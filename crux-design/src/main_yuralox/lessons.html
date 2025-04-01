@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crux Design</title>
+    <title>Lessons - Crux Design</title>
     <link rel="stylesheet" href="header.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="lessons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
@@ -17,16 +17,16 @@
             profile.addEventListener('mouseenter', function() {
                 dropdown.style.display = 'flex';
                 dropdown.style.flexDirection = 'column';
-                dropdown.style.animation = 'fadeIn 0.5s ease forwards'; // Increased duration
+                dropdown.style.animation = 'fadeIn 0.5s ease forwards';
             });
             
             profile.addEventListener('mouseleave', function() {
-                dropdown.style.animation = 'fadeOut 0.5s ease forwards'; // Increased duration
+                dropdown.style.animation = 'fadeOut 0.5s ease forwards';
                 setTimeout(function() {
                     if (!profile.matches(':hover')) {
                         dropdown.style.display = 'none';
                     }
-                }, 500); // Increased to match the new animation duration
+                }, 500);
             });
         });
     </script>
@@ -58,11 +58,17 @@
     
     <main>
         <div class="main-content">
-            <div class="circle circle-left"></div>
-            <div class="circle circle-right"></div>
-            <h1 class="huge-text">КГ?</h1>
-            <hr class="divider">
-            <h2 class="large-text">Левус клас/квас</h2>
+            <h1 class="page-title">Lessons</h1>
+            
+            <div class="lesson-container">
+                <div class="lesson-card">
+                    <div class="lesson-title">Intro to CG</div>
+                    <div class="lesson-description">Computer Graphics is the art and science of creating visual content using computers. It combines mathematical algorithms, artistic principles, and programming to render images, animations, and interactive visuals that are essential in gaming, film, design, and scientific visualization.</div>
+                </div>
+                <div class="lesson-card"></div>
+                <div class="lesson-card"></div>
+                <div class="lesson-card"></div>
+            </div>
         </div>
     </main>
 </body>
