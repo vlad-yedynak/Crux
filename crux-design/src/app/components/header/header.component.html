@@ -1,0 +1,15 @@
+<header class="main-header">
+    <div class="logo">
+        <h1><a href="main.html">Goida</a></h1>
+    </div>
+    <div class="profile-container">
+        <div class="profile" (click)="toggleDropdown()">
+            <img src="profile_placeholder.jpg" alt="Profile" class="profile-pic">
+            <span class="profile-name">User Name</span>
+            <div class="profile-dropdown" [ngClass]="{'show-dropdown': isDropdownVisible, 'hide-dropdown': !isDropdownVisible}">
+                <button class="btn sign-in">Sign In</button>
+                <button class="btn sign-up">Sign Up</button>
+            </div>
+        </div>
+    </div>
+</header>
