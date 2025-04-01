@@ -1,0 +1,31 @@
+/* Tab Navigation Styles */
+.tab-navigation {
+    background-color: #2E4756;
+    padding: 0 30px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+    display: flex;
+    list-style: none;
+}
+
+.tab-item {
+    margin-right: 10px;
+}
+
+.tab-item a {
+    display: block;
+    padding: 5px 15px; /* Reduced from 15px 20px to make the tab bar shorter */
+    color: #DBC2CF;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px; /* Added smaller font size */
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent; /* Reduced from 3px */
+}
+
+.tab-item a:hover {
+    background-color: #16262E;
+    border-bottom: 2px solid #DBC2CF; /* Reduced from 3px */
+}
