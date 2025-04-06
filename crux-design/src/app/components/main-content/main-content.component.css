@@ -1,8 +1,4 @@
 /* Main content styles */
-main {
-    padding: 40px 20px;
-}
-
 .main-content {
     display: flex;
     flex-direction: column;
@@ -18,13 +14,13 @@ main {
 .circle {
     position: absolute;
     border-radius: 50%;
-    z-index: -1;
+    z-index: 1;
 }
 
 .circle-left {
     width: 150px;
     height: 150px;
-    background-color: #2E4756;
+    background-color: var(--color-primary-dark); /* Changed */
     left: -75px;
     top: 50%;
     transform: translateY(-50%);
@@ -34,7 +30,7 @@ main {
 .circle-right {
     width: 200px;
     height: 200px;
-    background-color: #DBC2CF;
+    background-color: var(--color-secondary-light); /* Changed */
     right: -100px;
     top: 30%;
     opacity: 0.6;
@@ -43,20 +39,20 @@ main {
 .huge-text {
     font-size: 100px;
     font-weight: 700;
-    color: #16262E;
+    color: var(--color-primary-dark); /* Changed */
     margin-bottom: 20px;
 }
 
 .divider {
     width: 80%;
     border: none;
-    border-top: 2px solid #2E4756;
+    border-top: 2px solid var(--color-primary-dark); /* Changed */
     margin: 20px 0;
 }
 
 .large-text {
     font-size: 36px;
     font-weight: 500;
-    color: #2E4756;
+    color: var(--color-primary-dark); /* Changed */
     margin-top: 20px;
 }

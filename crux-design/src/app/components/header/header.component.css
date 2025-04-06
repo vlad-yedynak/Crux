@@ -3,14 +3,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px; /* Reduced side padding from 30px to 15px */
-    background-color: #16262E;
+    padding: 6px 15px;
+    height: 60px;
+    background-color: var(--color-primary-dark); 
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .logo h1 {
     margin: 0;
-    color: #DBC2CF;
+    color: var(--color-accent); 
     font-size: 20px;
     font-weight: bold;
 }
@@ -38,13 +39,15 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 8px;
+    padding: 5px;
     border-radius: 4px;
     transition: background-color 0.2s ease;
+    color: var(--color-secondary-light)
+    
 }
 
 .profile:hover {
-    background-color: #2E4756;
+    background-color: var(--color-accent);
 }
 
 .profile-pic {
@@ -53,15 +56,15 @@
     border-radius: 50%;
     object-fit: cover;
     margin-right: 10px;
+    background-color: var(--color-secondary-light)
 }
 
 .profile-name {
     font-weight: 500;
     font-size: 14px;
-    color: #DBC2CF;
+    color: var(--color-secondary-light);
 }
 
-/* Enhanced keyframes for more noticeable animations */
 @keyframes fadeIn {
     from { 
         opacity: 0;
@@ -88,37 +91,15 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: #DBC2CF;
+    background-color: var(--color-secondary-light); 
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 10px;
     z-index: 100;
-    width: 100%;
+    width: 200px;
     margin-top: 10px;
     display: flex;
     flex-direction: column;
-    
-    /* Початковий стан (сховано) */
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px) scale(0.95);
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-}
-
-/* Показуємо меню */
-.show-dropdown {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    animation: fadeIn 0.3s ease forwards;
-}
-
-/* Ховаємо меню */
-.hide-dropdown {
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-    animation: fadeOut 0.3s ease forwards;
 }
 
 .btn {
@@ -133,19 +114,19 @@
 }
 
 .sign-in {
-    background-color: #9FA2B2;
-    color: #333;
+    background-color: var(--color-secondary-dark); 
+    color: var(--color-primary-light);
 }
 
 .sign-up {
-    background-color: #2E4756;
-    color: white;
+    background-color: var(--color-accent); 
+    color: var(--color-secondary-light);
 }
 
 .sign-in:hover {
-    background-color: #8f9299;
+    background-color: var(--color-primary-dark); 
 }
 
 .sign-up:hover {
-    background-color: #263a46;
+    background-color: var(--color-primary-dark); 
 }
