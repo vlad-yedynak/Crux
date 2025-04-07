@@ -1,0 +1,8 @@
+bin/
+obj/
+.idea/*/*
+.idea/.idea.Crux/.idea
+Crux.sln.DotSettings.user
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
