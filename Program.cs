@@ -1,22 +1,24 @@
+using Crux.Controllers;
 using Crux.Data;
+using Crux.Models.Requests;
+using DotNetEnv;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-using (var dbContext = new ApplicationDbContext())
+var connectionString = Environment.GetEnvironmentVariable("APP_DB_CONNECTION_STRING");
+var dbContext = new ApplicationDbContext();
+try
 {
-    try
-    {
-        dbContext.SetConnectionString(connectionString);
-    }
-    catch (ApplicationException e)
-    {
-        Console.WriteLine(e);
-        throw;
-    }
-    
+    dbContext.SetConnectionString(connectionString);
     dbContext.Database.EnsureCreated();
+    UserController.SetDbContext(dbContext);
+}
+catch (Exception e)
+{
+    Console.WriteLine(e);
 }
 
 var app = builder.Build();
@@ -31,5 +33,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGet("/", () => "Цьомчик");
+
+// Mapped this route for test purposes, reroute later
+app.MapPost("/signup",  (UserSignUpRequest request) => UserController.SignUp(request));
 
 app.Run();
