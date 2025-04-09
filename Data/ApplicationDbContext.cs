@@ -3,35 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Data;
 
-public class ApplicationDbContext: DbContext
+public class ApplicationDbContext : DbContext
 {
-    private string? _connectionString;
-    
     public DbSet<User> Users { get; set; }
 
-    public void SetConnectionString(string? connectionString)
-    {
-        if (connectionString != null)
-        {
-            _connectionString = connectionString;
-        }
-        else
-        {
-            throw new ApplicationException("Connection string cannot be null");
-        }
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (_connectionString != null)
-        {
-            optionsBuilder.UseMySQL(_connectionString);
-        }
-        else
-        {
-            throw new ApplicationException("Connection string cannot be null");
-        }
-    }
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

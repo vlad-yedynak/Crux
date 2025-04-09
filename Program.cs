@@ -1,25 +1,24 @@
-using Crux.Controllers;
 using Crux.Data;
-using Crux.Models.Requests;
+using Crux.Models;
+using Crux.Services;
 using DotNetEnv;
+using Microsoft.AspNetCore.Identity;
+using MySql.EntityFrameworkCore.Extensions;
 
 Env.Load();
 
+var connectionString = Environment.GetEnvironmentVariable("APP_DB_CONNECTION_STRING");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new Exception("DB connection string not found");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-
-var connectionString = Environment.GetEnvironmentVariable("APP_DB_CONNECTION_STRING");
-var dbContext = new ApplicationDbContext();
-try
-{
-    dbContext.SetConnectionString(connectionString);
-    dbContext.Database.EnsureCreated();
-    UserController.SetDbContext(dbContext);
-}
-catch (Exception e)
-{
-    Console.WriteLine(e);
-}
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddMySQLServer<ApplicationDbContext>(connectionString);
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IApplicationAuthService, ApplicationAuthService>();
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
@@ -30,6 +29,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapControllers();
 
