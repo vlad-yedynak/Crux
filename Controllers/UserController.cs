@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Controllers;
 
+[Route("[controller]")]
 public class UserController
 {
     private static ApplicationDbContext _dbContext;
@@ -16,7 +17,10 @@ public class UserController
     }
     
     // Might need some upgrades :D
-    public static ControllerResponse SignUp([FromBody] UserSignUpRequest request)
+
+    [HttpPost("signup")]
+
+    public ControllerResponse SignUp([FromBody] UserSignUpRequest request)
     {
         try
         {
@@ -42,6 +46,32 @@ public class UserController
         catch (Exception ex)
         {
             return ControllerResponse.CreateError($"An error occurred: {ex.Message}");
+        }
+    }
+
+    [HttpPost("signin")]
+    public ControllerResponse SingIn([FromBody] UserSignInRequest request)
+    {
+        try
+        {
+            var user = _dbContext.Users.FirstOrDefault(u => u.Email == request.Email);
+            if (user == null)
+            {
+                return ControllerResponse.CreateError("User does not exist");
+            }
+
+            if (user.Password != request.Password)
+            {
+                return ControllerResponse.CreateError("Wrong password");   
+            }
+            
+
+            return ControllerResponse.CreateSuccess($"Signed in successfully, User #{user.Id}");
+
+        }
+        catch (Exception ex)
+        {
+            return ControllerResponse.CreateError($"An error occured: {ex.Message}");
         }
     }
 

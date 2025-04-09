@@ -32,9 +32,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGet("/", () => "Цьомчик");
 
-// Mapped this route for test purposes, reroute later
-app.MapPost("/signup",  (UserSignUpRequest request) => UserController.SignUp(request));
+app.MapGet("/", () => "Цьомчик");
 
 app.Run();

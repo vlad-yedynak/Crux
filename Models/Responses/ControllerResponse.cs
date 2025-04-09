@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Models.Responses;
 
@@ -31,4 +32,5 @@ public class ControllerResponse
             Error = errorMessage
         };
     }
+    
 }
