@@ -13,8 +13,8 @@ public interface IApplicationAuthService
     AuthResponse SignUp(UserSignUpRequest request);
     
     [HttpGet]
-    AuthResponse SignOut();
+    AuthResponse SignOut(HttpContext httpContext);
     
     [HttpHead]
-    AuthResponse CheckAuthentication();
+    bool CheckAuthentication(HttpContext httpContext);
 }

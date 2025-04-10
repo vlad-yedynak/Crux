@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Crux.Controllers;
 
 [Route("user")]
-public class UserController
+public class UserController : ControllerBase
 {
     private readonly IApplicationAuthService _authenticationService;
 
@@ -65,7 +65,7 @@ public class UserController
             return new ControllerResponse<AuthResponse>
             {
                 Success = true,
-                Body = _authenticationService.SignOut()
+                Body = _authenticationService.SignOut(HttpContext)
             };
         }
         catch (Exception ex)
@@ -78,24 +78,5 @@ public class UserController
         }
     }
     
-    [HttpHead("check-auth")]
-    public IResponse CheckAuthentication()
-    {
-        try
-        {
-            return new ControllerResponse<AuthResponse>
-            {
-                Success = true,
-                Body = _authenticationService.CheckAuthentication()
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ControllerResponse<AuthResponse>
-            {
-                Success = true,
-                Error = $"An error occured: {ex.Message}"
-            };
-        }
-    }
+    
 }
