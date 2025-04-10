@@ -1,5 +1,6 @@
 import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
+import { NavigationComponent } from '../navigation/navigation.component';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import {
   trigger,
@@ -17,7 +18,8 @@ import { Console } from 'console';
   imports: [
     CommonModule,
     NgbDropdownModule,
-    RouterModule
+    RouterModule,
+    NavigationComponent
   ], 
   animations: [
     trigger('dropdownAnimation', [

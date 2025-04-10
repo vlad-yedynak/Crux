@@ -12,7 +12,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
   imports: [
     RouterModule,
     HeaderComponent, 
-    NavigationComponent,
     NgbModule,
   ],
   // template: `
