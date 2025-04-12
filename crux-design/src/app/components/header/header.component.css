@@ -1,132 +1,146 @@
 /* Header styles */
+
+/*Style for main container*/
 .main-header {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 15px;
-    height: 60px;
-    background-color: var(--color-primary-dark); 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px 30px;
+    height: 50px;
+    background-color: var(--color-primary-dark);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
+/*Style for main logo - "Crux"*/
 .logo h1 {
+    padding: 0.5rem 0.8rem;
     margin: 0;
-    color: var(--color-accent); 
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--color-accent);
+    text-shadow: 0 0px 3px var(--color-accent); 
 }
-
+  
 .logo h1 a {
-    color: inherit;
     text-decoration: none;
-    font-size: inherit;
-    font-weight: inherit;
-    display: inline-block;
-}
-
-.logo h1 a:hover,
-.logo h1 a:visited,
-.logo h1 a:active {
     color: inherit;
-    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+  
+.logo h1 a:hover {
+    opacity: 0.8;
 }
 
-.profile-container {
-    position: relative;
+/**/
+app-navigation {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-.profile {
+/**/
+.header-right {
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.language-dropdown {
+    position: relative;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-    color: var(--color-secondary-light)
-    
+    user-select: none;
+    color: var(--color-accent);
 }
 
-.profile:hover {
-    background-color: var(--color-accent);
-}
-
-.profile-pic {
-    width: 40px;
+.selected-language {
+    padding: 0.6rem 0.75rem 0.5rem 0.75rem;
+    border-radius: 5px;
+    width: 80px;
     height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 10px;
-    background-color: var(--color-secondary-light)
-}
-
-.profile-name {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
-    color: var(--color-secondary-light);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    justify-content: center;
 }
 
-@keyframes fadeIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.dropdown-arrow {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
 }
 
-@keyframes fadeOut {
-    from { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    to { 
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-    }
+/* Обертання зображення при відкритті меню */
+.language-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
 }
 
-.profile-dropdown {
+.dropdown-options {
     position: absolute;
     top: 100%;
-    right: 0;
-    background-color: var(--color-secondary-light); 
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    z-index: 100;
-    width: 200px;
-    margin-top: 10px;
+    left: 0;
+    width: 100%;
+    background-color: var(--color-secondary-dark);
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-top: 5px;
+    list-style: none;
+    padding: 0;
+    z-index: 10;
+}
+
+.flag-icon {
+    width: 16px;
+    height: 12px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+    object-fit: cover;
+}
+.dropdown-options li {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
 }
 
-.btn {
-    padding: 6px 12px;
-    margin: 5px 0;
+.dropdown-options li:hover {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background-color: var(--color-secondary-dark);
+}
+
+.login-btn {
+    display: flex;
+    align-items: center;     /* по вертикалі */
+    justify-content: center;
+    width: 100px;
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+    background-color: inherit;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 14px;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
-    font-weight: 500;
-    font-size: 13px;
-    transition: all 0.2s ease;
+    border: 1px solid var(--color-secondary-dark);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 1rem;
+}
+  
+.login-btn:hover {
+    background-color: var(--color-secondary-dark);
+    transform: scale(1.1);
 }
 
-.sign-in {
-    background-color: var(--color-secondary-dark); 
-    color: var(--color-primary-light);
+.login-btn:active {
+    transform: translateY(0);
 }
 
-.sign-up {
-    background-color: var(--color-accent); 
-    color: var(--color-secondary-light);
-}
-
-.sign-in:hover {
-    background-color: var(--color-primary-dark); 
-}
-
-.sign-up:hover {
-    background-color: var(--color-primary-dark); 
-}

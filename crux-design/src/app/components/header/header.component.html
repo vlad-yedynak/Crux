@@ -1,22 +1,40 @@
 <header class="main-header">
     <div class="logo">
-        <h1><a [routerLink]="['/']">Goida</a></h1>
+      <h1>
+        <a routerLink="/">Goida</a>
+      </h1>
     </div>
     
-    <app-navigation></app-navigation>  
+    <app-navigation></app-navigation>
 
-    <div class="profile-container">
-        <div class="profile" (click)="toggleDropdown()">
-            <img src="profile_placeholder.jpg" alt="Profile" class="profile-pic">
-            <span class="profile-name">User Name</span>
-            <div class="profile-dropdown" 
-                    [@dropdownAnimation]="isDropdownVisible ? 'visible' : 'hidden'">
-                <button class="btn sign-in">Sign In</button>
-                <button class="btn sign-up">Sign Up</button>
-            </div>
+    <div class="header-right">
+      <div class="language-dropdown" [class.open]="isOpen">
+        
+        <div class="selected-language" (click)="toggleDropdown()">{{ getLanguageLabel(selectedLanguage) }}
+          <svg
+            class="dropdown-arrow"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+          </svg>
+          
         </div>
+
+        <ul class="dropdown-options" *ngIf="isOpen" @dropdownAnimation>
+          <li (click)="selectLanguage('en')">
+            EN
+            <img src="/flags/en.svg" alt="EN" class="flag-icon" />
+          </li>
+          <li (click)="selectLanguage('ua')">
+            UA
+            <img src="/flags/ua.svg" alt="UA" class="flag-icon" />
+          </li>
+        </ul>
+      </div>
+
+      <button class="login-btn">Log in</button>
     </div>
- 
 </header>
 
 

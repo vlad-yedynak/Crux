@@ -1,34 +1,32 @@
 /* Tab Navigation Styles */
 .tab-navigation {
-    padding: 0 20px;
-    height: 32px;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .tabs {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    height: 32px;
-}
-
-.tab-item {
-    margin-right: 10px;
+  display: flex;
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .tab-item a {
-    display: block;
-    padding: 5px 15px; /* Reduced from 15px 20px to make the tab bar shorter */
-    color: var(--color-secondary-light);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 13px; /* Added smaller font size */
-    transition: all 0.2s ease;
-    border-bottom: 3px solid transparent; /* Reduced from 3px */
+  padding: 8px 16px;
+  color: var(--color-secondary-light);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
-.tab-item a:hover {
-    background-color: var(--color-secondary-dark);
-    color: var(--color-accent);
-    border-bottom: 3px solid var(--color-accent); /* Reduced from 3px */
+.tab-item a:hover,
+.tab-item a.active {
+  /*background-color: var(--color-secondary-dark);*/
+  color: var(--color-accent);
+  /*border-bottom: 2px solid var(--color-accent);*/
 }
