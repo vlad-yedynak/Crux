@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { first } from 'rxjs';
 import e from 'express';
+import { AuthServiceService } from '../services/auth-service.service';
 
 @Component({
   selector: 'app-signup-form',
@@ -20,7 +21,7 @@ export class SignupFormComponent {
 
   signupForm: any;
 
-  constructor(public formBuilder:FormBuilder){
+  constructor(public formBuilder:FormBuilder, private service: AuthServiceService){
     this.signupForm = this.formBuilder.group({
       firstName: ['', [Validators.required]],
       lastName: [''],
@@ -30,6 +31,7 @@ export class SignupFormComponent {
     }, { 
       validators: this.passwordMatch 
     });
+    
   }
 
   passwordMatch: ValidatorFn = (control: AbstractControl): null | { [key: string]: boolean } => {
@@ -51,7 +53,15 @@ export class SignupFormComponent {
   onSubmit() {
     if (this.signupForm.valid) {
       console.log(this.signupForm.value);
-      //todo: Signup logic
+      //todo: Signup logic 
+      this.service.createUser(this.signupForm.value).subscribe({
+        next:res=>{
+          console.log("Response: ", res);
+        },
+        error:err=>{
+          console.log("Error: ", err);
+        }
+      })
     } else {
       console.log('Form is invalid');
     }
