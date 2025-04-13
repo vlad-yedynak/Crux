@@ -28,6 +28,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+
+app.UseCors(option => option.WithOrigins("http://localhost:4200")
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
 app.UseAuthorization();
 app.UseAuthentication();
 
