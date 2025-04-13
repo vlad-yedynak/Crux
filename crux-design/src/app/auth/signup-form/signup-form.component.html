@@ -1,9 +1,43 @@
 <div class="form-card">
-    <h2>Create an account</h2>
-    <input type="text" placeholder="First name" />
-    <input type="text" placeholder="Last name" />
-    <input type="email" placeholder="Email" />
-    <input type="password" placeholder="Enter your password" />
-    <button type="submit">Create account</button>
-    <p>Already have an account? <a (click)="onSwitchToLogin()" style="cursor: pointer;">Log in</a></p>
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <h2>Create an account</h2>
+        
+        <div>
+            <input type="text" placeholder="First name" formControlName="firstName"/>
+            <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('required')">
+                First name is required.
+            </div>
+        </div>
+        
+        <div>
+            <input type="text" placeholder="Last name" formControlName="lastName" />
+        </div>
+        
+        <div>
+            <input type="email" placeholder="Email" formControlName="email" />
+            <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('required')">
+                Email is required.
+            </div>
+        </div>
+        
+        <div>
+            <input type="password" placeholder="Enter your password" formControlName="password" />
+            <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('required')">
+                Password is required.
+            </div>
+            <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('minlength')">
+                Password must have at least 8 characters.
+            </div>
+        </div>
+        
+        <div>
+            <input type="password" placeholder="Confirm your password" formControlName="confirmPassword" />
+            <div class="error-feedback" *ngIf="signupForm.controls.confirmPassword.hasError('required')">
+                Confirm your password.
+            </div>
+        </div>
+        
+        <button type="submit">Create account</button>
+        <p>Already have an account? <a (click)="onSwitchToLogin()" style="cursor: pointer;">Log in</a></p>
+    </form>
 </div>
