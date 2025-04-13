@@ -1,15 +1,37 @@
 import { Routes } from '@angular/router';
-import { AppComponent } from './app.component';
-import { MainContentComponent } from './components/main-content/main-content.component';
 import { LessonsPageComponent } from './pages/lessons-page/lessons-page.component';
+import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
+import { AuthPageComponent } from './auth/auth-page/auth-page.component';
 
 export const routes: Routes = [
     {
         path: '',
-        component: MainContentComponent, // головна сторінка
+        component: MainLayoutComponent, // головна сторінка
+        children:[
+            {
+              path: '',
+              loadComponent: () =>
+                import('./components/main-content/main-content.component').then((m) => m.MainContentComponent),
+            },
+        ],
+    },
+    {
+        path: 'auth',
+        component: AuthLayoutComponent,
+        children: [
+            {
+                path: '',
+                component: AuthPageComponent,
+            },
+        ],
     },
     {
         path: 'lessons',
-        component: LessonsPageComponent, // інша сторінка
-    }
+        component: LessonsPageComponent, 
+    },
+    {
+        path: '**',
+        redirectTo: '',
+    },
 ]

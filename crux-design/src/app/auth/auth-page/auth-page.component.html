@@ -1,0 +1,32 @@
+<div class="auth-wrapper">
+    <div class="background"></div>
+  
+    <div class="forms-layer">
+        <div class="logo">
+            <h1>
+                <a routerLink="/">Goida</a>
+            </h1>
+        </div>
+        <div class="left-promo">
+            <h2>Welcome to Crux!</h2>
+        </div>
+
+        <div class="auth-forms">
+            <div
+              class="signup-form-wrapper"
+              [class.active]="activeForm === 'signup'"
+              [@formSwitch]="activeForm === 'signup' ? 'login' : 'signup'"
+            >
+              <app-signup-form (switchToLogin)="switchForm()"></app-signup-form>
+            </div>
+            
+            <div
+              class="login-form-wrapper"
+              [class.active]="activeForm === 'login'"
+              [@formSwitch]="activeForm === 'login' ? 'login' : 'signup'"
+            >
+              <app-login-form (switchToSignup)="switchForm()"></app-login-form>
+            </div>
+        </div>
+    </div>
+</div>

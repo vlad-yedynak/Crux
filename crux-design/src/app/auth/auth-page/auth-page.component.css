@@ -1,0 +1,120 @@
+.auth-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+  
+/* Фон — дві половини */
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    z-index: 0;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        height: 100%;
+    }
+
+    &::before {
+        background: linear-gradient(
+        225deg,
+        var(--color-primary-dark) 0%,
+        var(--color-secondary-dark) 75%,
+        var(--color-accent) 250%
+    );
+    }
+
+    &::after {
+        background: var(--color-secondary-light);
+    }
+}
+
+.logo {
+    position: absolute;
+    padding: 2rem 4rem;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--color-accent);
+    text-shadow: 0 0px 5px var(--color-accent);
+    z-index: 10;
+}
+
+.logo h1 a {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.left-promo {
+    position: absolute;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    padding: 4rem;
+    color: var(--color-accent);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+  
+    h2 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+}
+  
+.auth-forms {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+  
+.signup-form-wrapper, .login-form-wrapper {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: absolute;
+}
+  
+.signup-form-wrapper.active, .login-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+    opacity: 1;
+    pointer-events: all;
+}
+  
+.signup-form-wrapper:not(.active), .login-form-wrapper:not(.active) {
+    opacity: 0.4;
+    pointer-events: none;
+}
+  
+.signup-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+}
+  
+.login-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+}
+  
+.login-form-wrapper {
+    position: absolute;
+    width: 350px;
+    opacity: 0.4;
+    pointer-events: none; 
+}
