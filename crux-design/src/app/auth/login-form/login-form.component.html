@@ -1,8 +1,23 @@
 <div class="form-card">
-    <h2>Login to your account</h2>
-    <input type="email" placeholder="Email"/>
-    <input type="password" placeholder="Enter your password"/>
-    <div class="forgot-link"><a href="#">Forgot?</a></div>
-    <button>Login now</button>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <h2>Log in to your account</h2>
+    
+    <div>
+      <input type="email" placeholder="Email" formControlName="email" />
+      <div class="error-feedback" *ngIf="loginForm.controls['email'].invalid && (loginForm.controls['email'].dirty || loginForm.controls['email'].touched)">
+        <div *ngIf="loginForm.controls['email'].errors?.['required']">Email is required.</div>
+        <div *ngIf="loginForm.controls['email'].errors?.['email']">Please enter a valid email.</div>
+      </div>
+    </div>
+    
+    <div>
+      <input type="password" placeholder="Password" formControlName="password" />
+      <div class="error-feedback" *ngIf="loginForm.controls['password'].invalid && (loginForm.controls['password'].dirty || loginForm.controls['password'].touched)">
+        <div *ngIf="loginForm.controls['password'].errors?.['required']">Password is required.</div>
+      </div>
+    </div>
+    
+    <button type="submit">Log in</button>
     <p>Don't have an account? <a (click)="onSwitchToSignup()" style="cursor: pointer;">Sign up</a></p>
+  </form>
 </div>

@@ -3,6 +3,7 @@ import { LessonsPageComponent } from './pages/lessons-page/lessons-page.componen
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
 import { AuthPageComponent } from './auth/auth-page/auth-page.component';
+import { ProfileComponent } from './pages/profile/profile.component';
 
 export const routes: Routes = [
     {
@@ -25,6 +26,10 @@ export const routes: Routes = [
                 component: AuthPageComponent,
             },
         ],
+    },
+    {
+        path: 'profile',
+        component: ProfileComponent,
     },
     {
         path: 'lessons',

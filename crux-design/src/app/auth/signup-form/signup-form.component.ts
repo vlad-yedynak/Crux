@@ -4,6 +4,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validat
 import { first } from 'rxjs';
 import e from 'express';
 import { AuthServiceService } from '../services/auth-service.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signup-form',
@@ -21,12 +22,12 @@ export class SignupFormComponent {
 
   signupForm: any;
 
-  constructor(public formBuilder:FormBuilder, private service: AuthServiceService){
+  constructor(public formBuilder:FormBuilder, private service: AuthServiceService, private router: Router){
     this.signupForm = this.formBuilder.group({
-      firstName: ['', [Validators.required]],
-      lastName: [''],
-      email: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      firstName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-я])(?=.*[A-ZА-Я])[A-Za-zА-Яа-яіґїєІҐЇЄ]+$/)]],
+      lastName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-я])(?=.*[A-ZА-Я])[A-Za-zА-Яа-яіґїєІҐЇЄ]+$/)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])[A-Za-z\d@$!%*?&]+$/)]],
       confirmPassword: ['', [Validators.required]]
     }, { 
       validators: this.passwordMatch 
@@ -55,8 +56,16 @@ export class SignupFormComponent {
       console.log(this.signupForm.value);
       //todo: Signup logic 
       this.service.createUser(this.signupForm.value).subscribe({
-        next:res=>{
-          console.log("Response: ", res);
+        next:(res: any)=>{
+          const token = res.body.token;
+
+          localStorage.setItem('auth-token', token);
+
+          console.log("Response: ", res, "Token: ", token);
+
+          console.log("Token from header:", localStorage.getItem('auth-token'));
+
+          this.router.navigate(['/profile']);
         },
         error:err=>{
           console.log("Error: ", err);
@@ -64,7 +73,13 @@ export class SignupFormComponent {
       })
     } else {
       console.log('Form is invalid');
+      Object.keys(this.signupForm.controls).forEach(field => {
+        const control = this.signupForm.get(field);
+        control?.markAsTouched();
+      });
     }
   }
+
+
 
 }
