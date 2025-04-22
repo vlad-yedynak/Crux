@@ -2,11 +2,11 @@
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <h2>Log in to your account</h2>
     
-    <div>
+    <div class="form-group-email">
       <input type="email" placeholder="Email" formControlName="email" />
-      <div class="error-feedback" *ngIf="loginForm.controls['email'].invalid && (loginForm.controls['email'].dirty || loginForm.controls['email'].touched)">
-        <div *ngIf="loginForm.controls['email'].errors?.['required']">Email is required.</div>
-        <div *ngIf="loginForm.controls['email'].errors?.['email']">Please enter a valid email.</div>
+      <div *ngIf="loginForm.controls['email'].invalid && (loginForm.controls['email'].dirty || loginForm.controls['email'].touched)">
+        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['required']">Email is required.</div>
+        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['email']">Please enter a valid email.</div>
       </div>
     </div>
     

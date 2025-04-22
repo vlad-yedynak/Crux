@@ -14,12 +14,24 @@
     input {
         display: block;
         width: 100%;
-        margin-bottom: 1rem;
+        margin-bottom: 0.1rem;
         padding: 0.75rem;
         border: 1px solid var(--color-secondary-light);
         border-radius: 4px;
-        background: var(--color-primary-light);
+        background-color: var(--color-primary-light);
         color: var(--color-primary-dark);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 5px rgba(255, 93, 93, 0.5);
+        outline: none;
+    }
+
+    input.ng-invalid.ng-touched {
+        border-color: var(--color-accent);
+        background-color: #ffe6e6;
     }
 
     button {
@@ -32,6 +44,11 @@
         color: var(--color-primary-light);
         font-weight: bold;
         cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+        transform: scale(1.02);
     }
 
     .forgot-link {
@@ -51,5 +68,21 @@
     a {
         color: var(--color-accent);
         text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    a:hover {
+        color: var(--color-accent);
+    }
+
+    .error-feedback {
+        font-size: 0.85rem;
+        color: var(--color-accent);
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .form-group-email{
+        margin-bottom: 0.85rem;
     }
 }

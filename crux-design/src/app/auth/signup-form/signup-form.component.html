@@ -2,7 +2,7 @@
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
         <h2>Create an account</h2>
         
-        <div>
+        <div class="form-group">
             <input type="text" placeholder="First name" formControlName="firstName"/>
             <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('required') && (signupForm.controls.firstName.touched || signupForm.controls.firstName.dirty)">
                 First name is required.
@@ -12,7 +12,7 @@
             </div>
         </div>
         
-        <div>
+        <div class="form-group">
             <input type="text" placeholder="Last name" formControlName="lastName" />
             <div class="error-feedback" *ngIf="signupForm.controls.lastName.hasError('required') && (signupForm.controls.lastName.touched || signupForm.controls.lastName.dirty)">
                 Last name is required.
@@ -22,29 +22,29 @@
             </div>
         </div>
         
-        <div>
+        <div class="form-group-email">
             <input type="email" placeholder="Email" formControlName="email" />
             <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('required') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
                 Email is required.
             </div>
         </div>
         
-        <div>
+        <div class="form-group-password">
             <input type="password" placeholder="Enter your password" formControlName="password" />
             <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('required') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
                 Password is required.
             </div>
-            <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('minlength') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
+            <div class="error-feedback-password-1" *ngIf="signupForm.controls.password.hasError('minlength') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
                 Password must have at least 8 characters.
             </div>
-            <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('pattern') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
+            <div class="error-feedback-password-2" *ngIf="signupForm.controls.password.hasError('pattern') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
                 Password must include uppercase and lowercase letters.
             </div>
         </div>
         
         <div>
             <input type="password" placeholder="Confirm your password" formControlName="confirmPassword" />
-            <div class="error-feedback" *ngIf="signupForm.controls.confirmPassword.hasError('required') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
+            <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('required') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
                 Confirm your password.
             </div>
         </div>
