@@ -2,11 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Responses;
 
-public class AuthResponse : IResponse
+public class AuthResponse : Response
 {
-    public bool Success { get; set; }
-    public string? Error { get; set; }
-    
     [JsonPropertyName("userId")]
     public string? UserId { get; set; }
 

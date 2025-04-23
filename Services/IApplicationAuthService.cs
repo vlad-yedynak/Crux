@@ -14,6 +14,9 @@ public interface IApplicationAuthService
     
     [HttpGet]
     AuthResponse SignOut(HttpContext httpContext);
+
+    [HttpHead]
+    string GetUserIdFromToken(string token);
     
     [HttpHead]
     bool CheckAuthentication(HttpContext httpContext);

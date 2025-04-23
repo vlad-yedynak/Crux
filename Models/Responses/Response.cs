@@ -2,11 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Responses;
 
-public interface IResponse
+public abstract class Response
 {
-    [JsonPropertyName("Success")]
+    [JsonPropertyName("success")]
     public bool Success { get; set; }
     
-    [JsonPropertyName("Error")]
+    [JsonPropertyName("error")]
     public string? Error { get; set; }
 }

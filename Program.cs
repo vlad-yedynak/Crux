@@ -14,10 +14,13 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddControllers();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddMySQLServer<ApplicationDbContext>(connectionString);
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IApplicationUserService, ApplicationUserService>();
 builder.Services.AddScoped<IApplicationAuthService, ApplicationAuthService>();
 
 var app = builder.Build();
@@ -28,7 +31,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
 
 app.UseCors(option => option.WithOrigins("http://localhost:4200")
     .AllowAnyMethod()

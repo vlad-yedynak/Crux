@@ -1,9 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Models;
 
+[PrimaryKey(nameof(Id))]
+[Index(nameof(Email), IsUnique = true)]
 public class User
 {
+    [Key]
     public int Id { get; set; }
     
     [Required]
@@ -22,4 +27,7 @@ public class User
     [MinLength(6)]
     [MaxLength(255)]
     public required string Password { get; set; }
+    
+    [Required]
+    public required int ScorePoints { get; set; }
 }
