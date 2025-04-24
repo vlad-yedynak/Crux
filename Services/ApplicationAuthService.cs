@@ -60,35 +60,19 @@ public class ApplicationAuthService(
         };
     }
 
-    public AuthResponse SignOut(HttpContext httpContext)
+    public AuthResponse SignOut(HttpContext context)
     {
-        if (!httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
-            return new AuthResponse
-            {
-                Success = false,
-                Error = "No authorization header provided"
-            };
+        
+        var userId = GetUserIdFromToken(context);
 
-        var authHeaderValue = authHeader.ToString();
-        if (!authHeaderValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            return new AuthResponse
-            {
-                Success = false,
-                Error = "Invalid authorization format"
-            };
-
-        var token = authHeaderValue.Substring("Bearer ".Length).Trim();
-
-        var userId = GetUserIdFromToken(token);
-
-        if (string.IsNullOrEmpty(userId))
+        if (userId == null)
             return new AuthResponse
             {
                 Success = false,
                 Error = "Invalid token"
             };
 
-        distributedCache.Remove(userId);
+        distributedCache.Remove(userId.Value.ToString());
 
         return new AuthResponse
         {
@@ -96,45 +80,46 @@ public class ApplicationAuthService(
         };
     }
 
-    public bool CheckAuthentication(HttpContext httpContext)
+    public bool CheckAuthentication(HttpContext context)
     {
-        if (!httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
+
+        var userId = GetUserIdFromToken(context);
+
+        if (userId == null)
         {
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return false;
+        }
+
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        return true;
+    }
+
+    public int? GetUserIdFromToken(HttpContext context)
+    {
+        if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return null;
         }
 
         var authHeaderValue = authHeader.ToString();
 
         if (!authHeaderValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return null;
         }
 
         var clientToken = authHeaderValue.Substring("Bearer ".Length).Trim();
-
-        var userId = GetUserIdFromToken(clientToken);
-
-        if (string.IsNullOrEmpty(userId))
+        
+        foreach (var userId in dbContext.Users.Select(u => u.Id))
         {
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
+            var storedToken = distributedCache.Get(userId.ToString());
+            if (storedToken != null && Convert.ToBase64String(storedToken) == clientToken) 
+                return userId;
         }
 
-        httpContext.Response.StatusCode = StatusCodes.Status200OK;
-        return true;
-    }
-
-    public string GetUserIdFromToken(string token)
-    {
-        foreach (var user in dbContext.Users)
-        {
-            var storedToken = distributedCache.Get(user.Id.ToString());
-            if (storedToken != null && Convert.ToBase64String(storedToken) == token) return user.Id.ToString();
-        }
-
-        return string.Empty;
+        return null;
     }
 
     private string HashPassword(User user, string password)

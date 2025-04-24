@@ -1,5 +1,4 @@
 using Crux.Data;
-using Crux.Models;
 using Crux.Models.Responses;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -12,20 +11,23 @@ public class ApplicationUserService(
 {
     public UserResponse GetUserInfo(HttpContext context)
     {
-        if (applicationAuthService.CheckAuthentication(context) == false)
+        var userId = applicationAuthService.GetUserIdFromToken(context);
+
+        if (!userId.HasValue)
         {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return new UserResponse
             {
                 Success = false,
-                Error = "Invalid session token"
+                Error = "Unauthorized access"
             };
         }
 
-        // TODO: Get user by session token
-        User? user = null;
-
+        var user = dbContext.Users.FirstOrDefault(u => u.Id == userId.Value);
+        
         if (user == null)
         {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return new UserResponse
             {
                 Success = false,

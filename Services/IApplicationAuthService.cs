@@ -13,11 +13,11 @@ public interface IApplicationAuthService
     AuthResponse SignUp(UserSignUpRequest request);
     
     [HttpGet]
-    AuthResponse SignOut(HttpContext httpContext);
+    AuthResponse SignOut(HttpContext context);
 
     [HttpHead]
-    string GetUserIdFromToken(string token);
+    int? GetUserIdFromToken(HttpContext context);
     
     [HttpHead]
-    bool CheckAuthentication(HttpContext httpContext);
+    bool CheckAuthentication(HttpContext context);
 }
