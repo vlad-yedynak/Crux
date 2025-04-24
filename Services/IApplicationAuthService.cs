@@ -1,3 +1,4 @@
+using Crux.Models;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ public interface IApplicationAuthService
 
     [HttpHead]
     int? GetUserIdFromToken(HttpContext context);
-    
+
     [HttpHead]
-    bool CheckAuthentication(HttpContext context);
+    bool CheckAuthentication(HttpContext context, UserRole? role = null);
 }

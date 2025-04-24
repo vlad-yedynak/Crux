@@ -81,7 +81,7 @@ public class UserController (
             return new ControllerResponse<UserResponse>
             {
                 Success = true,
-                Body = applicationUserService.GetUserInfo(HttpContext)
+                Body = applicationUserService.GetUserInfoFromContext(HttpContext)
             };
         }
         catch (Exception ex)

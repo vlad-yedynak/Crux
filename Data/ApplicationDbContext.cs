@@ -1,3 +1,4 @@
+using Crux.Extensions;
 using Crux.Models;
 using Crux.Models.Cards;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,10 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .IsRequired();
             
             entity.Property(e => e.ScorePoints)
+                .IsRequired();
+
+            entity.Property(e => e.Role)
+                .HasConversion(e => e.ToString(), e => e.ToUserRole())
                 .IsRequired();
         });
 

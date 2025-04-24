@@ -15,4 +15,7 @@ public class UserResponse : Response
     
     [JsonPropertyName("scorePoints")]
     public int? ScorePoints { get; set; }
+    
+    [JsonPropertyName("userRole")]
+    public string? UserRole { get; set; }
 }

@@ -20,7 +20,8 @@ public class ApplicationAuthService(
             LastName = request.LastName,
             Email = request.Email,
             Password = request.Password,
-            ScorePoints = 0
+            ScorePoints = 0,
+            Role = UserRole.User
         };
 
         if (dbContext.Users.Any(u => u.Email == user.Email))
@@ -80,7 +81,7 @@ public class ApplicationAuthService(
         };
     }
 
-    public bool CheckAuthentication(HttpContext context)
+    public bool CheckAuthentication(HttpContext context, UserRole? role = null)
     {
 
         var userId = GetUserIdFromToken(context);
@@ -88,6 +89,17 @@ public class ApplicationAuthService(
         if (userId == null)
         {
             return false;
+        }
+
+        if (role.HasValue)
+        {
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return false;
+            }
+            
+            return user.Role == role;
         }
 
         context.Response.StatusCode = StatusCodes.Status200OK;

@@ -1,4 +1,4 @@
-using Crux.Models.Requests;
+using Crux.Models;
 using Crux.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,5 +7,8 @@ namespace Crux.Services;
 public interface IApplicationUserService
 {
     [HttpGet]
-    UserResponse GetUserInfo(HttpContext context);
+    UserResponse GetUserInfoFromContext(HttpContext context);
+    
+    [HttpGet]
+    ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo(HttpContext context);
 }

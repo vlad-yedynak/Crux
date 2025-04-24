@@ -13,4 +13,6 @@ public class User
     public required string Password { get; set; }
     
     public required int ScorePoints { get; set; }
+    
+    public required UserRole Role { get; set; }
 }
