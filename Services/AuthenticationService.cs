@@ -7,12 +7,12 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace Crux.Services;
 
-public class ApplicationAuthService(
+public class AuthenticationService(
     ApplicationDbContext dbContext,
     IPasswordHasher<User> passwordHasher,
-    IDistributedCache distributedCache) : IApplicationAuthService
+    IDistributedCache distributedCache) : IAuthenticationService
 {
-    public AuthResponse SignUp(UserSignUpRequest request)
+    public AuthenticationResponse SignUp(UserRequest request)
     {
         var user = new User
         {
@@ -25,12 +25,14 @@ public class ApplicationAuthService(
         };
 
         if (dbContext.Users.Any(u => u.Email == user.Email))
-            return new AuthResponse
+        {
+            return new AuthenticationResponse
             {
                 Success = false,
                 Error = "User with this email already exists!"
             };
-
+        }
+        
         user.Password = HashPassword(user, request.Password);
 
         dbContext.Users.Add(user);
@@ -39,21 +41,23 @@ public class ApplicationAuthService(
         return SignIn(request);
     }
 
-    public AuthResponse SignIn(UserSignInRequest request)
+    public AuthenticationResponse SignIn(UserRequest request)
     {
         var user = dbContext.Users.FirstOrDefault(u => u.Email == request.Email);
 
         if (user == null || !VerifyPassword(user, user.Password, request.Password))
-            return new AuthResponse
+        {
+            return new AuthenticationResponse
             {
                 Success = false,
                 Error = "Wrong credentials"
             };
+        }
 
         var token = Guid.NewGuid().ToByteArray();
         distributedCache.Set(user.Id.ToString(), token);
 
-        return new AuthResponse
+        return new AuthenticationResponse
         {
             Success = true,
             UserId = user.Id.ToString(),
@@ -61,21 +65,23 @@ public class ApplicationAuthService(
         };
     }
 
-    public AuthResponse SignOut(HttpContext context)
+    public AuthenticationResponse SignOut(HttpContext context)
     {
         
         var userId = GetUserIdFromToken(context);
 
         if (userId == null)
-            return new AuthResponse
+        {
+            return new AuthenticationResponse
             {
                 Success = false,
                 Error = "Invalid token"
             };
+        }
 
         distributedCache.Remove(userId.Value.ToString());
 
-        return new AuthResponse
+        return new AuthenticationResponse
         {
             Success = true
         };

@@ -8,7 +8,9 @@ public abstract class Card
     
     public required string Description { get; set; }
     
-    public int LessonId { get; set; }
+    public required int LessonId { get; set; }
     
     public Lesson? Lesson { get; set; }
+    
+    public CardType CardType { get; set; }
 }

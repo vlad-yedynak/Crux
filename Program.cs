@@ -20,8 +20,9 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddMySQLServer<ApplicationDbContext>(connectionString);
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddScoped<IApplicationUserService, ApplicationUserService>();
-builder.Services.AddScoped<IApplicationAuthService, ApplicationAuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())

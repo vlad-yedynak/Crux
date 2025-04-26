@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Responses;
 
-public class AuthResponse : Response
+public class AuthenticationResponse : Response
 {
     [JsonPropertyName("userId")]
     public string? UserId { get; set; }

@@ -5,16 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
-public interface IApplicationAuthService
+public interface IAuthenticationService
 {
     [HttpPost]
-    AuthResponse SignIn(UserSignInRequest request);
+    AuthenticationResponse SignIn(UserRequest request);
     
     [HttpPost]
-    AuthResponse SignUp(UserSignUpRequest request);
+    AuthenticationResponse SignUp(UserRequest request);
     
     [HttpGet]
-    AuthResponse SignOut(HttpContext context);
+    AuthenticationResponse SignOut(HttpContext context);
 
     [HttpHead]
     int? GetUserIdFromToken(HttpContext context);

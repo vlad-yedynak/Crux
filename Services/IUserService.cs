@@ -4,11 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
-public interface IApplicationUserService
+public interface IUserService
 {
     [HttpGet]
     UserResponse GetUserInfoFromContext(HttpContext context);
     
     [HttpGet]
     ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo(HttpContext context);
+    
+    [HttpPost]
+    UserResponse ChangeFirstName(HttpContext context, string firstName);
+    
+    [HttpPost]
+    UserResponse ChangeLastName(HttpContext context, string lastName);
 }

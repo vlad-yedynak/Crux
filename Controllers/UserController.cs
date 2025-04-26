@@ -1,3 +1,4 @@
+using Crux.Models;
 using Crux.Services;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
@@ -7,15 +8,15 @@ namespace Crux.Controllers;
 
 [Route("user")]
 public class UserController (
-    IApplicationAuthService authenticationService,
-    IApplicationUserService applicationUserService) : ControllerBase
+    IAuthenticationService authenticationService,
+    IUserService userService) : ControllerBase
 {
     [HttpPost("sign-up")]
-    public Response SignUp([FromBody] UserSignUpRequest request)
+    public Response SignUp([FromBody] UserRequest request)
     {
         try
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
                 Body = authenticationService.SignUp(request)
@@ -23,7 +24,7 @@ public class UserController (
         }
         catch (Exception ex)
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = $"An error occured: {ex.Message}"
@@ -32,11 +33,11 @@ public class UserController (
     }
 
     [HttpPost("sign-in")]
-    public Response SignIn([FromBody] UserSignInRequest request)
+    public Response SignIn([FromBody] UserRequest request)
     {
         try
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
                 Body = authenticationService.SignIn(request)
@@ -44,7 +45,7 @@ public class UserController (
         }
         catch (Exception ex)
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = $"An error occured: {ex.Message}"
@@ -57,7 +58,7 @@ public class UserController (
     {
         try
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
                 Body = authenticationService.SignOut(HttpContext)
@@ -65,7 +66,7 @@ public class UserController (
         }
         catch (Exception ex)
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = $"An error occured: {ex.Message}"
@@ -81,12 +82,44 @@ public class UserController (
             return new ControllerResponse<UserResponse>
             {
                 Success = true,
-                Body = applicationUserService.GetUserInfoFromContext(HttpContext)
+                Body = userService.GetUserInfoFromContext(HttpContext)
             };
         }
         catch (Exception ex)
         {
-            return new ControllerResponse<AuthResponse>
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
+    
+    [HttpGet("get-users")]
+    public Response GetUsers()
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var usersInfo = userService.GetUsersInfo(HttpContext);
+
+            return new ControllerResponse<ICollection<KeyValuePair<int, UserResponse>>>
+            {
+                Success = true,
+                Body = usersInfo
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<LessonResponse>
             {
                 Success = false,
                 Error = $"An error occured: {ex.Message}"

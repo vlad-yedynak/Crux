@@ -16,6 +16,12 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<EducationalCard> EducationalCards { get; set; }
     
     public DbSet<TestCard> TestCards { get; set; }
+    
+    public DbSet<SandboxCard> SandboxCards { get; set; }
+    
+    public DbSet<Question> Questions { get; set; }
+    
+    public DbSet<Answer> Answers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,31 +80,63 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .HasMaxLength(255)
                 .IsRequired();
             
+            entity.Property(e => e.LessonId)
+                .IsRequired();
+            
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .IsRequired();
 
-            entity.ToTable("Cards")
-                .HasDiscriminator<CardType>("CardType")
+            entity.HasDiscriminator<CardType>("CardType")
                 .HasValue<EducationalCard>(CardType.Educational)
-                .HasValue<TestCard>(CardType.Test);
+                .HasValue<TestCard>(CardType.Test)
+                .HasValue<SandboxCard>(CardType.Sandbox);
         });
 
         modelBuilder.Entity<EducationalCard>(entity =>
         {
             entity.Property(e => e.Content)
-                .HasMaxLength(1023)
+                .HasColumnType("Text")
                 .IsRequired();
         });
-
+        
         modelBuilder.Entity<TestCard>(entity =>
         {
-            entity.Property(e => e.Question)
+            entity.HasMany(e => e.Questions)
+                .WithOne(e => e.TestCard)
+                .HasForeignKey(e => e.TestCardId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<Question>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.TestCardId)
+                .IsRequired();
+
+            entity.Property(e => e.QuestionText)
                 .HasMaxLength(255)
                 .IsRequired();
             
-            entity.Property(e => e.Answer)
+            entity.HasMany(e => e.Answers)
+                .WithOne(e => e.Question)
+                .HasForeignKey(e => e.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Answer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.QuestionId)
+                .IsRequired();
+
+            entity.Property(e => e.AnswerText)
                 .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.IsCorrect)
                 .IsRequired();
         });
     }
