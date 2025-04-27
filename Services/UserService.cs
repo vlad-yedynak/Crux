@@ -10,7 +10,7 @@ public class UserService(
 {
     public UserResponse GetUserInfoFromContext(HttpContext context)
     {
-        var userId = authenticationService.GetUserIdFromToken(context);
+        var userId = authenticationService.GetUserIdFromContext(context);
 
         if (userId.HasValue)
         {
@@ -72,7 +72,7 @@ public class UserService(
 
     public UserResponse ChangeFirstName(HttpContext context, string firstName)
     {
-        var userId = authenticationService.GetUserIdFromToken(context);
+        var userId = authenticationService.GetUserIdFromContext(context);
 
         if (!userId.HasValue)
         {
@@ -112,6 +112,41 @@ public class UserService(
 
     public UserResponse ChangeLastName(HttpContext context, string lastName)
     {
-        throw new NotImplementedException();
+        var userId = authenticationService.GetUserIdFromContext(context);
+
+        if (!userId.HasValue)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return new UserResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
+        var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        
+        if (user != null)
+        {
+            user.LastName = lastName;
+            dbContext.SaveChanges();
+            
+            return new UserResponse
+            {
+                Success = true,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                ScorePoints = user.ScorePoints,
+                UserRole = user.Role.ToString()
+            };
+        }
+        
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Can't find user info"
+        };
     }
 }

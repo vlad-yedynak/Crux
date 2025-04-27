@@ -261,7 +261,53 @@ public class LessonService(
 
     public QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest)
     {
-        // TODO: 
-        throw new NotImplementedException();
+        var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
+
+        if (testCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Invalid TestCardId"
+            };
+        }
+
+        var question = new Question
+        {
+            TestCardId = questionRequest.TestCardId,
+            QuestionText = questionRequest.QuestionText
+        };
+
+        dbContext.Questions.Add(question);
+        dbContext.SaveChanges();
+        
+        dbContext.Answers.AddRange(
+            questionRequest.Answers.Select(a => new Answer
+            {
+                QuestionId = question.Id,
+                AnswerText = a.AnswerText,
+                IsCorrect = a.IsCorrect
+            })
+        );
+
+        dbContext.SaveChanges();
+
+        return new QuestionResponse
+        {
+            Success = true,
+            Id = question.Id,
+            QuestionText = question.QuestionText,
+            Answers = dbContext.Answers
+                .Where(a => a.QuestionId == question.Id)
+                .Select(a => new AnswerResponse
+                {
+                    Id = a.Id,
+                    AnswerText = a.AnswerText,
+                    IsCorrect = a.IsCorrect,
+                    Success = true
+                })
+                .ToList()
+        };
     }
 }

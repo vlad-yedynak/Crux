@@ -17,7 +17,7 @@ public interface IAuthenticationService
     AuthenticationResponse SignOut(HttpContext context);
 
     [HttpHead]
-    int? GetUserIdFromToken(HttpContext context);
+    int? GetUserIdFromContext(HttpContext context);
 
     [HttpHead]
     bool CheckAuthentication(HttpContext context, UserRole? role = null);

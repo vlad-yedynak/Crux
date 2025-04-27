@@ -68,7 +68,7 @@ public class AuthenticationService(
     public AuthenticationResponse SignOut(HttpContext context)
     {
         
-        var userId = GetUserIdFromToken(context);
+        var userId = GetUserIdFromContext(context);
 
         if (userId == null)
         {
@@ -90,7 +90,7 @@ public class AuthenticationService(
     public bool CheckAuthentication(HttpContext context, UserRole? role = null)
     {
 
-        var userId = GetUserIdFromToken(context);
+        var userId = GetUserIdFromContext(context);
 
         if (userId == null)
         {
@@ -112,7 +112,7 @@ public class AuthenticationService(
         return true;
     }
 
-    public int? GetUserIdFromToken(HttpContext context)
+    public int? GetUserIdFromContext(HttpContext context)
     {
         if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
         {
@@ -130,14 +130,22 @@ public class AuthenticationService(
 
         var clientToken = authHeaderValue.Substring("Bearer ".Length).Trim();
         
-        foreach (var userId in dbContext.Users.Select(u => u.Id))
+        var matchingUserId = dbContext.Users
+            .Select(u => u.Id) 
+            .AsEnumerable()   
+            .FirstOrDefault(id => {
+                var storedTokenBytes = distributedCache.Get(id.ToString());
+                return storedTokenBytes != null && Convert.ToBase64String(storedTokenBytes) == clientToken;
+            });
+        
+        if (matchingUserId != default(int))
         {
-            var storedToken = distributedCache.Get(userId.ToString());
-            if (storedToken != null && Convert.ToBase64String(storedToken) == clientToken) 
-                return userId;
+            return matchingUserId;
         }
-
+        
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return null;
+        
     }
 
     private string HashPassword(User user, string password)

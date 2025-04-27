@@ -5,15 +5,13 @@ namespace Crux.Models.Requests;
 
 public class UserRequest
 {
-    [Required]
     [MaxLength(255)]
     [JsonPropertyName("firstName")]
-    public required string FirstName { get; set; }
+    public string? FirstName { get; set; }
     
-    [Required]
     [MaxLength(255)]
     [JsonPropertyName("lastName")]
-    public required string LastName { get; set; }
+    public string? LastName { get; set; }
     
     [Required]
     [EmailAddress]

@@ -107,6 +107,36 @@ public class LessonsController (
             };
         }
     }
-    
-    // TODO: Implement routes for creating new questions
+
+    [HttpPost("create-question")]
+    public Response CreateQuestion([FromBody] QuestionRequest questionRequest)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+
+            var response = lessonService.AddQuestion(HttpContext, questionRequest);
+
+            return new ControllerResponse<QuestionResponse>
+            {
+                Success = true,
+                Body = response
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<QuestionResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
 }
