@@ -15,6 +15,10 @@ export const routes: Routes = [
               loadComponent: () =>
                 import('./components/main-content/main-content.component').then((m) => m.MainContentComponent),
             },
+            {
+                path: 'lessons',
+                component: LessonsPageComponent, 
+            },
         ],
     },
     {
@@ -31,10 +35,7 @@ export const routes: Routes = [
         path: 'profile',
         component: ProfileComponent,
     },
-    {
-        path: 'lessons',
-        component: LessonsPageComponent, 
-    },
+    
     {
         path: '**',
         redirectTo: '',
