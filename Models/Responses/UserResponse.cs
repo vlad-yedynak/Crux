@@ -7,7 +7,7 @@ public class UserResponse : Response
     [JsonPropertyName("firstName")]
     public string? FirstName { get; set; }
     
-    [JsonPropertyName("secondName")]
+    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
     
     [JsonPropertyName("email")]
