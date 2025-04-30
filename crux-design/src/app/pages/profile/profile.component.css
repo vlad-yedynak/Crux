@@ -1,0 +1,84 @@
+.profile-page {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 2rem;
+    background-color: var(--color-primary-light);
+    min-height: 90vh;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 400px;
+  }
+  
+  .avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .avatar img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-secondary-light);
+  }
+  
+  .profile-info h2, .progress-card h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--color-primary-dark);
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-secondary-dark);
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 10px;
+    background-color: var(--color-primary-light);
+  }
+  
+  .save-btn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .save-btn:hover {
+    background-color: #d34e1f;
+  }
+  
+  .progress-card p {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: var(--color-secondary-dark);
+  }
+  
+  .points {
+    font-size: 1.5rem;
+    color: var(--color-accent);
+    font-weight: bold;
+  }

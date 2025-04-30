@@ -33,30 +33,20 @@ export class LoginFormComponent {
   
   onSubmit() {
     if (this.loginForm.valid) {
-      console.log('Form submission attempt with:', this.loginForm.value);
       this.authService.loginUser(this.loginForm.value).subscribe({
-        next: (res: any) => {
-          console.log('Login response:', res);
-          const token = res?.token || res?.body?.token;
-          if (token) {
-            console.log('Authentication successful, token received');
-            localStorage.setItem('auth-token', token);
-            this.router.navigate(['/profile']);
-          } else {
-            console.warn(res.body.error);
-          }
+        next: () => {
+          console.log('Token after login:', localStorage.getItem('auth-token'));
+          this.router.navigate(['/profile']);
         },
-        error: (err: any) => {
+        error: (err) => {
           console.error('Login failed:', err);
-          console.log('Error details:', err.error || err.message);
         }
       });
     } else {
-      console.log('Form invalid, validation errors:');
       Object.keys(this.loginForm.controls).forEach(field => {
         const control = this.loginForm.get(field);
         if (control?.errors) {
-          console.log(`Field ${field} errors:`, control.errors);
+          console.log(`Validation errors in ${field}:`, control.errors);
         }
         control?.markAsTouched();
       });

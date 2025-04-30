@@ -55,6 +55,12 @@ app-navigation {
     cursor: pointer;
     user-select: none;
     color: var(--color-accent);
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.language-dropdown:hover {
+    background-color: var(--color-secondary-dark);
 }
 
 .selected-language {
@@ -142,5 +148,53 @@ app-navigation {
 
 .login-btn:active {
     transform: translateY(0);
+}
+
+/* User profile styles */
+.user-info {
+    position: relative;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    gap: 8px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--color-accent);
+    transition: background-color 0.3s ease;
+}
+
+.user-info:hover {
+    background-color: var(--color-secondary-dark);
+}
+
+.user-info.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--color-accent);
+}
+
+/* User dropdown specific styles */
+.user-dropdown-options {
+    right: 0;
+    left: auto;
+    min-width: 150px;
+    z-index: 1001;
+}
+
+.user-dropdown-options li {
+    justify-content: center;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.user-dropdown-options li:hover {
+    background-color: var(--color-primary-dark);
 }
 

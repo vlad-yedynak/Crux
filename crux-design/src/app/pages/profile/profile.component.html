@@ -1,1 +1,32 @@
-<p>profile works!</p>
+<div class="profile-page">
+    <!-- Блок профілю користувача -->
+    <div class="card profile-card" *ngIf="userInfo">
+      <div class="avatar">
+        <img src="profile_placeholder.jpg" alt="User Avatar">
+      </div>
+      <div class="profile-info">
+        <h2>Мій акаунт</h2>
+        <form>
+          <div class="form-group">
+            <label for="firstName">Ім'я</label>
+            <input type="text" id="firstName" [(ngModel)]="userInfo.firstName" name="firstName" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Прізвище</label>
+            <input type="text" id="lastName" [(ngModel)]="userInfo.lastName" name="lastName" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" [(ngModel)]="userInfo.email" name="email" />
+          </div>
+          <button type="button" class="save-btn">Зберегти</button>
+        </form>
+      </div>
+    </div>
+  
+    <!-- Блок прогресу -->
+    <div class="card progress-card">
+      <h2>Мій прогрес</h2>
+      <p>Кількість балів: <span class="points">100</span></p>
+    </div>
+  </div>

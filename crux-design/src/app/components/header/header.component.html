@@ -1,40 +1,57 @@
 <header class="main-header">
-    <div class="logo">
-      <h1>
-        <a routerLink="/">Goida</a>
-      </h1>
-    </div>
-    
-    <app-navigation></app-navigation>
+  <div class="logo">
+    <h1>
+      <a routerLink="/">Goida</a>
+    </h1>
+  </div>
+  
+  <app-navigation></app-navigation>
 
-    <div class="header-right">
-      <div class="language-dropdown" [class.open]="isOpen">
+  <div class="header-right">
+    <div class="language-dropdown" [class.open]="isOpen">
+      
+      <div class="selected-language" (click)="toggleDropdownLang()">{{ getLanguageLabel(selectedLanguage) }}
+        <svg
+          class="dropdown-arrow"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+        </svg>
         
-        <div class="selected-language" (click)="toggleDropdown()">{{ getLanguageLabel(selectedLanguage) }}
-          <svg
-            class="dropdown-arrow"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
-          </svg>
-          
-        </div>
-
-        <ul class="dropdown-options" *ngIf="isOpen" @dropdownAnimation>
-          <li (click)="selectLanguage('en')">
-            EN
-            <img src="/flags/en.svg" alt="EN" class="flag-icon" />
-          </li>
-          <li (click)="selectLanguage('ua')">
-            UA
-            <img src="/flags/ua.svg" alt="UA" class="flag-icon" />
-          </li>
-        </ul>
       </div>
 
-      <button class="login-btn" [routerLink]="'/auth'">Log in</button>
+      <ul class="dropdown-options" *ngIf="isOpen" @dropdownAnimation>
+        <li (click)="selectLanguage('en')">
+          EN
+          <img src="/flags/en.svg" alt="EN" class="flag-icon" />
+        </li>
+        <li (click)="selectLanguage('ua')">
+          UA
+          <img src="/flags/ua.svg" alt="UA" class="flag-icon" />
+        </li>
+      </ul>
     </div>
+
+    <ng-container *ngIf="user; else showLogin">
+      <div class="user-info" [class.open]="isUserDropdownOpen" (click)="toggleDropdownUser()">
+        <img src="profile_placeholder.jpg" alt="Avatar" class="avatar" />
+        <span>{{ user.firstName }} {{ user.lastName }}</span> 
+        <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+        </svg>
+
+        <ul class="dropdown-options user-dropdown-options" *ngIf="isUserDropdownOpen" @dropdownAnimation (click)="$event.stopPropagation()">
+          <li (click)="goToProfile()">Profile</li>
+          <li (click)="logout()">Log out</li>
+        </ul>
+      </div>
+    </ng-container>
+
+    <ng-template #showLogin>
+      <button class="login-btn" [routerLink]="'/auth'">Log in</button>
+    </ng-template>
+  </div>
 </header>
 
 

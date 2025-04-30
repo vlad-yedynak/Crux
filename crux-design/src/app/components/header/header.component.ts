@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { NavigationComponent } from '../navigation/navigation.component';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -9,8 +9,8 @@ import {
   transition,
   animate,
 } from '@angular/animations';
-import { RouterModule } from '@angular/router';
-import { Console } from 'console';
+import { RouterModule, Router } from '@angular/router';
+import { AuthServiceService, User} from '../../auth/services/auth-service.service';
 
 @Component({
   selector: 'app-header',
@@ -19,7 +19,7 @@ import { Console } from 'console';
     CommonModule,
     NgbDropdownModule,
     RouterModule,
-    NavigationComponent
+    NavigationComponent,
   ], 
   animations: [
     trigger('dropdownAnimation', [
@@ -63,15 +63,29 @@ import { Console } from 'console';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
-export class HeaderComponent{
+export class HeaderComponent implements OnInit{
   isOpen = false;
+  isUserDropdownOpen = false;
   selectedLanguage = 'en';
+  user: User | null = null;
 
+  constructor(private eRef: ElementRef, private authService: AuthServiceService, private router: Router) {}
 
-  constructor(private eRef: ElementRef) {}
+  ngOnInit(): void {
+    this.authService.fetchAndSetUser();
+    this.authService.getUser().subscribe(user => {
+      this.user = user;
+    });
+    
+  }
 
-  toggleDropdown() {
+  toggleDropdownLang() {
     this.isOpen = !this.isOpen;
+  }
+
+  toggleDropdownUser() {
+    this.isUserDropdownOpen = !this.isUserDropdownOpen;
+    this.isOpen = false; // Close language dropdown if user dropdown is toggled
   }
 
   selectLanguage(lang: string) {
@@ -83,10 +97,27 @@ export class HeaderComponent{
     return lang === 'en' ? 'EN' : 'UA';
   }
 
+  goToProfile() {
+    this.isUserDropdownOpen = false;
+    this.router.navigate(['/profile']);
+  }
+
+  logout() {
+    this.isUserDropdownOpen = false;
+    this.authService.logout();
+    this.router.navigate(['/auth']);
+  }
+
   @HostListener('document:click', ['$event'])
   clickOutside(event: Event) {
-    if (this.isOpen && !this.eRef.nativeElement.contains(event.target)) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
       this.isOpen = false;
+      this.isUserDropdownOpen = false;
+    } else if (this.isOpen && !(event.target as Element).closest('.language-dropdown')) {
+      this.isOpen = false;
+    } else if (this.isUserDropdownOpen && !(event.target as Element).closest('.user-info')) {
+      this.isUserDropdownOpen = false;
     }
   }
+
 }
