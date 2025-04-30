@@ -11,11 +11,108 @@ public class LessonService(
     IAuthenticationService authenticationService,
     ApplicationDbContext dbContext) : ILessonService
 {
+    public ICollection<LessonResponse> GetLessons(HttpContext context)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return [];
+        }
+        
+        var lessons = new List<LessonResponse>();
+        
+        dbContext.Lessons
+            .ToList()
+            .ForEach(lesson =>
+            {
+                lessons.Add(new LessonResponse
+                {
+                    Id = lesson.Id,
+                    Title = lesson.Title,
+                    BriefCards = GetLessonCardsBrief(context, lesson.Id)
+                });
+            } );
+        
+        return lessons;
+    }
+    
+    public ICollection<BriefCardResponse> GetLessonCardsBrief(HttpContext context, int lessonId)
+    {
+        var lesson = dbContext.Lessons
+            .Include(lesson => lesson.Cards)
+            .FirstOrDefault(lesson => lesson.Id == lessonId);
+
+        if (lesson == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return [];
+        }
+        
+        var cardsInfo = new List<BriefCardResponse>();
+        
+        lesson.Cards
+            .ToList()
+            .ForEach(card => cardsInfo.Add(GetCardBrief(card.Id)));
+        
+        return cardsInfo;
+    }
+    
+    public ICollection<FullCardResponse> GetLessonCardsFull(HttpContext context, int lessonId)
+    {
+        var lesson = dbContext.Lessons
+            .Include(lesson => lesson.Cards)
+            .FirstOrDefault(lesson => lesson.Id == lessonId);
+
+        if (lesson == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return [];
+        }
+        
+        var cardsInfo = new List<FullCardResponse>();
+        
+        lesson.Cards
+            .ToList()
+            .ForEach(card => cardsInfo.Add(GetCard(context, card.Id)));
+        
+        return cardsInfo;
+    }
+    
+    public FullCardResponse GetCard(HttpContext context, int id)
+    {
+        var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
+
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Card not found"
+            };
+        }
+
+        return new FullCardResponse
+        {
+            Success = true,
+            Id = card.Id,
+            LessonId = card.LessonId,
+            Title = card.Title,
+            CardType = card.CardType,
+            Description = card.Description,
+            Content = card is EducationalCard educationalCard ? educationalCard.Content : null,
+            Questions = card is TestCard ? GetQuestions(card.Id) : null,
+            Tasks = card is SandboxCard ? GetTasks(card.Id) : null
+        };
+    }
+    
     public LessonResponse AddLesson(HttpContext context, string title)
     {
         if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
             return new LessonResponse
             {
                 Success = false,
@@ -34,36 +131,13 @@ public class LessonService(
         };
     }
 
-    public ICollection<KeyValuePair<int, LessonResponse>> GetLessons(HttpContext context)
+    public FullCardResponse AddCard(HttpContext context, CardRequest cardRequest)
     {
         if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return [];
-        }
-        
-        var lessons = new List<KeyValuePair<int, LessonResponse>>();
-        
-        dbContext.Lessons.ToList()
-            .ForEach(lesson =>
-            {
-                lessons.Add(new KeyValuePair<int, LessonResponse>(lesson.Id, new LessonResponse
-                {
-                    Id = lesson.Id,
-                    Title = lesson.Title,
-                    Cards = GetLessonCards(lesson.Id)
-                }));
-            } );
-        
-        return lessons;
-    }
-
-    public CardResponse AddCard(HttpContext context, CardRequest cardRequest)
-    {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new CardResponse
+            
+            return new FullCardResponse
             {
                 Success = false,
                 Error = "Unauthorized access"
@@ -74,7 +148,8 @@ public class LessonService(
         if (lesson == null)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new CardResponse
+            
+            return new FullCardResponse
             {
                 Success = false,
                 Error = "Invalid lesson id"
@@ -84,35 +159,39 @@ public class LessonService(
         switch (cardRequest.CardType)
         {
             case CardType.Educational:
-                if (cardRequest.Content == null)
-                {
-                    return new CardResponse
-                    {
-                        Success = false,
-                        Error = "Educational card must include content"
-                    };
-                }
-
                 dbContext.EducationalCards.Add(new EducationalCard
                 {
                     Title = cardRequest.Title,
+                    CardType = cardRequest.CardType,
                     Description = cardRequest.Description,
-                    LessonId = cardRequest.LessonId,
-                    Content = cardRequest.Content
+                    LessonId = cardRequest.LessonId
                 });
+                
                 break;
             case CardType.Test:
                 dbContext.TestCards.Add(new TestCard
                 {
                     Title = cardRequest.Title,
+                    CardType = cardRequest.CardType,
                     Description = cardRequest.Description,
                     LessonId = cardRequest.LessonId
                 });
+                
+                break;
+            case CardType.Sandbox:
+                dbContext.SandboxCards.Add(new SandboxCard
+                {
+                    Title = cardRequest.Title,
+                    CardType = cardRequest.CardType,
+                    Description = cardRequest.Description,
+                    LessonId = cardRequest.LessonId
+                });
+                
                 break;
             default:
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 
-                return new CardResponse
+                return new FullCardResponse
                 {
                     Success = false,
                     Error = "Invalid card type"
@@ -121,61 +200,34 @@ public class LessonService(
         
         dbContext.SaveChanges();
         
-        return new CardResponse
+        return new FullCardResponse
         {
             Success = true
         };
     }
-
-    private CardResponse GetCardInfo(int id)
+    
+    private BriefCardResponse GetCardBrief(int id)
     {
         var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
 
         if (card == null)
         {
-            return new CardResponse
+            return new FullCardResponse
             {
                 Success = false,
                 Error = "Card not found"
             };
         }
-        
-        var content = card switch
-        {
-            EducationalCard educationalCard => educationalCard.Content,
-            _ => null
-        };
 
-        return new CardResponse
+        return new BriefCardResponse
         {
             Success = true,
             Id = card.Id,
             LessonId = card.LessonId,
             Title = card.Title,
             CardType = card.CardType,
-            Description = card.Description,
-            Content = content,
-            Questions = GetQuestions(card.Id)
+            Description = card.Description
         };
-    }
-
-    private List<KeyValuePair<int, CardResponse>> GetLessonCards(int lessonId)
-    {
-        var lesson = dbContext.Lessons.Include(lesson => lesson.Cards)
-            .FirstOrDefault(lesson => lesson.Id == lessonId);
-        var cardsInfo = new List<KeyValuePair<int, CardResponse>>();
-
-        if (lesson == null)
-        {
-            return [];
-        }
-        
-        lesson.Cards.ToList().ForEach(card =>
-        {
-            cardsInfo.Add(new KeyValuePair<int, CardResponse>(card.Id, GetCardInfo(card.Id)));
-        });
-        
-        return cardsInfo;
     }
 
     private List<QuestionResponse> GetQuestions(int cardId)
@@ -195,6 +247,25 @@ public class LessonService(
         });
         
         return questionsInfo;
+    }
+    
+    private List<TaskResponse> GetTasks(int cardId)
+    {
+        var card = dbContext.SandboxCards.Include(card => card.Tasks)
+            .FirstOrDefault(card => card.Id == cardId);
+        var tasksInfo = new List<TaskResponse>();
+
+        if (card == null)
+        {
+            return [];
+        }
+
+        card.Tasks.ToList().ForEach(task =>
+        {
+            tasksInfo.Add(GetTaskInfo(task.Id));
+        });
+        
+        return tasksInfo;
     }
 
     private QuestionResponse GetQuestionInfo(int id)
@@ -216,6 +287,25 @@ public class LessonService(
             Id = question.Id,
             QuestionText = question.QuestionText,
             Answers = GetAnswers(question.Id)
+        };
+    }
+    
+    private TaskResponse GetTaskInfo(int id)
+    {
+        var task = dbContext.Tasks.FirstOrDefault(task => task.Id == id);
+
+        if (task == null)
+        {
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Question not found"
+            };
+        }
+
+        return new TaskResponse
+        {
+            Success = true
         };
     }
 
@@ -261,6 +351,17 @@ public class LessonService(
 
     public QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest)
     {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
         var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
 
         if (testCard == null)
@@ -269,7 +370,7 @@ public class LessonService(
             return new QuestionResponse
             {
                 Success = false,
-                Error = "Invalid TestCardId"
+                Error = "Invalid Card Id"
             };
         }
 
@@ -309,5 +410,46 @@ public class LessonService(
                 })
                 .ToList()
         };
+    }
+    
+    public ContentResponse AddContent(HttpContext context, ContentRequest contentRequest)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new ContentResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
+        var educationalCard = dbContext.EducationalCards.FirstOrDefault(ec => ec.Id == contentRequest.CardId);
+
+        if (educationalCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            return new ContentResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+        
+        educationalCard.Content = contentRequest.Content;
+        dbContext.SaveChanges();
+
+        return new ContentResponse
+        {
+            Success = true,
+            CardId = educationalCard.Id
+        };
+    }
+
+    public TaskResponse AddTask(HttpContext context, TaskRequest taskRequest)
+    {
+        throw new NotImplementedException();
     }
 }

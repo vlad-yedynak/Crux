@@ -7,18 +7,13 @@ namespace Crux.Services;
 
 public interface IAuthenticationService
 {
-    [HttpPost]
     AuthenticationResponse SignIn(UserRequest request);
     
-    [HttpPost]
     AuthenticationResponse SignUp(UserRequest request);
     
-    [HttpGet]
     AuthenticationResponse SignOut(HttpContext context);
 
-    [HttpHead]
     int? GetUserIdFromContext(HttpContext context);
 
-    [HttpHead]
     bool CheckAuthentication(HttpContext context, UserRole? role = null);
 }

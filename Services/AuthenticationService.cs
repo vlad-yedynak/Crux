@@ -14,6 +14,33 @@ public class AuthenticationService(
 {
     public AuthenticationResponse SignUp(UserRequest request)
     {
+        if (request.FirstName == null)
+        {
+            return new AuthenticationResponse()
+            {
+                Success = false,
+                Error = "First name is required"
+            };
+        }
+        
+        if (request.LastName == null)
+        {
+            return new AuthenticationResponse()
+            {
+                Success = false,
+                Error = "Last name is required"
+            };
+        }
+        
+        if (request.FirstName == null)
+        {
+            return new AuthenticationResponse()
+            {
+                Success = false,
+                Error = "Email is required"
+            };
+        }
+        
         var user = new User
         {
             FirstName = request.FirstName,

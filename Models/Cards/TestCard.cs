@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Crux.Models.Cards;
 
 public class TestCard : Card

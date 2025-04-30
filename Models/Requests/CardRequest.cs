@@ -22,14 +22,4 @@ public class CardRequest
     [Required]
     [JsonPropertyName("cardType")]
     public CardType CardType { get; set; }
-    
-    [Required]
-    [MaxLength(1023)]
-    [JsonPropertyName("content")]
-    public string? Content { get; set; }
-    
-    [Required]
-    [MaxLength(255)]
-    [JsonPropertyName("question")]
-    public Question? Question { get; set; }
 }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Responses;
 
-public class CardResponse : Response
+public class BriefCardResponse : Response
 {
     [JsonPropertyName("id")]
     public int? Id { get; set; }
@@ -21,10 +21,4 @@ public class CardResponse : Response
     
     [JsonPropertyName("type")]
     public CardType? CardType { get; set; }
-    
-    [JsonPropertyName("content")]
-    public string? Content { get; set; }
-    
-    [JsonPropertyName("questions")]
-    public ICollection<QuestionResponse>? Questions { get; set; }
 }

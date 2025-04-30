@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Crux.Models;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
@@ -60,42 +59,10 @@ public class LessonsController (
             
             var response = lessonService.AddCard(HttpContext, cardRequest);
 
-            return new ControllerResponse<CardResponse>
+            return new ControllerResponse<FullCardResponse>
             {
                 Success = true,
                 Body = response
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ControllerResponse<LessonResponse>
-            {
-                Success = false,
-                Error = $"An error occured: {ex.Message}"
-            };
-        }
-    }
-
-    [HttpGet("get-lessons")]
-    public Response GetLessons()
-    {
-        try
-        {
-            if (!authenticationService.CheckAuthentication(HttpContext))
-            {
-                return new ControllerResponse<AuthenticationResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-            
-            var lessons = lessonService.GetLessons(HttpContext);
-
-            return new ControllerResponse<ICollection<KeyValuePair<int, LessonResponse>>>
-            {
-                Success = true,
-                Body = lessons
             };
         }
         catch (Exception ex)
@@ -133,6 +100,70 @@ public class LessonsController (
         catch (Exception ex)
         {
             return new ControllerResponse<QuestionResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
+    
+    [HttpGet("get-lessons")]
+    public Response GetLessons()
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var lessons = lessonService.GetLessons(HttpContext);
+
+            return new ControllerResponse<ICollection<LessonResponse>>
+            {
+                Success = true,
+                Body = lessons
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<LessonResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
+    
+    [HttpGet("get-card/{id:int}")]
+    public Response GetCard(int id)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var card = lessonService.GetCard(HttpContext, id);
+
+            return new ControllerResponse<FullCardResponse>
+            {
+                Success = true,
+                Body = card
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<LessonResponse>
             {
                 Success = false,
                 Error = $"An error occured: {ex.Message}"

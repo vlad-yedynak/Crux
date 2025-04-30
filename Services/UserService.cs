@@ -60,7 +60,8 @@ public class UserService(
         
         var users = new List<KeyValuePair<int, UserResponse>>();
         
-        dbContext.Users.Select(u => u.Id)
+        dbContext.Users
+            .Select(u => u.Id)
             .ToList()
             .ForEach(id =>
             {

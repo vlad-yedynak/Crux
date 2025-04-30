@@ -1,20 +1,23 @@
 using Crux.Models.Requests;
 using Crux.Models.Responses;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
 public interface ILessonService
 {
-    [HttpPost]
-    LessonResponse AddLesson(HttpContext context, string title);
-
-    [HttpPost]
-    CardResponse AddCard(HttpContext context, CardRequest cardRequest);
+    ICollection<LessonResponse> GetLessons(HttpContext context);
     
-    [HttpPost]
+    FullCardResponse GetCard(HttpContext context, int id);
+    
+    ICollection<FullCardResponse> GetLessonCardsFull(HttpContext context, int lessonId);
+    
+    ICollection<BriefCardResponse> GetLessonCardsBrief(HttpContext context, int lessonId);
+    
+    LessonResponse AddLesson(HttpContext context, string title);
+    
+    FullCardResponse AddCard(HttpContext context, CardRequest cardRequest);
+    
     QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest);
-
-    [HttpGet]
-    ICollection<KeyValuePair<int, LessonResponse>> GetLessons(HttpContext context);
+    
+    TaskResponse AddTask(HttpContext context, TaskRequest taskRequest);
 }
