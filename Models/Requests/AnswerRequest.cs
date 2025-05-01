@@ -14,6 +14,11 @@ public class AnswerRequest
     public required string AnswerText { get; set; }
     
     [Required]
+    [JsonPropertyName("score")]
+    [MaxLength(255)]
+    public required int Score { get; set; }
+    
+    [Required]
     [JsonPropertyName("isCorrect")]
     public bool IsCorrect { get; set; }
 }

@@ -393,6 +393,7 @@ public class LessonService(
             {
                 QuestionId = question.Id,
                 AnswerText = a.AnswerText,
+                Score = a.Score,
                 IsCorrect = a.IsCorrect
             })
         );
@@ -477,7 +478,7 @@ public class LessonService(
                 Error = "Invalid Card Id"
             };
         }
-
+        
         var task = new Models.Task
         {
             Name = taskRequest.Name,

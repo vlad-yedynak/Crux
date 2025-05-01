@@ -24,8 +24,6 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<SandboxCard> SandboxCards { get; set; }
     
     public DbSet<Models.Task> Tasks { get; set; }
-    
-    public DbSet<TaskData> TaskData { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -167,6 +165,10 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity
                 .Property(e => e.AnswerText)
                 .HasMaxLength(255)
+                .IsRequired();
+            
+            entity
+                .Property(e => e.Score)
                 .IsRequired();
 
             entity

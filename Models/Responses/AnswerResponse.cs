@@ -9,4 +9,7 @@ public class AnswerResponse : Response
     
     [JsonPropertyName("answerText")]
     public string? AnswerText { get; set; }
+    
+    [JsonPropertyName("score")]
+    public int? Score { get; set; }
 }

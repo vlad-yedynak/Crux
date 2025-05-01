@@ -6,7 +6,6 @@ namespace Crux.Models.Requests;
 
 public class QuestionRequest
 {
-    
     [JsonPropertyName("id")]
     public int? Id { get; set; }
     
