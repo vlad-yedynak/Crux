@@ -23,6 +23,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<ITestService, TestService>();
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
