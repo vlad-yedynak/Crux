@@ -13,7 +13,7 @@ public class LessonService(
 {
     public ICollection<LessonResponse> GetLessons(HttpContext context)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        if (!authenticationService.CheckAuthentication(context))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return [];
@@ -36,7 +36,7 @@ public class LessonService(
         return lessons;
     }
     
-    public ICollection<BriefCardResponse> GetLessonCardsBrief(HttpContext context, int lessonId)
+    private List<BriefCardResponse> GetLessonCardsBrief(HttpContext context, int lessonId)
     {
         var lesson = dbContext.Lessons
             .Include(lesson => lesson.Cards)
@@ -52,34 +52,59 @@ public class LessonService(
         
         lesson.Cards
             .ToList()
-            .ForEach(card => cardsInfo.Add(GetCardBrief(card.Id)));
+            .ForEach(card => cardsInfo.Add(GetCardBrief(context, card.Id)));
         
         return cardsInfo;
     }
     
-    public ICollection<FullCardResponse> GetLessonCardsFull(HttpContext context, int lessonId)
+    public BriefCardResponse GetCardBrief(HttpContext context, int id)
     {
-        var lesson = dbContext.Lessons
-            .Include(lesson => lesson.Cards)
-            .FirstOrDefault(lesson => lesson.Id == lessonId);
-
-        if (lesson == null)
+        if (!authenticationService.CheckAuthentication(context))
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return [];
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new BriefCardResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
         }
         
-        var cardsInfo = new List<FullCardResponse>();
-        
-        lesson.Cards
-            .ToList()
-            .ForEach(card => cardsInfo.Add(GetCard(context, card.Id)));
-        
-        return cardsInfo;
+        var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
+
+        if (card == null)
+        {
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Card not found"
+            };
+        }
+
+        return new BriefCardResponse
+        {
+            Success = true,
+            Id = card.Id,
+            LessonId = card.LessonId,
+            Title = card.Title,
+            CardType = card.CardType,
+            Description = card.Description
+        };
     }
     
-    public FullCardResponse GetCard(HttpContext context, int id)
+    public FullCardResponse GetCardFull(HttpContext context, int id)
     {
+        if (!authenticationService.CheckAuthentication(context))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
         var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
 
         if (card == null)
@@ -205,30 +230,6 @@ public class LessonService(
             Success = true
         };
     }
-    
-    private BriefCardResponse GetCardBrief(int id)
-    {
-        var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
-
-        if (card == null)
-        {
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Card not found"
-            };
-        }
-
-        return new BriefCardResponse
-        {
-            Success = true,
-            Id = card.Id,
-            LessonId = card.LessonId,
-            Title = card.Title,
-            CardType = card.CardType,
-            Description = card.Description
-        };
-    }
 
     private List<QuestionResponse> GetQuestions(int cardId)
     {
@@ -305,7 +306,11 @@ public class LessonService(
 
         return new TaskResponse
         {
-            Success = true
+            Success = true,
+            Id = task.Id,
+            Name = task.Name,
+            Description = task.Description,
+            Points = task.Points
         };
     }
 
@@ -345,7 +350,7 @@ public class LessonService(
         {
             Success = true,
             Id = answer.Id,
-            AnswerText = answer.AnswerText,
+            AnswerText = answer.AnswerText
         };
     }
 
@@ -405,7 +410,6 @@ public class LessonService(
                 {
                     Id = a.Id,
                     AnswerText = a.AnswerText,
-                    IsCorrect = a.IsCorrect,
                     Success = true
                 })
                 .ToList()
@@ -450,6 +454,62 @@ public class LessonService(
 
     public TaskResponse AddTask(HttpContext context, TaskRequest taskRequest)
     {
-        throw new NotImplementedException();
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
+        var sandboxCard = dbContext.SandboxCards.FirstOrDefault(sc => sc.Id == taskRequest.SandboxCardId);
+        
+        if (sandboxCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+
+        var task = new Models.Task
+        {
+            Name = taskRequest.Name,
+            Description = taskRequest.Description,
+            Points = taskRequest.Points,
+            SandboxCardId = taskRequest.SandboxCardId,
+        };
+        
+        foreach (var item in taskRequest.ExpectedData)
+        {
+            var taskData = new TaskData
+            {
+                TaskId = task.Id,
+                Value = item.Value,
+            };
+
+            if (taskData.IsSet)
+            {
+                task.ExpectedData.Add(taskData);
+            }
+        }
+        
+        dbContext.Tasks.Add(task);
+        dbContext.SaveChanges();
+
+        return new TaskResponse
+        {
+            Success = true,
+            Id = task.Id,
+            Name = task.Name,
+            Description = task.Description,
+            Points = task.Points
+        };
     }
 }

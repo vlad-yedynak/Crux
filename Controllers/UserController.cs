@@ -126,4 +126,68 @@ public class UserController (
             };
         }
     }
+    
+    [HttpPut("change-first-name")]
+    public Response ChangeFirstName([FromBody] string firstName)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = userService.ChangeFirstName(HttpContext, firstName);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<LessonResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
+    
+    [HttpPut("change-last-name")]
+    public Response ChangeLastName([FromBody] string lastName)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = userService.ChangeLastName(HttpContext, lastName);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<LessonResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
 }

@@ -12,9 +12,7 @@ public class Task
     
     public int Points { get; set; }
     
-    public ICollection<ExpectedTaskData> ExpectedData { get; set; } = new List<ExpectedTaskData>();
-
-    public ICollection<ActualTaskData> ActualData { get; set; } = new List<ActualTaskData>();
+    public ICollection<TaskData> ExpectedData { get; set; } = new List<TaskData>();
     
     public int SandboxCardId { get; set; }
     

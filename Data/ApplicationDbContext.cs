@@ -2,7 +2,6 @@ using Crux.Extensions;
 using Crux.Models;
 using Crux.Models.Cards;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Crux.Data;
 
@@ -195,12 +194,6 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
 
             entity
                 .HasMany(e => e.ExpectedData)
-                .WithOne(e => e.Task)
-                .HasForeignKey(e => e.TaskId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            entity
-                .HasMany(e => e.ActualData)
                 .WithOne(e => e.Task)
                 .HasForeignKey(e => e.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);

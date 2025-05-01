@@ -7,11 +7,9 @@ public interface ILessonService
 {
     ICollection<LessonResponse> GetLessons(HttpContext context);
     
-    FullCardResponse GetCard(HttpContext context, int id);
+    FullCardResponse GetCardFull(HttpContext context, int id);
     
-    ICollection<FullCardResponse> GetLessonCardsFull(HttpContext context, int lessonId);
-    
-    ICollection<BriefCardResponse> GetLessonCardsBrief(HttpContext context, int lessonId);
+    BriefCardResponse GetCardBrief(HttpContext context, int id);
     
     LessonResponse AddLesson(HttpContext context, string title);
     

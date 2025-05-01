@@ -107,6 +107,38 @@ public class LessonsController (
         }
     }
     
+    [HttpPost("create-task")]
+    public Response CreateTask([FromBody] TaskRequest taskRequest)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+
+            var response = lessonService.AddTask(HttpContext, taskRequest);
+
+            return new ControllerResponse<TaskResponse>
+            {
+                Success = true,
+                Body = response
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<TaskResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
+    
     [HttpGet("get-lessons")]
     public Response GetLessons()
     {
@@ -153,7 +185,7 @@ public class LessonsController (
                 };
             }
             
-            var card = lessonService.GetCard(HttpContext, id);
+            var card = lessonService.GetCardFull(HttpContext, id);
 
             return new ControllerResponse<FullCardResponse>
             {
