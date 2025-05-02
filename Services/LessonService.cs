@@ -1,6 +1,8 @@
 using Crux.Data;
-using Crux.Models;
+using Crux.Extensions;
 using Crux.Models.Cards;
+using Crux.Models.Entities;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +15,6 @@ public class LessonService(
 {
     public ICollection<LessonResponse> GetLessons(HttpContext context)
     {
-        if (!authenticationService.CheckAuthentication(context))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return [];
-        }
-        
         var lessons = new List<LessonResponse>();
         
         dbContext.Lessons
@@ -59,17 +55,6 @@ public class LessonService(
     
     public BriefCardResponse GetCardBrief(HttpContext context, int id)
     {
-        if (!authenticationService.CheckAuthentication(context))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new BriefCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
 
         if (card == null)
@@ -87,7 +72,7 @@ public class LessonService(
             Id = card.Id,
             LessonId = card.LessonId,
             Title = card.Title,
-            CardType = card.CardType,
+            CardType = card.CardType.ToString(),
             Description = card.Description
         };
     }
@@ -117,6 +102,8 @@ public class LessonService(
                 Error = "Card not found"
             };
         }
+        
+        var userId = authenticationService.GetUserIdFromContext(context);
 
         return new FullCardResponse
         {
@@ -124,11 +111,12 @@ public class LessonService(
             Id = card.Id,
             LessonId = card.LessonId,
             Title = card.Title,
-            CardType = card.CardType,
+            CardType = card.CardType.ToString(),
             Description = card.Description,
             Content = card is EducationalCard educationalCard ? educationalCard.Content : null,
-            Questions = card is TestCard ? GetQuestions(card.Id) : null,
-            Tasks = card is SandboxCard ? GetTasks(card.Id) : null
+            Questions = card is TestCard ? GetQuestions(userId, card.Id) : null,
+            Tasks = card is SandboxCard ? GetTasks(userId, card.Id) : null,
+            SandboxType = card is SandboxCard sandboxCard ? sandboxCard.Type.ToString() : null
         };
     }
     
@@ -181,13 +169,13 @@ public class LessonService(
             };
         }
         
-        switch (cardRequest.CardType)
+        switch (cardRequest.CardType.ToCardType())
         {
             case CardType.Educational:
                 dbContext.EducationalCards.Add(new EducationalCard
                 {
                     Title = cardRequest.Title,
-                    CardType = cardRequest.CardType,
+                    CardType = cardRequest.CardType.ToCardType(),
                     Description = cardRequest.Description,
                     LessonId = cardRequest.LessonId
                 });
@@ -197,7 +185,7 @@ public class LessonService(
                 dbContext.TestCards.Add(new TestCard
                 {
                     Title = cardRequest.Title,
-                    CardType = cardRequest.CardType,
+                    CardType = cardRequest.CardType.ToCardType(),
                     Description = cardRequest.Description,
                     LessonId = cardRequest.LessonId
                 });
@@ -207,7 +195,7 @@ public class LessonService(
                 dbContext.SandboxCards.Add(new SandboxCard
                 {
                     Title = cardRequest.Title,
-                    CardType = cardRequest.CardType,
+                    CardType = cardRequest.CardType.ToCardType(),
                     Description = cardRequest.Description,
                     LessonId = cardRequest.LessonId
                 });
@@ -231,7 +219,7 @@ public class LessonService(
         };
     }
 
-    private List<QuestionResponse> GetQuestions(int cardId)
+    private List<QuestionResponse> GetQuestions(int? userId, int cardId)
     {
         var card = dbContext.TestCards.Include(card => card.Questions)
             .FirstOrDefault(card => card.Id == cardId);
@@ -244,13 +232,13 @@ public class LessonService(
 
         card.Questions.ToList().ForEach(question =>
         {
-            questionsInfo.Add(GetQuestionInfo(question.Id));
+            questionsInfo.Add(GetQuestionInfo(userId, question.Id));
         });
         
         return questionsInfo;
     }
     
-    private List<TaskResponse> GetTasks(int cardId)
+    private List<TaskResponse> GetTasks(int? userId, int cardId)
     {
         var card = dbContext.SandboxCards.Include(card => card.Tasks)
             .FirstOrDefault(card => card.Id == cardId);
@@ -263,13 +251,13 @@ public class LessonService(
 
         card.Tasks.ToList().ForEach(task =>
         {
-            tasksInfo.Add(GetTaskInfo(task.Id));
+            tasksInfo.Add(GetTaskInfo(userId, task.Id));
         });
         
         return tasksInfo;
     }
 
-    private QuestionResponse GetQuestionInfo(int id)
+    private QuestionResponse GetQuestionInfo(int? userId, int id)
     {
         var question = dbContext.Questions.FirstOrDefault(question => question.Id == id);
 
@@ -281,17 +269,21 @@ public class LessonService(
                 Error = "Question not found"
             };
         }
+        
+        var isCompleted = dbContext.UserQuestionProgresses.Any(progress => progress.UserId == userId 
+                                                                           && progress.QuestionId == id);
 
         return new QuestionResponse
         {
             Success = true,
             Id = question.Id,
             QuestionText = question.QuestionText,
-            Answers = GetAnswers(question.Id)
+            Answers = GetAnswers(question.Id),
+            IsCompleted = isCompleted
         };
     }
     
-    private TaskResponse GetTaskInfo(int id)
+    private TaskResponse GetTaskInfo(int? userId, int id)
     {
         var task = dbContext.Tasks.FirstOrDefault(task => task.Id == id);
 
@@ -303,6 +295,9 @@ public class LessonService(
                 Error = "Question not found"
             };
         }
+        
+        var isCompleted = dbContext.UserTaskProgresses.Any(progress => progress.UserId == userId
+                                                                       && progress.TaskId == id);
 
         return new TaskResponse
         {
@@ -310,7 +305,8 @@ public class LessonService(
             Id = task.Id,
             Name = task.Name,
             Description = task.Description,
-            Points = task.Points
+            Points = task.Points,
+            IsCompleted = isCompleted
         };
     }
 
@@ -479,7 +475,7 @@ public class LessonService(
             };
         }
         
-        var task = new Models.Task
+        var task = new Models.Entities.Task
         {
             Name = taskRequest.Name,
             Description = taskRequest.Description,

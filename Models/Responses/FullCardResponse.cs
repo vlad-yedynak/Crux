@@ -12,4 +12,7 @@ public class FullCardResponse : BriefCardResponse
     
     [JsonPropertyName("tasks")]
     public ICollection<TaskResponse>? Tasks { get; set; }
+    
+    [JsonPropertyName("sandboxType")]
+    public string? SandboxType { get; set; }
 }

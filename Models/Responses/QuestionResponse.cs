@@ -12,4 +12,7 @@ public class QuestionResponse : Response
     
     [JsonPropertyName("answers")]
     public ICollection<AnswerResponse>? Answers { get; set; }
+    
+    [JsonPropertyName("isCompleted")]
+    public bool? IsCompleted { get; set; }
 }

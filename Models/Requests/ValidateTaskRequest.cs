@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.Entities;
 
 namespace Crux.Models.Requests;
 

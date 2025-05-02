@@ -1,7 +1,6 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 

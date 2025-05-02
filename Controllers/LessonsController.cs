@@ -1,4 +1,4 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Crux.Services;
@@ -144,15 +144,6 @@ public class LessonsController (
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
-            {
-                return new ControllerResponse<AuthenticationResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-            
             var lessons = lessonService.GetLessons(HttpContext);
 
             return new ControllerResponse<ICollection<LessonResponse>>

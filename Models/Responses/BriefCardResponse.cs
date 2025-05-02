@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.EntityTypes;
 
 namespace Crux.Models.Responses;
 
@@ -20,5 +21,5 @@ public class BriefCardResponse : Response
     public int? LessonId { get; set; }
     
     [JsonPropertyName("type")]
-    public CardType? CardType { get; set; }
+    public string? CardType { get; set; }
 }

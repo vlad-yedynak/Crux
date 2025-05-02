@@ -1,6 +1,7 @@
 using Crux.Extensions;
-using Crux.Models;
 using Crux.Models.Cards;
+using Crux.Models.EntityTypes;
+using Crux.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Data;
@@ -23,7 +24,11 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     
     public DbSet<SandboxCard> SandboxCards { get; set; }
     
-    public DbSet<Models.Task> Tasks { get; set; }
+    public DbSet<Models.Entities.Task> Tasks { get; set; }
+    
+    public DbSet<UserTaskProgress> UserTaskProgresses { get; set; }
+    
+    public DbSet<UserQuestionProgress> UserQuestionProgresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +105,11 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .Property(e => e.Description)
                 .HasMaxLength(255)
                 .IsRequired();
+            
+            entity
+                .Property(e => e.CardType)
+                .HasConversion(e => e.ToString(), e => e.ToCardType())
+                .IsRequired();
 
             entity
                 .HasDiscriminator<CardType>("CardType")
@@ -128,10 +138,13 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<SandboxCard>(entity =>
         {
             entity
-                .HasMany(e => e.Tasks)
-                .WithOne(e => e.SandboxCard)
-                .HasForeignKey(e => e.SandboxCardId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .Property(e => e.Type)
+                .IsRequired();
+
+            entity
+                .Property(e => e.Type)
+                .HasConversion(e => e.ToString(), e => e.ToSandboxCardType())
+                .IsRequired();
         });
         
         modelBuilder.Entity<Question>(entity =>
@@ -176,7 +189,7 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .IsRequired();
         });
 
-        modelBuilder.Entity<Models.Task>(entity =>
+        modelBuilder.Entity<Models.Entities.Task>(entity =>
         {
             entity.HasKey(e => e.Id);
             
@@ -214,6 +227,28 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity.Property(e => e.ValueString);
             
             entity.Property(e => e.ValueBool);
+        });
+
+        modelBuilder.Entity<UserTaskProgress>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.TaskId });
+            
+            entity
+                .HasOne<User>()
+                .WithMany(e => e.CompletedTasks)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<UserQuestionProgress>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.QuestionId });
+            
+            entity
+                .HasOne<User>()
+                .WithMany(e => e.CompletedQuestions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

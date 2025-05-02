@@ -7,7 +7,7 @@ public class ContentRequest
 {
     [Required]
     [JsonPropertyName("cardId")]
-    public int CardId { get; set; }
+    public required int CardId { get; set; }
     
     [Required]
     [MaxLength(65535)]

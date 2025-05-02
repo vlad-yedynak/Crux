@@ -1,4 +1,4 @@
-namespace Crux.Models;
+namespace Crux.Models.Entities;
 
 public class Answer
 {

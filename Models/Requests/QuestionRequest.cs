@@ -11,7 +11,7 @@ public class QuestionRequest
     
     [Required]
     [JsonPropertyName("testCardId")]
-    public int TestCardId { get; set; }
+    public required int TestCardId { get; set; }
 
     [Required]
     [JsonPropertyName("questionText")]
@@ -20,5 +20,5 @@ public class QuestionRequest
     
     [Required]
     [JsonPropertyName("answers")]
-    public ICollection<AnswerRequest> Answers { get; set; } = new List<AnswerRequest>();
+    public required ICollection<AnswerRequest> Answers { get; set; } = new List<AnswerRequest>();
 }

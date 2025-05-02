@@ -1,6 +1,6 @@
 using Crux.Data;
-using Crux.Models;
 using Crux.Models.Responses;
+using Crux.Models.EntityTypes;
 
 namespace Crux.Services;
 

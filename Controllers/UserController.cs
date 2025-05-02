@@ -1,4 +1,4 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 using Crux.Services;
 using Crux.Models.Requests;
 using Crux.Models.Responses;

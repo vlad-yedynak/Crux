@@ -1,5 +1,5 @@
 using Crux.Data;
-using Crux.Models;
+using Crux.Models.Entities;
 using Crux.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;

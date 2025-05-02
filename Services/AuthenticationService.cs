@@ -1,5 +1,6 @@
 using Crux.Data;
-using Crux.Models;
+using Crux.Models.Entities;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.AspNetCore.Identity;

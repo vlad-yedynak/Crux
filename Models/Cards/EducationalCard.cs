@@ -1,3 +1,5 @@
+using Crux.Models.Entities;
+
 namespace Crux.Models.Cards;
 
 public class EducationalCard : Card

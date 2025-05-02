@@ -1,6 +1,6 @@
 using Crux.Models.Cards;
 
-namespace Crux.Models;
+namespace Crux.Models.Entities;
 
 public class Question
 {

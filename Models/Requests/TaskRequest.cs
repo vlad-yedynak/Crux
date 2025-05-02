@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.Entities;
 
 namespace Crux.Models.Requests;
 
@@ -20,11 +21,11 @@ public class TaskRequest
     
     [Required]
     [JsonPropertyName("points")]
-    public int Points { get; set; }
+    public required int Points { get; set; }
     
     [Required]
     [JsonPropertyName("sandboxCardId")]
-    public int SandboxCardId { get; set; }
+    public required int SandboxCardId { get; set; }
     
     [Required]
     [JsonPropertyName("expectedData")]

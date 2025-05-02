@@ -15,4 +15,7 @@ public class TaskResponse : Response
     
     [JsonPropertyName("points")]
     public int? Points { get; set; }
+    
+    [JsonPropertyName("isCompleted")]
+    public bool? IsCompleted { get; set; }
 }

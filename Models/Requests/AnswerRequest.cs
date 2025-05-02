@@ -20,5 +20,5 @@ public class AnswerRequest
     
     [Required]
     [JsonPropertyName("isCorrect")]
-    public bool IsCorrect { get; set; }
+    public required bool IsCorrect { get; set; }
 }

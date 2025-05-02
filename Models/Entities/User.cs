@@ -1,4 +1,6 @@
-namespace Crux.Models;
+using Crux.Models.EntityTypes;
+
+namespace Crux.Models.Entities;
 
 public class User
 {
@@ -15,4 +17,8 @@ public class User
     public required int ScorePoints { get; set; }
     
     public required UserRole Role { get; set; }
+    
+    public ICollection<UserTaskProgress> CompletedTasks { get; set; } = new List<UserTaskProgress>();
+    
+    public ICollection<UserQuestionProgress> CompletedQuestions { get; set; } = new List<UserQuestionProgress>();
 }
