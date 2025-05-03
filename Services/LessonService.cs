@@ -346,6 +346,7 @@ public class LessonService(
         {
             Success = true,
             Id = answer.Id,
+            Score = answer.Score,
             AnswerText = answer.AnswerText
         };
     }
