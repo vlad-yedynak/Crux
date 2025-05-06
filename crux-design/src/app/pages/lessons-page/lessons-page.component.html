@@ -1,139 +1,47 @@
-
 <div class="main-content">
     <div class="circle circle-left"></div>
     <div class="circle circle-right"></div>
     <h1 class="page-title">Lessons</h1>
     
-    <!-- Category 1 -->
-    <div class="category-container" data-category="1">
-        <h2 class="category-title">c1</h2>
-        <div class="scroll-container">
-            <button class="scroll-arrow scroll-left" (click)="scrollLessons($event, 'left')">
-                <span class="arrow-icon">&#10094;</span>
-            </button>
-            <div class="lesson-container">
-                <div class="lesson-card">
-                    <div class="lesson-title">Intro to CG</div>
-                    <div class="lesson-description">Computer Graphics is the art and science of creating visual content using computers. It combines mathematical algorithms, artistic principles, and programming to render images, animations, and interactive visuals that are essential in gaming, film, design, and scientific visualization.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Basic Concepts</div>
-                    <div class="lesson-description">Learn about pixels, vectors, coordinate systems, and color models that form the foundation of computer graphics.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Rendering Techniques</div>
-                    <div class="lesson-description">Explore different methods for creating images from 3D models, including rasterization and ray tracing.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Shading Models</div>
-                    <div class="lesson-description">Understanding how light interacts with surfaces and how to simulate realistic lighting in computer graphics.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Color Theory</div>
-                    <div class="lesson-description">Explore the principles of color mixing, harmony, and perception that inform effective visual design in computer graphics.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Transformations</div>
-                    <div class="lesson-description">Learn about translation, rotation, scaling, and other geometric transformations essential for manipulating objects in 3D space.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Perspective</div>
-                    <div class="lesson-description">Understanding how to simulate depth and spatial relationships through perspective projection techniques.</div>
-                </div>
-            </div>
-            <button class="scroll-arrow scroll-right" (click)="scrollLessons($event, 'right')">
-                <span class="arrow-icon">&#10095;</span>
-            </button>
-        </div>
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-state">
+        <p>Loading lessons...</p>
     </div>
     
-    <!-- Category 2 -->
-    <div class="category-container" data-category="2">
-        <h2 class="category-title">c2</h2>
-        <div class="scroll-container">
-            <button class="scroll-arrow scroll-left" (click)="scrollLessons($event, 'left')">
-                <span class="arrow-icon">&#10094;</span>
-            </button>
-            <div class="lesson-container">
-                <div class="lesson-card">
-                    <div class="lesson-title">3D Modeling</div>
-                    <div class="lesson-description">Learn techniques for creating three-dimensional digital objects and environments.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Animation Principles</div>
-                    <div class="lesson-description">Discover the fundamentals of creating movement and bringing graphics to life.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Texturing</div>
-                    <div class="lesson-description">Apply detailed surface properties to 3D models to enhance realism and visual appeal.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Rigging</div>
-                    <div class="lesson-description">Set up skeletal structures and controls for animating characters and complex objects with realistic movement.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Character Design</div>
-                    <div class="lesson-description">Principles and techniques for designing appealing and functional characters for games and animation.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Environment Design</div>
-                    <div class="lesson-description">Create immersive 3D worlds with attention to composition, lighting, and atmospheric effects.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Motion Capture</div>
-                    <div class="lesson-description">Use technology to record real-world movements and apply them to digital characters for natural animation.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Digital Sculpting</div>
-                    <div class="lesson-description">Master organic modeling techniques that mimic traditional clay sculpting in a digital environment.</div>
-                </div>
-            </div>
-            <button class="scroll-arrow scroll-right" (click)="scrollLessons($event, 'right')">
-                <span class="arrow-icon">&#10095;</span>
-            </button>
-        </div>
+    <!-- Error state -->
+    <div *ngIf="!isLoading && hasError" class="error-state">
+        <p>{{ errorMessage }}</p>
+        <button (click)="fetchLessons()" class="retry-button">Retry</button>
     </div>
     
-    <!-- Category 3 -->
-    <div class="category-container" data-category="3">
-        <h2 class="category-title">c3</h2>
-        <div class="scroll-container">
-            <button class="scroll-arrow scroll-left" (click)="scrollLessons($event, 'left')">
-                <span class="arrow-icon">&#10094;</span>
-            </button>
-            <div class="lesson-container">
-                <div class="lesson-card">
-                    <div class="lesson-title">Real-time Graphics</div>
-                    <div class="lesson-description">Techniques for rendering graphics at interactive frame rates for games and simulations.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">GPU Programming</div>
-                    <div class="lesson-description">Harness the power of graphics processing units to accelerate rendering and computations.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Advanced Effects</div>
-                    <div class="lesson-description">Create sophisticated visual effects like shadows, reflections, and particle systems.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">VR/AR Graphics</div>
-                    <div class="lesson-description">Specialized techniques for creating immersive virtual and augmented reality experiences.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Procedural Generation</div>
-                    <div class="lesson-description">Algorithmically create complex models, textures, and environments without manual modeling.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Global Illumination</div>
-                    <div class="lesson-description">Advanced lighting techniques that simulate how light bounces between surfaces for realistic lighting.</div>
-                </div>
-                <div class="lesson-card">
-                    <div class="lesson-title">Volumetric Rendering</div>
-                    <div class="lesson-description">Render atmospheric effects like fog, clouds, and fire that have volume rather than just surface properties.</div>
+    <!-- Dynamic categories from API response -->
+    <div *ngIf="!isLoading && !hasError">
+        <div *ngFor="let lesson of lessons" class="category-container" [attr.data-category]="lesson.id">
+            <div class="category-header">
+                <h2 class="category-title">{{ lesson.title }}</h2>
+                <div class="category-controls">
+                    <button class="control-btn scroll-btn" (click)="scrollLessons($event, 'left')">
+                        <span class="arrow-icon">&#10094;</span>
+                    </button>
+                    <button class="control-btn scroll-btn" (click)="scrollLessons($event, 'right')">
+                        <span class="arrow-icon">&#10095;</span>
+                    </button>
+                    <button class="control-btn view-all-btn">View all</button>
                 </div>
             </div>
-            <button class="scroll-arrow scroll-right" (click)="scrollLessons($event, 'right')">
-                <span class="arrow-icon">&#10095;</span>
-            </button>
+            <div class="scroll-container">
+                <div class="lesson-container">
+                    <div *ngFor="let card of lesson.cards" class="lesson-card" [attr.data-id]="card.id" [attr.data-type]="card.type">
+                        <div class="lesson-title">{{ card.title }}</div>
+                        <div class="lesson-description">{{ card.description }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- No lessons message -->
+        <div *ngIf="lessons.length === 0" class="no-data">
+            <p>No lessons available at the moment.</p>
         </div>
     </div>
 </div>

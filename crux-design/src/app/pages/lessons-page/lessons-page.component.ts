@@ -1,7 +1,28 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../components/header/header.component';
-import { NavigationComponent } from '../../components/navigation/navigation.component';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+
+// Data models for API response
+interface Card {
+  id: number;
+  title: string;
+  description: string;
+  lessonId: number;
+  type: number;
+}
+
+interface Lesson {
+  id: number;
+  title: string;
+  cards: Card[];
+}
+
+interface LessonsResponse {
+  body: Lesson[];
+  success: boolean;
+  error: string;
+}
 
 @Component({
   selector: 'app-lessons-page',
@@ -9,18 +30,54 @@ import { NavigationComponent } from '../../components/navigation/navigation.comp
   imports: [
     CommonModule,
     HeaderComponent,
-    NavigationComponent
+    HttpClientModule
   ],
   templateUrl: './lessons-page.component.html',
   styleUrl: './lessons-page.component.css'
 })
-export class LessonsPageComponent {
+export class LessonsPageComponent implements OnInit {
+  lessons: Lesson[] = [];
+  isLoading = true;
+  hasError = false;
+  errorMessage = '';
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchLessons();
+  }
+
+  fetchLessons(): void {
+    this.http.get<LessonsResponse>('http://localhost:8080/lessons/get-lessons').subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.lessons = response.body;
+        } else {
+          this.hasError = true;
+          this.errorMessage = response.error || 'Failed to load lessons';
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching lessons:', error);
+        this.hasError = true;
+        this.errorMessage = 'Failed to connect to the server';
+        this.isLoading = false;
+      }
+    });
+  }
+
   /**
    * Scroll the lesson container horizontally
    */
   scrollLessons(event: MouseEvent, direction: 'left' | 'right'): void {
     const button = event.currentTarget as HTMLButtonElement;
-    const scrollContainer = button.closest('.scroll-container');
+    // First find the parent category container
+    const categoryContainer = button.closest('.category-container');
+    if (!categoryContainer) return;
+    
+    // Then find the scroll container within this category
+    const scrollContainer = categoryContainer.querySelector('.scroll-container');
     if (!scrollContainer) return;
     
     const lessonContainer = scrollContainer.querySelector('.lesson-container') as HTMLElement;
