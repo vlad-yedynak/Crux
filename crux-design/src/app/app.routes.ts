@@ -19,6 +19,10 @@ export const routes: Routes = [
                 path: 'lessons',
                 component: LessonsPageComponent, 
             },
+            {
+                path: 'profile',
+                component: ProfileComponent,
+            },
         ],
     },
     {
@@ -31,11 +35,6 @@ export const routes: Routes = [
             },
         ],
     },
-    {
-        path: 'profile',
-        component: ProfileComponent,
-    },
-    
     {
         path: '**',
         redirectTo: '',

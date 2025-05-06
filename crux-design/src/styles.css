@@ -18,7 +18,7 @@
 
 main {
     /* padding: 40px 20px; */
-    height: calc(100vh - 92px); /* Додає повну висоту екрану */
+    height: calc(100vh - 50px); /* Додає повну висоту екрану */
     box-sizing: border-box; /* Щоб padding не додавався зверху до vh */
     background-color: var(--color-primary-light);
 }

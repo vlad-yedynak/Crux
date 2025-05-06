@@ -1,32 +1,118 @@
 <div class="profile-page">
-    <!-- Блок профілю користувача -->
-    <div class="card profile-card" *ngIf="userInfo">
-      <div class="avatar">
-        <img src="profile_placeholder.jpg" alt="User Avatar">
-      </div>
-      <div class="profile-info">
-        <h2>Мій акаунт</h2>
-        <form>
-          <div class="form-group">
-            <label for="firstName">Ім'я</label>
-            <input type="text" id="firstName" [(ngModel)]="userInfo.firstName" name="firstName" />
+  <!-- Блок профілю користувача -->
+  <div class="navigation-profile">
+    <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav flex-column">
+      <li [ngbNavItem]="'info'">
+        <a ngbNavLink>General Info</a>
+      </li>
+      <!-- Вкладку Scores видалено -->
+      <li [ngbNavItem]="'settings'">
+        <a ngbNavLink>Settings</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="content-area">
+    <div *ngIf="activeTab === 'info'">
+      <div class="info-blocks-row">
+        <!-- Лівий блок: Інформація про користувача -->
+        <div class="account-info user-info">
+          <div class="avatar-wrapper">
+            <img src="profile_placeholder.jpg" alt="User Avatar" class="avatar-image">
           </div>
-          <div class="form-group">
-            <label for="lastName">Прізвище</label>
-            <input type="text" id="lastName" [(ngModel)]="userInfo.lastName" name="lastName" />
+          <h2>Account Information</h2>
+          <div class="info-row first-row">
+            <span class="label">First Name:</span>
+            <span class="value">{{ userInfo?.firstName }}</span>
           </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" [(ngModel)]="userInfo.email" name="email" />
+          <div class="info-row">
+            <span class="label">Last Name:</span>
+            <span class="value">{{ userInfo?.lastName }}</span>
           </div>
-          <button type="button" class="save-btn">Зберегти</button>
-        </form>
+          <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ userInfo?.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Role:</span>
+            <span class="value">{{ userInfo?.userRole }}</span>
+          </div>
+        </div>
+        <div class="account-info points-info">
+          <h2>Points Details</h2>
+          <div class="topic-points-container">
+            <div class="topic-row">
+              <div class="topic-name">C1</div>
+              <div class="topic-bar-container">
+                <div class="topic-bar" style="width: 85%;"></div>
+              </div>
+              <div class="topic-value">85</div>
+            </div>
+            <div class="topic-row">
+              <div class="topic-name">C2</div>
+              <div class="topic-bar-container">
+                <div class="topic-bar" style="width: 70%;"></div>
+              </div>
+              <div class="topic-value">70</div>
+            </div>
+            <div class="topic-row">
+              <div class="topic-name">C3</div>
+              <div class="topic-bar-container">
+                <div class="topic-bar" style="width: 92%;"></div>
+              </div>
+              <div class="topic-value">92</div>
+            </div>
+            <div class="topic-row">
+              <div class="topic-name">C4</div>
+              <div class="topic-bar-container">
+                <div class="topic-bar" style="width: 63%;"></div>
+              </div>
+              <div class="topic-value">63</div>
+            </div>
+            <div class="topic-row">
+              <div class="topic-name">C5</div>
+              <div class="topic-bar-container">
+                <div class="topic-bar" style="width: 45%;"></div>
+              </div>
+              <div class="topic-value">45</div>
+            </div>
+            <div class="info-row total-points">
+              <span class="label">Total Points:</span>
+              <span class="value">{{ userInfo?.scorePoints }}</span>
+            </div>
+            <div class="topic-bar-container total-points-bar">
+              <div class="topic-bar" style="width: 75%;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  
-    <!-- Блок прогресу -->
-    <div class="card progress-card">
-      <h2>Мій прогрес</h2>
-      <p>Кількість балів: <span class="points">100</span></p>
+    <div *ngIf="activeTab === 'settings'">
+      <div class="settings-block">
+          <div class="account-info user-info">
+              <div class="avatar-wrapper">
+                  <img src="profile_placeholder.jpg" alt="User Avatar" class="avatar-image">
+              </div>
+              <h2>Edit Account Information</h2>
+              <div class="info-row first-row">
+                  <span class="label">First Name:</span>
+                  <input type="text" [(ngModel)]="editableFirstName" [value]="userInfo?.firstName" class="input-field">
+              </div>
+              <div class="info-row">
+                  <span class="label">Last Name:</span>
+                  <input type="text" [(ngModel)]="editableLastName" [value]="userInfo?.lastName" class="input-field">
+              </div>
+              <div class="info-row">
+                  <span class="label">Email:</span>
+                  <input type="email" [value]="userInfo?.email" class="input-field" disabled>
+              </div>
+              <div class="info-row">
+                  <span class="label">Role:</span>
+                  <input type="text" [value]="userInfo?.userRole" class="input-field" disabled>
+              </div>
+              <button class="save-button" (click)="saveSettings()">Save</button>
+          </div>
+      </div>
     </div>
   </div>
+</div>

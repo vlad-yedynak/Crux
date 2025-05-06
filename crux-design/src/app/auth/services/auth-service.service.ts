@@ -8,6 +8,8 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  scorePoints: string;
+  userRole: string;
   avatarUrl?: string;
 }
 
@@ -81,5 +83,25 @@ export class AuthServiceService {
       localStorage.removeItem('auth-token');
     }
     this.userSubject.next(null);
+  }
+
+  changeFirstName(newFirstName: string) {
+    const token = localStorage.getItem('auth-token'); // Отримуємо токен із localStorage
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  
+    return this.http.put(this.baseUrl + '/change-first-name', JSON.stringify(newFirstName), { headers });
+  }
+  
+  changeLastName(newLastName: string) {
+    const token = localStorage.getItem('auth-token'); 
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  
+    return this.http.put(this.baseUrl + '/change-last-name', JSON.stringify(newLastName), { headers });
   }
 }
