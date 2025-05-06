@@ -4,6 +4,8 @@ using Crux.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
 using MySql.EntityFrameworkCore.Extensions;
+using Microsoft.OpenApi.Models;
+
 
 Env.Load();
 
@@ -24,6 +26,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { 
+        Title = "Crux API", 
+        Version = "v1",
+        Description = "API for the Crux application"
+    });
+});
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
@@ -44,5 +56,12 @@ app.UseAuthentication();
 app.MapControllers();
 
 app.MapGet("/", () => "Цьомчик");
+
+app.UseSwagger();
+app.UseSwaggerUI(c => 
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Crux API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.Run();
