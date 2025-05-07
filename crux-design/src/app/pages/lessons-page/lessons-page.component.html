@@ -31,7 +31,10 @@
             </div>
             <div class="scroll-container">
                 <div class="lesson-container">
-                    <div *ngFor="let card of lesson.cards" class="lesson-card" [attr.data-id]="card.id" [attr.data-type]="card.type">
+                    <div *ngFor="let card of lesson.cards" class="lesson-card" 
+                         [attr.data-id]="card.id" 
+                         [attr.data-type]="card.type"
+                         (click)="openCardDetails(card)">
                         <div class="lesson-title">{{ card.title }}</div>
                         <div class="lesson-description">{{ card.description }}</div>
                     </div>
@@ -42,6 +45,26 @@
         <!-- No lessons message -->
         <div *ngIf="lessons.length === 0" class="no-data">
             <p>No lessons available at the moment.</p>
+        </div>
+    </div>
+    
+    <!-- Popup for Educational cards -->
+    <div *ngIf="selectedCard && isPopupVisible" class="card-popup-overlay" (click)="closePopup($event)">
+        <div class="card-popup-content">
+            <button class="close-popup-btn" (click)="closePopup($event)">&times;</button>
+            <div class="popup-content-area">
+                <div class="popup-left-content">
+                    <!-- Display educational content with fallback -->
+                    <div *ngIf="safeCardContent" [innerHTML]="safeCardContent" class="educational-content"></div>
+                    <div *ngIf="!safeCardContent" class="content-fallback">
+                        <p>No content available for this lesson.</p>
+                    </div>
+                </div>
+                <div class="popup-right-content">
+                    <h2>{{ selectedCard.title }}</h2>
+                    <p>{{ selectedCard.description }}</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

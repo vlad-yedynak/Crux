@@ -1,0 +1,21 @@
+<div class="test-page-container">
+  <div *ngIf="isLoading" class="loading-indicator">
+    <p>Loading test...</p>
+  </div>
+  
+  <div *ngIf="hasError" class="error-message">
+    <p>{{ errorMessage }}</p>
+  </div>
+  
+  <div *ngIf="!isLoading && !hasError && card" class="test-content">
+    <h1>{{ card.title }}</h1>
+    <p class="test-description">{{ card.description }}</p>
+    
+    <div class="test-instructions" [innerHTML]="card.content"></div>
+    
+    <!-- Content for test questions will go here -->
+    <div class="test-questions">
+      <!-- This will be populated with the test questions from card.content -->
+    </div>
+  </div>
+</div>
