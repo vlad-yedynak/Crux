@@ -31,7 +31,7 @@
             </div>
             <div class="scroll-container">
                 <div class="lesson-container">
-                    <div *ngFor="let card of lesson.cards" class="lesson-card" 
+                    <div *ngFor="let card of lesson.cards" class="lesson-card" [ngClass]="getCardTypeClass(card.type)"
                          [attr.data-id]="card.id" 
                          [attr.data-type]="card.type"
                          (click)="openCardDetails(card)">

@@ -11,11 +11,59 @@
     <h1>{{ card.title }}</h1>
     <p class="test-description">{{ card.description }}</p>
     
-    <div class="test-instructions" [innerHTML]="card.content"></div>
+    <!-- <div class="test-instructions" [innerHTML]="card.content"></div> -->
     
-    <!-- Content for test questions will go here -->
-    <div class="test-questions">
-      <!-- This will be populated with the test questions from card.content -->
+    <!-- Questions section -->
+      <div class="questions-section">
+        <h2>Questions</h2>
+        <div *ngFor="let question of questions; let qIndex = index" class="question-card">
+          <p class="question-text">{{ question.questionText }}</p>
+          <div class="options-list">
+            <div *ngFor="let answer of question.answers" class="option-item">
+              <label class="option-label">
+                <input 
+                  type="radio" 
+                  name="question{{qIndex}}" 
+                  [value]="answer.id"
+                  (change)="selectAnswer(question.id, answer.id)"
+                  style="accent-color: var(--color-accent);"
+                  class="option-radio">
+                <span class="option-text">{{ answer.answerText }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-actions" *ngIf="questions && questions.length > 0">
+          <button class="submit-test-btn" 
+                  (click)="submitTest()" 
+                  [disabled]="!hasAllAnswers()">
+            Submit Answers
+          </button>
+        </div>
+
+    <div *ngIf="!questions || questions.length === 0" class="no-questions">
+      <p>No questions available for this test.</p>
+    </div>
+  </div>
+
+  <!-- Results Popup -->
+  <div *ngIf="showResultsPopup && allQuestionsProcessed" class="results-popup-overlay">
+    <div class="results-popup">
+      <h2>Test Results</h2>
+      <div class="results-content">
+        <p class="results-score">You scored <span class="highlight">{{ correctAnswersCount }}</span> out of <span class="highlight">{{ questions.length }}</span></p>
+        <div class="results-percentage">
+          <div class="percentage-bar">
+            <div class="percentage-fill" [style.width.%]="(correctAnswersCount / questions.length) * 100"></div>
+          </div>
+          <p>{{ ((correctAnswersCount / questions.length) * 100).toFixed(0) }}%</p>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="retry-btn" (click)="restartTest()">Try Again</button>
+        <button class="return-btn" (click)="returnToLessons()">Return to Lessons</button>
+      </div>
     </div>
   </div>
 </div>

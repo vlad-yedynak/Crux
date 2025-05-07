@@ -1,6 +1,5 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HeaderComponent } from '../../components/header/header.component';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
@@ -32,7 +31,6 @@ interface LessonsResponse {
   standalone: true,
   imports: [
     CommonModule,
-    HeaderComponent,
     HttpClientModule
   ],
   templateUrl: './lessons-page.component.html',
@@ -140,6 +138,21 @@ export class LessonsPageComponent implements OnInit {
         console.error(`Error fetching details for card ${cardId}:`, error);
       }
     });
+  }
+
+  /**
+   * Returns the CSS class for styling cards based on their type
+   */
+  getCardTypeClass(cardType: string): string {
+    switch(cardType) {
+      case 'Test':
+        return 'test-card';
+      case 'Sandbox':
+        return 'sandbox-card';
+      case 'Educational':
+      default:
+        return 'educational-card';
+    }
   }
 
   /**
