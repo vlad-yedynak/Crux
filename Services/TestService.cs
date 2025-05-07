@@ -86,24 +86,8 @@ public class TestService(
         {
             return false;
         }
-
-        //----Gemini magic starts here----//
         
-        var comparer = new TaskDataValueComparer();
-
-        var expectedCounts = task.ExpectedData
-            .GroupBy(td => td, comparer)
-            .ToDictionary(g => g.Key, g => g.Count(), comparer);
-
-        var inputCounts = inputData
-            .GroupBy(td => td, comparer)
-            .ToDictionary(g => g.Key, g => g.Count(), comparer);
-        
-        bool areEqual = expectedCounts.Count == inputCounts.Count &&
-                        expectedCounts.All(kvp => inputCounts.TryGetValue(kvp.Key, out var inputCount) &&
-                                                  inputCount == kvp.Value);
-        
-        //----Gemini ends starts here----//
+        bool areEqual = task.ExpectedData.SequenceEqual(inputData, new TaskDataValueComparer());
 
         if (areEqual)
         {
