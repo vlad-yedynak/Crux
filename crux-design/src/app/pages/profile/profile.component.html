@@ -1,11 +1,9 @@
 <div class="profile-page">
-  <!-- Блок профілю користувача -->
   <div class="navigation-profile">
     <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav flex-column">
       <li [ngbNavItem]="'info'">
         <a ngbNavLink>General Info</a>
       </li>
-      <!-- Вкладку Scores видалено -->
       <li [ngbNavItem]="'settings'">
         <a ngbNavLink>Settings</a>
       </li>
@@ -15,7 +13,6 @@
   <div class="content-area">
     <div *ngIf="activeTab === 'info'">
       <div class="info-blocks-row">
-        <!-- Лівий блок: Інформація про користувача -->
         <div class="account-info user-info">
           <div class="avatar-wrapper">
             <img src="profile_placeholder.jpg" alt="User Avatar" class="avatar-image">

@@ -87,7 +87,7 @@ export class LessonsPageComponent implements OnInit {
   openCardDetails(card: Card): void {
     // First fetch detailed card data from API
     this.fetchCardDetails(card.id);
-
+    console.log('Card loaded:', card);
     // Check if this is an educational card type
     if (card.type === 'Educational') {
       this.selectedCard = card;
@@ -107,6 +107,17 @@ export class LessonsPageComponent implements OnInit {
       this.selectedCard = card;
       localStorage.setItem('selectedCardId', card.id.toString());
       this.router.navigate(['lessons/test']);
+      document.body.style.overflow = 'hidden';
+    } else if (card.type === 'Sandbox') {
+      this.selectedCard = card;
+      localStorage.setItem('selectedCardId', card.id.toString());
+
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      }
+
+      this.router.navigate(['lessons/sandbox-card']);
       document.body.style.overflow = 'hidden';
     }
   }

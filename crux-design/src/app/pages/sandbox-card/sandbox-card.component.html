@@ -1,0 +1,83 @@
+<div *ngIf="card?.sandboxType === 'CoordinateSystem'" class="sandbox-layout-container">
+    <div #canvasContainer id="canvasContainer" class="canvas-section coordinate-system-container">
+        <canvas #myCanvas id="coordinateCanvas"></canvas>
+    </div>
+    <div class="overlay-section">
+      <div class="shape-selector">
+        <label for="shape">Оберіть фігуру:</label>
+        <select id="shape" name="shape">
+          <option value="square">Квадрат</option>
+          <option value="triangle">Трикутник</option>
+        </select>
+      </div>
+      <button class="draw-button" (click)="openModal()">Намалювати</button>
+
+      <div class="task-section">
+        <div *ngIf="!selectedTask" class="task-list">
+          <h3>Список завдань</h3>
+          <ul>
+            <li *ngFor="let task of card?.tasks" (click)="selectTask(task)">
+              ID: {{ task.id }} - {{ task.name }}
+            </li>
+          </ul>
+        </div>
+        <div *ngIf="selectedTask" class="task-details">
+          <h3>{{ selectedTask.name }}</h3>
+          <p>{{ selectedTask.description }}</p>
+          
+          
+          <div class="input-group">
+            <label for="taskAnswerInt">Ціле число (Integer):</label>
+            <input id="taskAnswerInt" type="number" [(ngModel)]="taskAnswerInt" />
+          </div>
+          
+          <div class="input-group">
+            <label for="taskAnswerDouble">Дробове число (Double):</label>
+            <input id="taskAnswerDouble" type="number" step="0.01" [(ngModel)]="taskAnswerDouble" />
+          </div>
+          
+          <div class="input-group">
+            <label for="taskAnswerString">Текст (String):</label>
+            <input id="taskAnswerString" type="text" [(ngModel)]="taskAnswerString" />
+          </div>
+          
+          <button class="submit-button" (click)="submitTaskAnswer()">Надіслати відповідь</button>
+          <button class="back-button" (click)="deselectTask()">Назад до списку</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="isModalVisible" class="card-popup-overlay" (click)="closeModal()">
+    <div class="card-popup-content" (click)="$event.stopPropagation()">
+      <button class="close-popup-btn" (click)="closeModal()">&times;</button>
+      <h2>Налаштування фігури</h2>
+      <div>
+        <label for="figureColor">Колір фігури:</label>
+        <input id="figureColor" type="color" [(ngModel)]="figureColor" />
+      </div>
+      <div>
+        <label for="borderColor">Колір контурів:</label>
+        <input id="borderColor" type="color" [(ngModel)]="borderColor" />
+      </div>
+      <div class="points-grid">
+        <label>Координати точок:</label>
+        <div *ngFor="let point of figurePoints; let i = index">
+          <label>Точка {{ i + 1 }}:</label>
+          <input type="number" [(ngModel)]="figurePoints[i].x" placeholder="X" />
+          <input type="number" [(ngModel)]="figurePoints[i].y" placeholder="Y" />
+        </div>
+      </div>
+      <button class="save-button" (click)="saveFigure()">Зберегти</button>
+    </div>
+  </div>
+  
+  <div *ngIf="card?.sandboxType === 'fractal'">
+    <h1>Фрактал</h1>
+    <p>Тут буде відображено фрактал.</p>
+  </div>
+  
+  <div *ngIf="card?.sandboxType === 'color'">
+    <h1>Кольорова палітра</h1>
+    <p>Тут буде відображено кольорову палітру.</p>
+  </div>
