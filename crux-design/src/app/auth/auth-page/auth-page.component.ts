@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { LoginFormComponent } from '../login-form/login-form.component';
 import { SignupFormComponent } from '../signup-form/signup-form.component';
 import { trigger, state, style, transition, animate, keyframes  } from '@angular/animations';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-auth-page',
@@ -51,6 +51,15 @@ import { RouterModule } from '@angular/router';
 })
 export class AuthPageComponent {
   activeForm: 'login' | 'signup' = 'login';
+
+  constructor(private route: ActivatedRoute) {
+    // Check query param on init
+    this.route.queryParams.subscribe(params => {
+      if (params['signup'] === '1') {
+        this.activeForm = 'signup';
+      }
+    });
+  }
   
   switchForm() {
     this.activeForm = this.activeForm === 'login' ? 'signup' : 'login';

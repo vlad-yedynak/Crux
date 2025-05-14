@@ -47,7 +47,7 @@ app-navigation {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0; /* Зменшити gap, щоб кнопки були впритул */
 }
 
 .language-dropdown {
@@ -122,32 +122,81 @@ app-navigation {
     background-color: var(--color-primary-dark);
 }
 
-.login-btn {
+.auth-btn-group {
     display: flex;
-    align-items: center;     /* по вертикалі */
-    justify-content: center;
-    width: 100px;
-    padding: 0.4rem 0.6rem;
-    text-align: center;
+    align-items: center;
+    margin-left: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+    border-radius: 25px;
+    border: 1.5px solid var(--color-secondary-dark);
+    background: var(--color-primary-dark);
+    padding: 0;
+}
+
+.login-btn {
+    border: none;
+    border-radius: 25px 0 0 25px;
+    border-right: none;
+    border: 1px solid var(--color-secondary-dark);
+    border-right: none;
     background-color: inherit;
     color: var(--color-accent);
     font-weight: 600;
-    font-size: 14px;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    border: 1px solid var(--color-secondary-dark);
-    transition: background-color 0.3s ease, transform 0.2s ease;
     font-size: 1rem;
-}
-  
-.login-btn:hover {
-    background-color: var(--color-secondary-dark);
-    transform: scale(1.1);
+    width: 80px;
+    padding: 0.4rem 0.6rem;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    cursor: pointer;
+    outline: none;
+    clip-path: polygon(0 0, 100% 0, 82% 100%, 0% 100%);
+    z-index: 1;
+    background-clip: padding-box;
 }
 
-.login-btn:active {
-    transform: translateY(0);
+.login-btn:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+    z-index: 2;
+    transform: scale(1.03);
+}
+
+.signup-btn {
+    border: none;
+    border-radius: 0 25px 25px 0;
+    border-left: none;
+    border: 1px solid var(--color-secondary-dark);
+    background-color: var(--color-accent);
+    color: var(--color-secondary-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    width: 80px;
+    padding: 0.4rem 0.6rem;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    cursor: pointer;
+    outline: none;
+    margin-left: 0;
+    margin-left: -16px; 
+    clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
+    z-index: 2;
+    background-clip: padding-box;
+}
+
+.signup-btn:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+    z-index: 3;
+    transform: scale(1.03);
+}
+
+.login-btn,
+.signup-btn {
+    position: relative;
+}
+
+.login-btn:focus,
+.signup-btn:focus {
+    z-index: 3;
 }
 
 /* User profile styles */

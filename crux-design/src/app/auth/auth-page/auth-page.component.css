@@ -88,6 +88,7 @@
     cursor: pointer;
     transition: transform 0.3s ease;
     position: absolute;
+    width: 350px;
 }
   
 .signup-form-wrapper.active, .login-form-wrapper.active {
@@ -96,9 +97,18 @@
     opacity: 1;
     pointer-events: all;
 }
-  
+.signup-form-wrapper.active app-signup-form,
+.login-form-wrapper.active app-login-form {
+    pointer-events: all;
+}
+
 .signup-form-wrapper:not(.active), .login-form-wrapper:not(.active) {
     opacity: 0.4;
+    z-index: 1;
+    pointer-events: auto;
+}
+.signup-form-wrapper:not(.active) app-signup-form,
+.login-form-wrapper:not(.active) app-login-form {
     pointer-events: none;
 }
   

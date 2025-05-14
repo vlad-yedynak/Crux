@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -40,12 +40,10 @@ export interface CardResponse {
   styleUrl: './sandbox-card.component.css',
   providers: [CanvasService]
 })
-export class SandboxCardComponent implements OnInit {
+export class SandboxCardComponent implements OnInit, AfterViewInit {
   card: Card | null = null;
   private canvasInitialized = false;
-
-  private readonly CANVAS_WIDTH = 1000;
-  private readonly CANVAS_HEIGHT = 600;
+  activePanel: 'shapes' | 'tasks' = 'shapes'; // New property to track active panel
 
   @ViewChild('myCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasContainer') containerRef!: ElementRef<HTMLElement>;
@@ -80,14 +78,43 @@ export class SandboxCardComponent implements OnInit {
     }
   }
 
-  ngAfterViewChecked(): void {
+  ngAfterViewInit(): void {
+    if (this.isBrowser()) {
+      setTimeout(() => this.setupCanvasIfReady(), 100);
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.canvasInitialized) {
+      this.updateCanvasSize();
+    }
+  }
+
+  private updateCanvasSize(): void {
+    if (
+      this.containerRef && 
+      this.containerRef.nativeElement && 
+      this.canvasRef && 
+      this.canvasRef.nativeElement
+    ) {
+      const width = this.containerRef.nativeElement.clientWidth;
+      const height = this.containerRef.nativeElement.clientHeight;
+      
+      if (width > 0 && height > 0) {
+        this.canvasService.initializeCanvas(this.canvasRef, width, height);
+      }
+    }
+  }
+
+  private setupCanvasIfReady(): void {
     if (
       this.card?.sandboxType === 'CoordinateSystem' &&
       !this.canvasInitialized &&
       this.canvasRef && this.canvasRef.nativeElement &&
       this.containerRef && this.containerRef.nativeElement
     ) {
-      this.canvasService.initializeCanvas(this.canvasRef, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
+      this.updateCanvasSize();
       this.canvasInitialized = true; 
     }
   }
@@ -106,6 +133,7 @@ export class SandboxCardComponent implements OnInit {
       next: (response) => {
         console.log('Card details:', response.body);
         this.card = response.body;
+        setTimeout(() => this.setupCanvasIfReady(), 100);
       },
       error: (err) => {
         console.error('Failed to fetch card details:', err);
@@ -222,5 +250,10 @@ export class SandboxCardComponent implements OnInit {
 
       this.deselectTask();
     }
+  }
+
+  // Add new method to switch between panels
+  switchPanel(panel: 'shapes' | 'tasks'): void {
+    this.activePanel = panel;
   }
 }

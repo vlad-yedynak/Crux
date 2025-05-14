@@ -49,7 +49,10 @@
     </ng-container>
 
     <ng-template #showLogin>
-      <button class="login-btn" [routerLink]="'/auth'">Log in</button>
+      <div class="auth-btn-group">
+        <button class="login-btn" [routerLink]="'/auth'">Log in</button>
+        <button class="signup-btn" [routerLink]="['/auth']" [queryParams]="{ signup: 1 }">Sign up</button>
+      </div>
     </ng-template>
   </div>
 </header>

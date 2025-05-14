@@ -2,7 +2,7 @@
 :host {
     display: block;
     background-color: var(--color-primary-light);
-    min-height: 100vh;
+    /* min-height: 100vh; */ /* Removed as main-layout handles this */
     padding-bottom: 40px;
 }
 
@@ -16,6 +16,7 @@
     max-width: 1400px;
     padding: 0 20px;
     position: relative; /* Added for circle positioning */
+     /* Add this line to prevent horizontal overflow */
 }
 
 /* Circle decorations - copied from landing page */
