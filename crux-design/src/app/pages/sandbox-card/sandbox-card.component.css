@@ -13,7 +13,7 @@
 
 .canvas-section {
     flex: 2;
-    background-color: grey;
+    background-color: var(--color-secondary-light);
     border: 1px solid var(--color-accent);
     border-radius: 4px;
     display: flex;
@@ -39,6 +39,9 @@
     right: 10px;
     z-index: 10;
     background-color: var(--color-secondary-light);
+    display: flex; /* Make overlay-section a flex container */
+    flex-direction: column; /* Stack children vertically */
+    overflow: hidden; /* Prevent content from overflowing overlay */
 }
 
 .shape-selector {
@@ -59,6 +62,13 @@
     box-sizing: border-box;
 }
 
+.shape-selector h4 {
+  font-size: 0.95em;
+  font-weight: bold;
+  color: var(--color-secondary-dark);
+  margin-bottom: 10px;
+}
+
 .draw-button {
     width: 100%;
     padding: 10px;
@@ -70,6 +80,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 1em;
+    /* Add some margin if needed, e.g., margin-bottom: 15px; */
 }
 
 .draw-button:hover {
@@ -77,134 +88,249 @@
     color: var(--color-accent);
 }
 
-.card-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.75);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.drawn-shapes-list {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-secondary-light);
+    flex-grow: 1; /* Allow this to grow */
+    display: flex; /* Make it a flex container */
+    flex-direction: column; /* Stack h4 and ul vertically */
+    min-height: 0; /* Important for flex children inside fixed height parent */
 }
 
-.card-popup-content {
-  position: relative;
-  width: 90%;
-  max-width: 600px;
-  background-color: var(--color-primary-light);
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+.drawn-shapes-list h4 {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--color-secondary-dark);
+    margin-bottom: 10px;
+}
+
+.drawn-shapes-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    /* max-height: 200px; */ /* Remove or comment out max-height */
+    overflow-y: auto; /* Keep scrolling */
+    flex-grow: 1; /* Allow ul to take available space in .drawn-shapes-list */
+    max-height: calc(100vh - 300px); /* Limit height to allow scrolling */
+}
+
+.drawn-shapes-list li {
+    padding: 8px 10px;
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    color: var(--color-secondary-dark);
+    display: flex; /* Use flexbox to align items */
+    flex-wrap: wrap; /* Allow wrapping for edit panel */
+    justify-content: space-between; /* Puts text on left, buttons on right */
+    align-items: center; /* Vertically aligns items in the center */
+}
+
+.drawn-shapes-list li:last-child {
+    margin-bottom: 0;
+}
+
+.drawn-shapes-list .shape-info {
+    flex-grow: 1; /* Takes available space */
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+.drawn-shapes-list .shape-actions {
+    display: flex;
+    align-items: center; /* Align buttons vertically */
+    gap: 8px; /* Space between buttons */
+}
+
+.drawn-shapes-list .edit-arrow-btn,
+.drawn-shapes-list .delete-cross-btn {
+    background: none;
+    color: var(--color-accent);
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drawn-shapes-list .edit-arrow-btn .dropdown-arrow {
+    width: 20px; /* Adjust size */
+    height: 20px;
+    fill: var(--color-secondary-dark);
+    transition: transform 0.3s ease;
+}
+
+.drawn-shapes-list .edit-arrow-btn.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.drawn-shapes-list .delete-cross-btn {
+    font-size: 1em; /* Reset or adjust if needed for SVG sizing */
+    color: var(--color-accent); /* Use accent color for the icon */
+    line-height: 1; 
+}
+
+.drawn-shapes-list .delete-cross-btn .cross-icon {
+    width: 18px; /* Adjust size as needed */
+    height: 18px;
+    display: block; /* Helps with alignment */
+}
+
+.drawn-shapes-list .edit-arrow-btn:hover {
+    background-color: var(--color-accent-light);
+}
+
+.drawn-shapes-list .edit-arrow-btn:hover .dropdown-arrow {
+    fill: var(--color-primary-dark);
+}
+
+.drawn-shapes-list .delete-cross-btn:hover {
+    background-color: var(--color-secondary-light); /* Subtle hover for accent color icon */
+    /* Or a darker shade of accent if preferred and defined */
+    /* color: var(--color-accent-dark); */ 
+}
+
+/* Shape edit panel adjustments */
+.shape-edit-panel {
+  width: 100%; 
+  background-color: var(--color-primary-light); /* Match the cream color in the screenshot */
+  border-radius: 4px;
+  border: 1px solid var(--color-secondary-dark); 
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: popupFadeIn 0.3s ease-out forwards;
-}
-
-.card-popup-content h2 {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--color-primary-dark);
-  margin-bottom: 20px;
-}
-
-.card-popup-content label {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-secondary-dark);
-  margin-bottom: 5px;
-  display: block;
-}
-
-.card-popup-content input[type="color"] {
-  width: 50px;
-  height: 30px;
-  border: none;
-  cursor: pointer;
-}
-
-.card-popup-content input[type="number"] {
-  width: 80px;
-  padding: 5px;
-  border: 1px solid var(--color-secondary-light);
-  border-radius: 4px;
+  overflow-y: auto; /* Changed from visible to auto */
   box-sizing: border-box;
-  font-size: 14px;
+  padding: 10px;
+  margin-top: 8px;
+  /* max-height will be controlled by the animation, e.g., 500px */
 }
 
-.card-popup-content .save-button {
-  align-self: flex-end;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--color-secondary-dark);
-  background-color: var(--color-accent);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.card-popup-content .save-button:hover {
-    background-color: var(--color-secondary-dark);
-    color: var(--color-accent);
-}
-
-.card-popup-content .close-popup-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 30px;
-  height: 30px;
-  background-color: var(--color-secondary-dark);;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
+.color-section {
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.card-popup-content .close-popup-btn:hover {
-  background-color: var(--color-accent);
-  transform: scale(1.1);
-}
-
-.card-popup-content .points-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.card-popup-content .points-grid label {
-  grid-column: span 2;
-  font-size: 14px;
-  font-weight: normal;
-  color: var(--color-secondary-dark);
-}
-
-.card-popup-content .points-grid input[type="number"] {
+.color-section label {
   margin-right: 10px;
+  font-weight: bold;
+  font-size: 14px;
 }
 
-.card-popup-content .points-grid input[type="number"]:last-child {
-  margin-right: 0; 
+.color-section input[type="color"] {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-@keyframes popupFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.points-section {
+  margin-bottom: 12px;
+}
+
+.points-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.points-container {
+  margin-left: 5px;
+  max-height: 200px; /* Add max height to force scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding-right: 5px; /* Add some padding for the scrollbar */
+}
+
+.point-inputs {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #ccc;
+  min-height: 65px; /* Ensure minimum height for point inputs */
+}
+
+.point-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.coordinates {
+  display: flex;
+  gap: 15px;
+  margin-left: 10px;
+}
+
+.coordinate {
+  display: flex;
+  align-items: center;
+}
+
+.coordinate label {
+  margin-right: 5px;
+  width: 15px;
+}
+
+.coordinate input {
+  width: 60px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.save-btn {
+  background-color: var(--color-accent, #ff5722);
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: var(--color-secondary-dark, #333);
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.shape-edit-panel input[type="color"] {
+    width: 40px;
+    height: 25px;
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.no-shapes-message {
+    font-style: italic;
+    color: var(--color-secondary-dark);
+    text-align: center;
+    padding: 10px;
 }
 
 .task-section {
@@ -317,6 +443,11 @@
 
 .panel {
     animation: fadeIn 0.3s ease-in-out;
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1; 
+    min-height: 0; 
+    overflow: hidden; 
 }
 
 @keyframes fadeIn {
@@ -328,5 +459,117 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.name-section {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.name-section label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.name-section input[type="text"] {
+  padding: 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.points-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.add-point-btn {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-accent);
+  color: var(--color-secondary-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.add-point-btn:hover {
+  background-color: var(--color-secondary-dark);
+  color: var(--color-accent);
+}
+
+.add-point-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-point-btn {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-point-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 50%;
+}
+
+.validation-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.no-points-message {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.save-btn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.invalid-point {
+  background-color: rgba(255, 0, 0, 0.05);
+  border-left: 3px solid #f44336;
+  padding-left: 6px;
+}
+
+.invalid-input {
+  border-color: #f44336 !important;
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.point-validation-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 10px;
 }
 

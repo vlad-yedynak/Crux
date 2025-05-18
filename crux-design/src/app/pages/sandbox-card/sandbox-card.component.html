@@ -11,13 +11,203 @@
       <!-- Shapes panel -->
       <div class="panel" *ngIf="activePanel === 'shapes'">
         <div class="shape-selector">
-          <label for="shape">Оберіть фігуру:</label>
-          <select id="shape" name="shape">
+          <h4>Оберіть фігуру:</h4>
+          <select id="shape" name="shape" [(ngModel)]="selectedShapeType">
             <option value="square">Квадрат</option>
             <option value="triangle">Трикутник</option>
+            <option value="rectangle">Прямокутник</option> 
+            <option value="circle">Круг</option> 
+            <option value="polygon">Інший багатокутник</option>
           </select>
         </div>
-        <button class="draw-button" (click)="openModal()">Намалювати</button>
+        <button class="draw-button" (click)="onDrawShape()">Намалювати</button>
+
+        <div class="drawn-shapes-list">
+          <h4>Намальовані фігури:</h4>
+          <ul *ngIf="drawnShapes.length > 0; else noShapes">
+            <li *ngFor="let shape of drawnShapes; let i = index">
+              <div class="shape-info" (click)="onEditShape(shape)">
+                <span>{{ i + 1 }}. {{ shape.name || shape.type }} {{ shape.isPlaceholder ? '(редагується)' : '' }}</span>
+              </div>
+              <div class="shape-actions">
+                <button class="edit-arrow-btn" (click)="onEditShape(shape)" [class.open]="shape.id === editingShapeId">
+                  <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button class="delete-cross-btn" (click)="onDeleteShape(shape.id)">
+                  <svg class="cross-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="shape-edit-panel" *ngIf="shape.id === editingShapeId" @slideTogglePanel>
+                <div class="name-section">
+                  <label>Назва фігури:</label>
+                  <input 
+                    type="text" 
+                    [(ngModel)]="shape.name" 
+                    (input)="updateShapeProperty('name', shape.name)"
+                  >
+                </div>
+                
+                <div class="color-section">
+                  <label>Колір заливки:</label>
+                  <input 
+                    type="color" 
+                    [(ngModel)]="shape.fillColor" 
+                    (change)="updateShapeProperty('fillColor', shape.fillColor)"
+                  >
+                </div>
+                
+                <div class="color-section">
+                  <label>Колір контуру:</label>
+                  <input 
+                    type="color" 
+                    [(ngModel)]="shape.borderColor" 
+                    (change)="updateShapeProperty('borderColor', shape.borderColor)"
+                  >
+                </div>
+                
+                <div class="points-section">
+                  <div class="points-header-container">
+                    <div class="points-header">
+                      <span *ngIf="shape.type !== 'circle' && shape.type !== 'polygon'">Точки (потрібно: {{ getRequiredPointsCount(shape.type) }}, маємо: {{ shape.points.length }}):</span>
+                      <span *ngIf="shape.type === 'polygon'">Точки (потрібно щонайменше: {{ getRequiredPointsCount(shape.type) }}, маємо: {{ shape.points.length }}):</span>
+                      <span *ngIf="shape.type === 'circle'">Центр:</span>
+                    </div>
+                    <button *ngIf="shape.type !== 'circle'" type="button" class="add-point-btn" (click)="addPointToShape(shape)">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+                      </svg>
+                      Додати точку
+                    </button>
+                  </div>
+              
+                  <!-- Point inputs for Polygons -->
+                  <div *ngIf="shape.type !== 'circle'" class="points-container">
+                    <div *ngFor="let point of shape.points; let i = index" class="point-inputs" [ngClass]="{'invalid-point': !isPointValid(shape.id, i)}">
+                      <div class="point-header">
+                        <span class="point-label">Точка {{ i + 1 }}:</span>
+                        <button type="button" class="remove-point-btn" (click)="removePointFromShape(shape, i)">
+                          <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label for="point-{{i}}-x">X:</label>
+                          <input 
+                            type="number" 
+                            id="point-{{i}}-x" 
+                            [(ngModel)]="shape.points[i].x" 
+                            (input)="updateShapeProperty('point-'+i+'-x', shape.points[i].x)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, i)}"
+                            step="1.0"
+                          >
+                        </div>
+                        <div class="coordinate">
+                          <label for="point-{{i}}-y">Y:</label>
+                          <input 
+                            type="number" 
+                            id="point-{{i}}-y" 
+                            [(ngModel)]="shape.points[i].y" 
+                            (input)="updateShapeProperty('point-'+i+'-y', shape.points[i].y)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, i)}"
+                            step="1.0"
+                          >
+                        </div>
+                      </div>
+                      <div *ngIf="!isPointValid(shape.id, i)" class="point-validation-error">
+                        Ця точка не утворює правильну фігуру
+                      </div>
+                    </div>
+                    <div *ngIf="shape.points.length === 0 && shape.type !== 'circle'" class="no-points-message">
+                      Натисніть "Додати точку", щоб додати координати для фігури
+                    </div>
+                  </div>
+
+                  <div *ngIf="shape.type === 'circle'" class="points-container">
+                    <div *ngIf="shape.points.length > 0" class="point-inputs" [ngClass]="{'invalid-point': !isPointValid(shape.id, 0)}">
+                      <div class="point-header">
+                        <span class="point-label">Центр (X, Y):</span>
+                      </div>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label for="circle-center-x-{{shape.id}}">X:</label>
+                          <input 
+                            type="number" 
+                            id="circle-center-x-{{shape.id}}" 
+                            [(ngModel)]="shape.points[0].x" 
+                            (input)="updateShapeProperty('point-0-x', shape.points[0].x)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, 0) && shape.points.length > 0}"
+                            step="1.0"
+                          >
+                        </div>
+                        <div class="coordinate">
+                          <label for="circle-center-y-{{shape.id}}">Y:</label>
+                          <input 
+                            type="number" 
+                            id="circle-center-y-{{shape.id}}" 
+                            [(ngModel)]="shape.points[0].y" 
+                            (input)="updateShapeProperty('point-0-y', shape.points[0].y)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, 0) && shape.points.length > 0}"
+                            step="1.0"
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Radius Input -->
+                    <div class="point-inputs" [ngClass]="{'invalid-point': shape.radius !== undefined && shape.radius <= 0}">
+                        <div class="point-header">
+                            <span class="point-label">Радіус:</span>
+                        </div>
+                        <div class="coordinates">
+                            <div class="coordinate">
+                                <label for="circle-radius-{{shape.id}}">R:</label>
+                                <input 
+                                  type="number" 
+                                  id="circle-radius-{{shape.id}}" 
+                                  [(ngModel)]="shape.radius" 
+                                  (input)="updateShapeProperty('radius', shape.radius)"
+                                  min="0.1" 
+                                  step="0.1"
+                                  [ngClass]="{'invalid-input': shape.radius !== undefined && shape.radius <= 0}"
+                                >
+                            </div>
+                        </div>
+                        <div *ngIf="shape.radius !== undefined && shape.radius <= 0" class="point-validation-error">
+                          Радіус має бути позитивним числом.
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="button" class="save-btn" 
+                    [disabled]="!isShapeValid(shape)" 
+                    (click)="onSaveShape()">Зберегти</button>
+                  <button type="button" class="cancel-btn" (click)="onCancelEditShape()">Скасувати</button>
+                </div>
+              
+                <div *ngIf="shape.points.length !== getRequiredPointsCount(shape.type) && shape.type !== 'circle' && shape.type !== 'polygon'" class="validation-error">
+                  Для фігури "{{ shape.type === 'square' ? 'квадрат' : shape.type === 'triangle' ? 'трикутник' : 'прямокутник' }}" потрібно точно
+                  {{ getRequiredPointsCount(shape.type) }} точки
+                </div>
+                <div *ngIf="shape.type === 'polygon' && shape.points.length < getRequiredPointsCount(shape.type)" class="validation-error">
+                  Для фігури "багатокутник" потрібно щонайменше {{ getRequiredPointsCount(shape.type) }} точки.
+                </div>
+                 <div *ngIf="shape.type === 'circle' && (shape.radius === undefined || shape.radius <= 0)" class="validation-error">
+                  Радіус для круга має бути вказаний і бути позитивним.
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noShapes>
+            <p class="no-shapes-message">Ще не намальовано жодної фігури.</p>
+          </ng-template>
+        </div>
       </div>
 
       <!-- Tasks panel -->
@@ -55,30 +245,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  
-  <div *ngIf="isModalVisible" class="card-popup-overlay" (click)="closeModal()">
-    <div class="card-popup-content" (click)="$event.stopPropagation()">
-      <button class="close-popup-btn" (click)="closeModal()">&times;</button>
-      <h2>Налаштування фігури</h2>
-      <div>
-        <label for="figureColor">Колір фігури:</label>
-        <input id="figureColor" type="color" [(ngModel)]="figureColor" />
-      </div>
-      <div>
-        <label for="borderColor">Колір контурів:</label>
-        <input id="borderColor" type="color" [(ngModel)]="borderColor" />
-      </div>
-      <div class="points-grid">
-        <label>Координати точок:</label>
-        <div *ngFor="let point of figurePoints; let i = index">
-          <label>Точка {{ i + 1 }}:</label>
-          <input type="number" [(ngModel)]="figurePoints[i].x" placeholder="X" />
-          <input type="number" [(ngModel)]="figurePoints[i].y" placeholder="Y" />
-        </div>
-      </div>
-      <button class="save-button" (click)="saveFigure()">Зберегти</button>
     </div>
   </div>
   
