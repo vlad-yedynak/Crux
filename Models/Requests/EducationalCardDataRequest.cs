@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Requests;
 
-public class ContentRequest
+public class EducationalCardDataRequest
 {
     [Required]
     [JsonPropertyName("cardId")]
@@ -13,4 +13,12 @@ public class ContentRequest
     [MaxLength(65535)]
     [JsonPropertyName("content")]
     public required string Content { get; set; }
+
+    [JsonPropertyName("images")]
+    public List<CardImageRequest>? Images { get; set; }
+
+    [JsonPropertyName("attachments")]
+    public List<CardAttachmentRequest>? Attachments { get; set; }
 }
+
+// TODO: update corresponding controller routes and service methods to match the new request signature 

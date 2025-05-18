@@ -29,6 +29,10 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<UserTaskProgress> UserTaskProgresses { get; set; }
     
     public DbSet<UserQuestionProgress> UserQuestionProgresses { get; set; }
+    
+    public DbSet<CardAttachment> CardAttachments { get; set; }
+    
+    public DbSet<CardImage> CardImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -123,6 +127,53 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity
                 .Property(e => e.Content)
                 .HasColumnType("Text")
+                .IsRequired();
+
+            entity
+                .HasMany(e => e.Images)
+                .WithOne(i => i.EducationalCard)
+                .HasForeignKey(i => i.EducationalCardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity
+                .HasMany(e => e.Attachments)
+                .WithOne(a => a.EducationalCard)
+                .HasForeignKey(a => a.EducationalCardId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CardImage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity
+                .Property(e => e.Url)
+                .IsRequired();
+            
+            entity
+                .Property(e => e.Caption)
+                .HasMaxLength(255);
+            
+            entity
+                .Property(e => e.AltText)
+                .HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<CardAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity
+                .Property(e => e.Url)
+                .IsRequired();
+
+            entity
+                .Property(e => e.Description)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity
+                .Property(e => e.Url)
                 .IsRequired();
         });
         

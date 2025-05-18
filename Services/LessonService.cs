@@ -414,7 +414,7 @@ public class LessonService(
         };
     }
     
-    public ContentResponse AddContent(HttpContext context, ContentRequest contentRequest)
+    public ContentResponse AddContent(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
     {
         if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
         {
@@ -427,7 +427,7 @@ public class LessonService(
             };
         }
         
-        var educationalCard = dbContext.EducationalCards.FirstOrDefault(ec => ec.Id == contentRequest.CardId);
+        var educationalCard = dbContext.EducationalCards.FirstOrDefault(ec => ec.Id == educationalCardDataRequest.CardId);
 
         if (educationalCard == null)
         {
@@ -440,7 +440,7 @@ public class LessonService(
             };
         }
         
-        educationalCard.Content = contentRequest.Content;
+        educationalCard.Content = educationalCardDataRequest.Content;
         dbContext.SaveChanges();
 
         return new ContentResponse
