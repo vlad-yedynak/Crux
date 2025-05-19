@@ -113,7 +113,7 @@ public class LessonService(
             Title = card.Title,
             CardType = card.CardType.ToString(),
             Description = card.Description,
-            Content = card is EducationalCard educationalCard ? educationalCard.Content : null,
+            EducationalData = card is EducationalCard educationalCard ? GetEducationalData(educationalCard.Id) : null,
             Questions = card is TestCard ? GetQuestions(userId, card.Id) : null,
             Tasks = card is SandboxCard ? GetTasks(userId, card.Id) : null,
             SandboxType = card is SandboxCard sandboxCard ? sandboxCard.Type.ToString() : null
@@ -414,13 +414,13 @@ public class LessonService(
         };
     }
     
-    public ContentResponse AddContent(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
+    public EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
     {
         if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             
-            return new ContentResponse
+            return new EducationalDataResponse
             {
                 Success = false,
                 Error = "Unauthorized access"
@@ -433,21 +433,21 @@ public class LessonService(
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             
-            return new ContentResponse
+            return new EducationalDataResponse
             {
                 Success = false,
                 Error = "Invalid Card Id"
             };
         }
         
-        educationalCard.Content = educationalCardDataRequest.Content;
-        dbContext.SaveChanges();
+        // handle request
 
-        return new ContentResponse
-        {
-            Success = true,
-            CardId = educationalCard.Id
-        };
+        throw new NotImplementedException();
+    }
+
+    private EducationalDataResponse GetEducationalData(int id)
+    {
+        throw new NotImplementedException();
     }
 
     public TaskResponse AddTask(HttpContext context, TaskRequest taskRequest)

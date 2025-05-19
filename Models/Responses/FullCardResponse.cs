@@ -5,7 +5,7 @@ namespace Crux.Models.Responses;
 public class FullCardResponse : BriefCardResponse
 {
     [JsonPropertyName("content")]
-    public string? Content { get; set; }
+    public EducationalDataResponse? EducationalData { get; set; }
     
     [JsonPropertyName("questions")]
     public ICollection<QuestionResponse>? Questions { get; set; }

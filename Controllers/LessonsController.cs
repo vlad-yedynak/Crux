@@ -138,6 +138,38 @@ public class LessonsController (
             };
         }
     }
+
+    [HttpPost("add-educational-data")]
+    public Response AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
+    {
+        try
+        {
+            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            {
+                return new ControllerResponse<AuthenticationResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+
+            var response = lessonService.AddEducationalData(HttpContext, educationalCardDataRequest);
+
+            return new ControllerResponse<EducationalDataResponse>
+            {
+                Success = true,
+                Body = response
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ControllerResponse<EducationalDataResponse>
+            {
+                Success = false,
+                Error = $"An error occured: {ex.Message}"
+            };
+        }
+    }
     
     [HttpGet("get-lessons")]
     public Response GetLessons()

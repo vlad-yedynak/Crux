@@ -11,6 +11,8 @@ public interface ILessonService
     
     BriefCardResponse GetCardBrief(HttpContext context, int id);
     
+    EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest dataRequest);
+    
     LessonResponse AddLesson(HttpContext context, string title);
     
     FullCardResponse AddCard(HttpContext context, CardRequest cardRequest);
