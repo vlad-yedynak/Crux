@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Crux.Models.Cards;
 
 public class CardAttachment
@@ -8,6 +10,7 @@ public class CardAttachment
     
     public string Description { get; set; }
     
+    [JsonIgnore]
     public EducationalCard EducationalCard { get; set; }
     
     public int EducationalCardId { get; set; }

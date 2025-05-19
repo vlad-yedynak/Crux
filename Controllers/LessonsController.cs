@@ -140,7 +140,7 @@ public class LessonsController (
     }
 
     [HttpPost("add-educational-data")]
-    public Response AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
+    public Response AddEducationalData([FromBody] EducationalCardDataRequest educationalCardDataRequest)
     {
         try
         {

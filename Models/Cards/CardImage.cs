@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Crux.Models.Cards;
 
 public class CardImage
@@ -10,6 +12,7 @@ public class CardImage
     
     public required string AltText { get; set; }
     
+    [JsonIgnore]
     public EducationalCard EducationalCard { get; set; }
     
     public int EducationalCardId { get; set; }

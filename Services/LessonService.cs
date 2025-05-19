@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using Crux.Data;
 using Crux.Extensions;
 using Crux.Models.Cards;
@@ -427,7 +428,10 @@ public class LessonService(
             };
         }
         
-        var educationalCard = dbContext.EducationalCards.FirstOrDefault(ec => ec.Id == educationalCardDataRequest.CardId);
+        var educationalCard = dbContext.EducationalCards.
+            Include(ec => ec.Images).
+            Include(ec => ec.Attachments).
+            FirstOrDefault(ec => ec.Id == educationalCardDataRequest.CardId);
 
         if (educationalCard == null)
         {
@@ -440,14 +444,71 @@ public class LessonService(
             };
         }
         
-        // handle request
+        educationalCard.Content = educationalCardDataRequest.Content;
+        
+        educationalCard.Images.Clear();
+        educationalCard.Attachments.Clear();
 
-        throw new NotImplementedException();
+        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Any())
+        {
+            var image = educationalCardDataRequest.Images.Select(imageRequest => new CardImage
+            {
+                Url = imageRequest.Url,
+                Caption = imageRequest.Caption,
+                AltText = imageRequest.AltText,
+                EducationalCardId = educationalCard.Id
+            }).ToList();
+            educationalCard.Images.AddRange(image);
+        }
+
+        if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Any())
+        {
+            var attachment = educationalCardDataRequest.Attachments.Select(attachmentRequest => new CardAttachment
+            {
+                Url = attachmentRequest.Url,
+                Description = attachmentRequest.Description,
+                EducationalCardId = educationalCard.Id
+            }).ToList();
+            educationalCard.Attachments.AddRange(attachment);
+        }
+        
+        dbContext.SaveChanges();
+
+        return new EducationalDataResponse
+        {
+            Success = true,
+            CardId = educationalCard.Id,
+            Content = educationalCard.Content,
+            Images = educationalCard.Images,
+            Attachments = educationalCard.Attachments
+        };
+
     }
 
     private EducationalDataResponse GetEducationalData(int id)
     {
-        throw new NotImplementedException();
+        var educationalCard = dbContext.EducationalCards
+            .Include(ec => ec.Images)
+            .Include(ec => ec.Attachments)
+            .FirstOrDefault(ec => ec.Id == id);
+
+        if (educationalCard == null)
+        {
+            return new EducationalDataResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+
+        return new EducationalDataResponse
+        {
+            Success = true,
+            CardId = educationalCard.Id,
+            Content = educationalCard.Content,
+            Images = educationalCard.Images,
+            Attachments = educationalCard.Attachments
+        };
     }
 
     public TaskResponse AddTask(HttpContext context, TaskRequest taskRequest)
