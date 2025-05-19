@@ -1,6 +1,8 @@
 using Crux.Data;
+using Crux.Models.Entities;
 using Crux.Models.Responses;
 using Crux.Models.EntityTypes;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
@@ -27,7 +29,9 @@ public class UserService(
 
     private UserResponse GetUserInfoFromId(HttpContext context, int userId)
     {
-        var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        var user = dbContext.Users
+            .Include(u => u.ScorePoints)
+            .FirstOrDefault(u => u.Id == userId);
         
         if (user != null)
         {
@@ -37,7 +41,7 @@ public class UserService(
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                ScorePoints = user.ScorePoints,
+                ScorePoints = GetUserScorePoints(user.ScorePoints),
                 UserRole = user.Role.ToString()
             };
         }
@@ -85,7 +89,9 @@ public class UserService(
             };
         }
         
-        var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        var user = dbContext.Users
+            .Include(u => u.ScorePoints)
+            .FirstOrDefault(u => u.Id == userId);
         
         if (user != null)
         {
@@ -98,7 +104,7 @@ public class UserService(
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                ScorePoints = user.ScorePoints,
+                ScorePoints = GetUserScorePoints(user.ScorePoints),
                 UserRole = user.Role.ToString()
             };
         }
@@ -125,7 +131,9 @@ public class UserService(
             };
         }
         
-        var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+        var user = dbContext.Users
+            .Include(u => u.ScorePoints)
+            .FirstOrDefault(u => u.Id == userId);
         
         if (user != null)
         {
@@ -138,7 +146,7 @@ public class UserService(
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                ScorePoints = user.ScorePoints,
+                ScorePoints = GetUserScorePoints(user.ScorePoints),
                 UserRole = user.Role.ToString()
             };
         }
@@ -149,5 +157,17 @@ public class UserService(
             Success = false,
             Error = "Can't find user info"
         };
+    }
+
+    private Dictionary<int, int> GetUserScorePoints(ICollection<UserLessonProgress> progresses)
+    {
+        var scorePoints = new Dictionary<int, int>();
+
+        progresses.ToList().ForEach(p =>
+        {
+            scorePoints[p.LessonId] = p.ScorePoint;
+        });
+        
+        return scorePoints;
     }
 }

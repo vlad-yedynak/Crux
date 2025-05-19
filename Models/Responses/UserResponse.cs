@@ -14,7 +14,7 @@ public class UserResponse : Response
     public string? Email { get; set; }
     
     [JsonPropertyName("scorePoints")]
-    public int? ScorePoints { get; set; }
+    public Dictionary<int, int>? ScorePoints { get; set; }
     
     [JsonPropertyName("userRole")]
     public string? UserRole { get; set; }

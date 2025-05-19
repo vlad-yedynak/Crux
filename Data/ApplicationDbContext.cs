@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Crux.Extensions;
 using Crux.Models.Cards;
 using Crux.Models.EntityTypes;
@@ -29,6 +30,8 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<UserTaskProgress> UserTaskProgresses { get; set; }
     
     public DbSet<UserQuestionProgress> UserQuestionProgresses { get; set; }
+    
+    public DbSet<UserLessonProgress> UserLessonProgresses { get; set; }
     
     public DbSet<CardAttachment> CardAttachments { get; set; }
     
@@ -64,10 +67,6 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity
                 .Property(e => e.Password)
                 .HasMaxLength(255)
-                .IsRequired();
-            
-            entity
-                .Property(e => e.ScorePoints)
                 .IsRequired();
 
             entity
@@ -300,6 +299,23 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .WithMany(e => e.CompletedQuestions)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<UserLessonProgress>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.LessonId });
+
+            entity
+                .HasOne(e => e.User)
+                .WithMany(u => u.ScorePoints)
+                .HasForeignKey(e => e.UserId);
+
+            entity
+                .HasOne(e => e.Lesson)
+                .WithMany(l => l.UserScorePoints)
+                .HasForeignKey(e => e.LessonId);
+
+            entity.Property(e => e.ScorePoint).IsRequired();
         });
     }
 }

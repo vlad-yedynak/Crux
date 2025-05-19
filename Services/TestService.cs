@@ -19,29 +19,61 @@ public class TestService(
         }
         
         var user =  dbContext.Users.FirstOrDefault(x => x.Id == userId.Value);
-        
         if (user == null)
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
-        var answer = dbContext
-            .Answers
-            .FirstOrDefault(x => x.Id == answerId &&  x.QuestionId == questionId);
+        var answer = dbContext.Answers.FirstOrDefault(x => x.Id == answerId &&  x.QuestionId == questionId);
+        if (answer == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var question = dbContext.Questions.FirstOrDefault(x => x.Id == answer.QuestionId);
+        if (question == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+
+        var card = dbContext.TestCards.FirstOrDefault(x => x.Id == question.TestCardId);
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
         var isPreviouslyCompleted = dbContext.UserQuestionProgresses.Any(progress => progress.UserId == user.Id 
             && progress.QuestionId == questionId);
 
-        if (answer != null && answer.IsCorrect)
+        if (answer.IsCorrect)
         {
             if (!isPreviouslyCompleted)
             {
-                user.ScorePoints += answer.Score;
+                var scoreProgress = dbContext.UserLessonProgresses
+                    .FirstOrDefault(p => p.UserId == user.Id && p.LessonId == card.LessonId);
+                
+                if (scoreProgress == null)
+                {
+                    dbContext.UserLessonProgresses.Add(new UserLessonProgress
+                    {
+                        UserId = user.Id,
+                        LessonId = card.LessonId,
+                        ScorePoint = answer.Score
+                    });
+                }
+                else
+                {
+                    scoreProgress.ScorePoint += answer.Score;
+                }
                 
                 dbContext.UserQuestionProgresses.Add(new UserQuestionProgress
                 {
                     UserId = user.Id,
-                    QuestionId = questionId,
+                    QuestionId = questionId
                 });
             }
             
@@ -73,29 +105,51 @@ public class TestService(
         var task = dbContext.Tasks
             .Include(t => t.ExpectedData)
             .FirstOrDefault(t => t.Id == taskId);
-        var isPreviouslyCompleted = dbContext.UserTaskProgresses.Any(progress => progress.UserId == user.Id 
-            && progress.TaskId == taskId);
-
         if (task == null)
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
+        
+        var card = dbContext.SandboxCards.FirstOrDefault(x => x.Id == task.SandboxCardId);
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var isPreviouslyCompleted = dbContext.UserTaskProgresses.Any(progress => progress.UserId == user.Id 
+            && progress.TaskId == taskId);
 
         if (task.ExpectedData.Count != inputData.Count)
         {
             return false;
         }
         
-        bool areEqual = task.ExpectedData.SequenceEqual(inputData, new TaskDataValueComparer());
+        var areEqual = task.ExpectedData.SequenceEqual(inputData, new TaskDataValueComparer());
 
         if (areEqual)
         {
             if (!isPreviouslyCompleted)
             {
-                user.ScorePoints += task.Points;
+                var scoreProgress = dbContext.UserLessonProgresses
+                    .FirstOrDefault(p => p.UserId == user.Id && p.LessonId == card.LessonId);
                 
-                dbContext.UserTaskProgresses.Add(new UserTaskProgress()
+                if (scoreProgress == null)
+                {
+                    dbContext.UserLessonProgresses.Add(new UserLessonProgress
+                    {
+                        UserId = user.Id,
+                        LessonId = card.LessonId,
+                        ScorePoint = task.Points
+                    });
+                }
+                else
+                {
+                    scoreProgress.ScorePoint += task.Points;
+                }
+                
+                dbContext.UserTaskProgresses.Add(new UserTaskProgress
                 {
                     UserId = user.Id,
                     TaskId = taskId
@@ -109,7 +163,6 @@ public class TestService(
         return false;
     }
 }
-
 
 public class TaskDataValueComparer : IEqualityComparer<TaskData>
 {

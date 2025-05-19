@@ -48,7 +48,6 @@ public class AuthenticationService(
             LastName = request.LastName,
             Email = request.Email,
             Password = request.Password,
-            ScorePoints = 0,
             Role = UserRole.User
         };
 
@@ -166,14 +165,13 @@ public class AuthenticationService(
                 return storedTokenBytes != null && Convert.ToBase64String(storedTokenBytes) == clientToken;
             });
         
-        if (matchingUserId != default(int))
+        if (matchingUserId != 0)
         {
             return matchingUserId;
         }
         
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return null;
-        
     }
 
     private string HashPassword(User user, string password)
