@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Requests;
 
-public class CardAttachmentRequest
+public class  CardAttachmentRequest
 {
     [Required]
     [Url]

@@ -58,6 +58,8 @@ public class LessonTrackerService(
                 TrackedTime = request.TrackedTime
             });
             
+            dbContext.SaveChanges();
+            
             return new LessonTrackerResponse
             {
                 TrackedTime = request.TrackedTime,
@@ -162,16 +164,16 @@ public class LessonTrackerService(
             };
         }
         
-        foreach (var lesson in dbContext.Lessons)
+        var userTrackers = dbContext.LessonTrackers
+            .Where(t => t.UserId == userId.Value)
+            .ToList();
+        
+        foreach (var tracker in userTrackers)
         {
-            var tracker = dbContext.LessonTrackers.FirstOrDefault(t => t.LessonId == lesson.Id && t.UserId == userId);
-            if (tracker != null)
-            {
                 tracker.TrackedTime = 0;
-            }
-            
-            dbContext.SaveChanges();
         }
+        
+        dbContext.SaveChanges();
 
         return new LessonTrackerResponse
         {

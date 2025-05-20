@@ -15,7 +15,6 @@ public class AnswerRequest
     
     [Required]
     [JsonPropertyName("score")]
-    [MaxLength(255)]
     public required int Score { get; set; }
     
     [Required]

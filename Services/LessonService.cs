@@ -120,7 +120,7 @@ public class LessonService(
             SandboxType = card is SandboxCard sandboxCard ? sandboxCard.Type.ToString() : null
         };
     }
-    
+
     public LessonResponse AddLesson(HttpContext context, string title)
     {
         if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
@@ -143,6 +143,60 @@ public class LessonService(
             Success = true,
             Id = lesson.Id,
         };
+    }
+
+    public LessonResponse UpdateLessonName(HttpContext context, UpdateLessonRequest request)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+            return new LessonResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+
+        var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == request.Id);
+        if (lesson != null)
+        {
+            lesson.Title = request.Title;
+            dbContext.SaveChanges();
+            
+            return new LessonResponse
+            {
+                Success = true,
+                Id = lesson.Id,
+                Title = lesson.Title,
+            };
+        }
+
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return new LessonResponse
+        {
+            Success = false,
+            Error = "Lesson not found"
+        };
+    }
+
+    public bool DeleteLesson(HttpContext context, int id)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+        
+        if (dbContext.Lessons.Any(l => l.Id == id))
+        {
+            dbContext.Lessons.Where(l => l.Id == id).ExecuteDelete();   
+            dbContext.SaveChanges();
+            return true;
+        }
+        
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return false;
     }
 
     public FullCardResponse AddCard(HttpContext context, CardRequest cardRequest)
@@ -219,6 +273,91 @@ public class LessonService(
             Success = true
         };
     }
+
+    public FullCardResponse UpdateCard(HttpContext context, CardRequest cardRequest)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+
+        if (cardRequest.Id == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Card is not provided"
+            };
+        }
+        
+        var card = dbContext.Cards.FirstOrDefault(c => c.Id == cardRequest.Id);
+
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Invalid card id"
+            };
+        }
+        
+        var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == cardRequest.LessonId);
+        if (lesson == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+            return new FullCardResponse
+            {
+                Success = false,
+                Error = "Invalid lesson id"
+            };
+        }
+        
+        card.Title = cardRequest.Title;
+        card.Description = cardRequest.Description;
+        card.LessonId = cardRequest.LessonId;
+        
+        dbContext.SaveChanges();
+        
+        return new FullCardResponse
+        {
+            Success = true,
+            Id = card.Id,
+            LessonId = card.LessonId,
+            Title = card.Title,
+            CardType = card.CardType.ToString(),
+            Description = card.Description
+        };
+    }
+
+    public bool DeleteCard(HttpContext context, int id)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+
+        if (dbContext.Cards.Any(c => c.Id == id))
+        {
+            dbContext.Cards.Where(c => c.Id == id).ExecuteDelete();   
+            dbContext.SaveChanges();
+            return true;
+        }
+        
+        return false;
+    }
+
 
     private List<QuestionResponse> GetQuestions(int? userId, int cardId)
     {
@@ -414,6 +553,108 @@ public class LessonService(
                 .ToList()
         };
     }
+
+    public QuestionResponse UpdateQuestion(HttpContext context, QuestionRequest questionRequest)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+
+        if (!questionRequest.Id.HasValue)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Question not provided"
+            };
+        }
+        
+        var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
+
+        if (testCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+        
+        var question = dbContext.Questions.FirstOrDefault(question => question.Id == questionRequest.Id);
+
+        if (question == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Question not found"
+            };
+        }
+
+        question.TestCardId = questionRequest.TestCardId;
+        question.QuestionText = questionRequest.QuestionText;
+
+        var existingAnswers = dbContext.Answers.Where(a => a.QuestionId == question.Id);
+        dbContext.Answers.RemoveRange(existingAnswers);
+
+        if (questionRequest.Answers != null)
+        {
+            var newAnswers = questionRequest.Answers.Select(a => new Answer
+            {
+                QuestionId = question.Id,
+                AnswerText = a.AnswerText,
+                Score = a.Score,
+                IsCorrect = a.IsCorrect
+            }).ToList();
+            dbContext.Answers.AddRange(newAnswers);
+        }
+
+        dbContext.SaveChanges();
+
+        return new QuestionResponse
+        {
+            Success = true,
+            Id = question.Id,
+            QuestionText = question.QuestionText,
+            Answers = dbContext.Answers
+                .Where(a => a.QuestionId == question.Id)
+                .Select(a => new AnswerResponse
+                {
+                    Id = a.Id,
+                    AnswerText = a.AnswerText,
+                    Success = true
+                })
+                .ToList()
+        };
+    }
+
+    public bool DeleteQuestion(HttpContext context, int id)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+
+        if (dbContext.Questions.Any(q => q.Id == id))
+        {
+            dbContext.Questions.Where(q => q.Id == id).ExecuteDelete();
+            dbContext.SaveChanges();
+            return true;
+        }
+        
+        return false;
+    }
     
     public EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
     {
@@ -483,6 +724,71 @@ public class LessonService(
             Attachments = educationalCard.Attachments
         };
 
+    }
+
+    public EducationalDataResponse UpdateEducationalData(HttpContext context, EducationalCardDataRequest dataRequest)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new EducationalDataResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+        
+        var educationalCard = dbContext.EducationalCards
+            .Include(ec => ec.Images)
+            .Include(ec => ec.Attachments)
+            .FirstOrDefault(ec => ec.Id == dataRequest.CardId);
+
+        if (educationalCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new EducationalDataResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+        
+        educationalCard.Content = dataRequest.Content;
+        educationalCard.Images.Clear();
+        educationalCard.Attachments.Clear();
+        
+        if (dataRequest.Images != null)
+        {
+            educationalCard.Images.AddRange(dataRequest.Images.Select(imageRequest => new CardImage
+            {
+                Url = imageRequest.Url,
+                Caption = imageRequest.Caption,
+                AltText = imageRequest.AltText,
+                EducationalCardId = educationalCard.Id
+            }));
+        }
+        
+        if (dataRequest.Attachments != null)
+        {
+            educationalCard.Attachments.AddRange(dataRequest.Attachments.Select(attachmentRequest => new CardAttachment
+            {
+                Url = attachmentRequest.Url,
+                Description = attachmentRequest.Description,
+                EducationalCardId = educationalCard.Id
+            }));
+        }
+
+        dbContext.SaveChanges();
+
+        return new EducationalDataResponse
+        {
+            Success = true,
+            CardId = educationalCard.Id,
+            Content = educationalCard.Content,
+            Images = educationalCard.Images,
+            Attachments = educationalCard.Attachments
+        };
     }
 
     private EducationalDataResponse GetEducationalData(int id)
@@ -570,5 +876,102 @@ public class LessonService(
             Description = task.Description,
             Points = task.Points
         };
+    }
+
+    public TaskResponse UpdateTask(HttpContext context, TaskRequest taskRequest)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Unauthorized access"
+            };
+        }
+
+        if (!taskRequest.Id.HasValue)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Task Id not provided"
+            };
+        }
+        
+        var sandboxCard = dbContext.SandboxCards.FirstOrDefault(sc => sc.Id == taskRequest.SandboxCardId);
+        
+        if (sandboxCard == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
+        }
+        
+        var task = dbContext.Tasks.FirstOrDefault(t => t.Id == taskRequest.Id);
+
+        if (task == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Task not found"
+            };
+        }
+
+        task.Name = taskRequest.Name;
+        task.Description = taskRequest.Description;
+        task.Points = taskRequest.Points;
+        task.SandboxCardId = sandboxCard.Id;
+        
+        task.ExpectedData.Clear();
+        
+        if (taskRequest.ExpectedData != null)
+        {
+            foreach (var item in taskRequest.ExpectedData)
+            {
+                task.ExpectedData.Add(new TaskData
+                {
+                    TaskId = task.Id,
+                    Value = item.Value,
+                });
+            }
+        }
+    
+        dbContext.SaveChanges();
+
+        return new TaskResponse
+        {
+            Success = true,
+            Id = task.Id,
+            Name = task.Name,
+            Description = task.Description,
+            Points = task.Points
+        };
+    }
+    
+    public bool DeleteTask(HttpContext context, int id)
+    {
+        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+        
+        if (dbContext.Tasks.Any(t => t.Id == id))
+        {
+            dbContext.Tasks.Where(t => t.Id == id).ExecuteDelete();
+            dbContext.SaveChanges();
+            return true;
+        }
+        
+        return false;
     }
 }
