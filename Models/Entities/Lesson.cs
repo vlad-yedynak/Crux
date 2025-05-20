@@ -9,4 +9,6 @@ public class Lesson
     public ICollection<Card> Cards { get; set; } = new List<Card>();
     
     public ICollection<UserLessonProgress> UserScorePoints { get; set; } = new List<UserLessonProgress>();
+    
+    public ICollection<LessonTracker> LessonTrackers { get; set; } = new List<LessonTracker>();
 }

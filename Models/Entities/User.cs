@@ -21,4 +21,6 @@ public class User
     public ICollection<UserQuestionProgress> CompletedQuestions { get; set; } = new List<UserQuestionProgress>();
     
     public ICollection<UserLessonProgress> ScorePoints { get; set; } = new List<UserLessonProgress>();
+    
+    public ICollection<LessonTracker> LessonTrackers { get; set;  } = new List<LessonTracker>();
 }

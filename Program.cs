@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Identity;
 using MySql.EntityFrameworkCore.Extensions;
 using Microsoft.OpenApi.Models;
 
-
 Env.Load();
 
 var connectionString = Environment.GetEnvironmentVariable("APP_DB_CONNECTION_STRING");
@@ -26,6 +25,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddScoped<ILessonTrackerService, LessonTrackerService>();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>

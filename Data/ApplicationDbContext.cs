@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Crux.Extensions;
 using Crux.Models.Cards;
 using Crux.Models.EntityTypes;
@@ -36,6 +35,8 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<CardAttachment> CardAttachments { get; set; }
     
     public DbSet<CardImage> CardImages { get; set; }
+    
+    public DbSet<LessonTracker> LessonTrackers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -316,6 +317,23 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(e => e.LessonId);
 
             entity.Property(e => e.ScorePoint).IsRequired();
+        });
+        
+        modelBuilder.Entity<LessonTracker>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.LessonId });
+
+            entity
+                .HasOne(e => e.User)
+                .WithMany(u => u.LessonTrackers)
+                .HasForeignKey(e => e.UserId);
+
+            entity
+                .HasOne(e => e.Lesson)
+                .WithMany(l => l.LessonTrackers)
+                .HasForeignKey(e => e.LessonId);
+
+            entity.Property(e => e.TrackedTime).IsRequired();
         });
     }
 }
