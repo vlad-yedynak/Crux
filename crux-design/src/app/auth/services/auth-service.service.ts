@@ -60,6 +60,9 @@ export class AuthServiceService {
     this.http.get<{ body: User }>(this.baseUrl + '/info', { headers }).subscribe({
       next: (res) => {
         this.userSubject.next(res.body);
+        localStorage.setItem('Role', res.body.userRole);
+
+        console.log('User role:', res.body.userRole);
         
         console.log('Complete user information after login:', res.body);
       },

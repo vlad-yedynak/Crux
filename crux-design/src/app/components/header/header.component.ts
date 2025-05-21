@@ -68,6 +68,7 @@ export class HeaderComponent implements OnInit{
   isUserDropdownOpen = false;
   selectedLanguage = 'en';
   user: User | null = null;
+  isAdmin = false;
 
   constructor(private eRef: ElementRef, private authService: AuthServiceService, private router: Router) {}
 
@@ -76,7 +77,11 @@ export class HeaderComponent implements OnInit{
     this.authService.getUser().subscribe(user => {
       this.user = user;
     });
-    
+
+    if (localStorage.getItem('Role') === 'Admin') {
+      this.isAdmin = true;
+          //console.log('Header response; User role:', localStorage.getItem('Role'));
+    }
   }
 
   toggleDropdownLang() {

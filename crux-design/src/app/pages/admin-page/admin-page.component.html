@@ -1,0 +1,239 @@
+<div class="main-content">
+    <h1 class="page-title">Admin Dashboard</h1>
+    
+    <div class="admin-controls">
+        <button class="add-lesson-btn" (click)="openAddLessonForm()">+ Add Lesson</button>
+    </div>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-state">
+        <p>Loading lessons...</p>
+    </div>
+    
+    <!-- Error state -->
+    <div *ngIf="!isLoading && hasError" class="error-state">
+        <p>{{ errorMessage }}</p>
+        <button (click)="fetchLessons()" class="retry-button">Retry</button>
+    </div>
+    
+    <!-- Lessons List for Management -->
+    <div *ngIf="!isLoading && !hasError" class="admin-lessons-list">
+        <div *ngFor="let lesson of lessons" class="admin-lesson-item">
+            <div class="lesson-info">
+                <h2>{{ lesson.title }}</h2>
+                <p>{{ lesson.cards.length || 0 }} cards</p>
+            </div>
+            <div class="lesson-actions">
+                <button class="action-btn edit-btn" (click)="editLesson(lesson)">Edit</button>
+                <button class="action-btn view-cards-btn" (click)="viewCards(lesson)">View Cards</button>
+                <button class="action-btn delete-btn" (click)="deleteLesson(lesson)">Delete</button>
+            </div>
+        </div>
+        
+        <!-- No lessons message -->
+        <div *ngIf="lessons.length === 0" class="no-data">
+            <p>No lessons available. Create your first lesson with the "Add Lesson" button above.</p>
+        </div>
+    </div>
+    
+    <!-- Add Lesson Popup -->
+    <div *ngIf="isAddLessonPopupVisible" class="add-lesson-popup-overlay" (click)="closeAddLessonPopup($event)">
+        <div class="add-lesson-popup-content">
+            <div class="popup-header">
+                <h2>Add New Lesson</h2>
+                <button class="close-popup-btn" (click)="closeAddLessonPopup($event)">&times;</button>
+            </div>
+            
+            <div class="popup-body">
+                <div class="form-group">
+                    <label for="lessonName">Lesson Name</label>
+                    <input type="text" id="lessonName" [(ngModel)]="newLessonName" 
+                           placeholder="Enter lesson name" class="form-control">
+                </div>
+            </div>
+            
+            <div class="popup-footer">
+                <button class="cancel-btn" (click)="closeAddLessonPopup($event)">Cancel</button>
+                <button class="create-btn" [disabled]="!newLessonName.trim()" 
+                        (click)="createLesson()">Create Lesson</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards Popup -->
+    <div *ngIf="selectedLesson && isCardsPopupVisible" class="cards-popup-overlay" (click)="closeCardsPopup($event)">
+        <div class="cards-popup-content">
+            <div class="popup-header">
+                <h2>Cards in "{{ selectedLesson.title }}"</h2>
+                <button class="close-popup-btn" (click)="closeCardsPopup($event)">&times;</button>
+            </div>
+            
+            <div class="cards-container">
+                <div *ngIf="selectedLesson.cards.length === 0" class="no-cards-message">
+                    <p>No cards available in this lesson.</p>
+                    <button class="add-card-btn" (click)="addCardToLesson(selectedLesson)">+ Add Card</button>
+                </div>
+                
+                <div *ngFor="let card of selectedLesson.cards" class="admin-card-item" [ngClass]="getCardTypeClass(card.type)">
+                    <div class="card-header">
+                        <h3>{{ card.title }}</h3>
+                        <span class="card-type-badge">{{ card.type }}</span>
+                    </div>
+                    <p class="card-description">{{ card.description }}</p>
+                    <div class="card-actions">
+                        <button class="card-action-btn edit-btn" (click)="editCard(card)">Edit</button>
+                        <button class="card-action-btn delete-btn" (click)="deleteCard(card)">Delete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="popup-footer">
+                <button class="add-card-btn" (click)="addCardToLesson(selectedLesson)">+ Add Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Card Popup - moved to the end to ensure it's rendered on top -->
+<div *ngIf="isAddCardPopupVisible" class="add-card-popup-overlay" (click)="closeAddCardPopup($event)">
+    <div class="add-card-popup-content">
+        <div class="popup-header">
+            <h2>Add New Card</h2>
+            <button class="close-popup-btn" (click)="closeAddCardPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Debug info to verify popup state -->
+            <p style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                Editing lesson: {{ currentLessonForCard?.title }}
+            </p>
+            
+            <div class="form-group">
+                <label for="cardTitle">Card Title</label>
+                <input type="text" id="cardTitle" [(ngModel)]="newCard.title" 
+                       placeholder="Enter card title" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="cardDescription">Card Description</label>
+                <textarea id="cardDescription" [(ngModel)]="newCard.description" 
+                        placeholder="Enter card description" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="cardType">Card Type</label>
+                <select id="cardType" [(ngModel)]="newCard.type" class="form-control">
+                    <option value="Educational">Educational</option>
+                    <option value="Test">Test</option>
+                    <option value="Sandbox">Sandbox</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeAddCardPopup($event)">Cancel</button>
+            <button class="create-btn" [disabled]="!isCardFormValid()" 
+                    (click)="createCard()">Create Card</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Questions List Popup -->
+<div *ngIf="isViewTestQuestionsPopupVisible" class="view-test-questions-overlay" (click)="closeViewTestQuestionsPopup($event)">
+    <div class="view-test-questions-content">
+        <div class="popup-header">
+            <h2>Questions in "{{ currentEditingCard?.title }}"</h2>
+            <button class="close-popup-btn" (click)="closeViewTestQuestionsPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Loading state for questions -->
+            <div *ngIf="isLoadingQuestions" class="loading-state">
+                <p>Loading questions...</p>
+            </div>
+            
+            <!-- Questions list -->
+            <div *ngIf="!isLoadingQuestions" class="questions-list">
+                <div *ngIf="testQuestions.length === 0" class="no-questions-message">
+                    <p>No questions available for this test.</p>
+                </div>
+                
+                <div *ngFor="let question of testQuestions; let i = index" class="question-item">
+                    <div class="question-header">
+                        <h3>Question #{{i+1}}</h3>
+                    </div>
+                    <p class="question-text">{{ question.questionText }}</p>
+                    <div class="answer-count">{{ question.answers.length || 0 }} answers</div>
+                    <div class="question-actions">
+                        <button class="action-btn edit-btn" (click)="editQuestion(question)">Edit</button>
+                        <button class="action-btn delete-btn" (click)="deleteQuestion(question, i)">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="add-question-btn" (click)="addNewQuestion()">+ Add Question</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Card Edit Popup -->
+<div *ngIf="isEditTestCardPopupVisible" class="edit-test-card-popup-overlay" (click)="closeEditTestCardPopup($event)">
+    <div class="edit-test-card-popup-content">
+        <div class="popup-header">
+            <h2>Edit Test Card</h2>
+            <button class="close-popup-btn" (click)="closeEditTestCardPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="form-group">
+                <label for="questionText">Question</label>
+                <textarea id="questionText" [(ngModel)]="testCardData.questionText" 
+                        placeholder="Enter question text" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div class="answers-section">
+                <h3>Answers</h3>
+                <div *ngFor="let answer of testCardData.answers; let i = index" class="answer-item">
+                    <div class="answer-header">
+                        <h4>Answer #{{i+1}}</h4>
+                        <button type="button" class="remove-answer-btn" (click)="removeAnswer(i)">Remove</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label [for]="'answerText' + i">Answer Text</label>
+                        <input [id]="'answerText' + i" [(ngModel)]="answer.answerText" 
+                               placeholder="Enter answer text" class="form-control">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half-width">
+                            <label [for]="'answerScore' + i">Score</label>
+                            <input [id]="'answerScore' + i" type="number" [(ngModel)]="answer.score" 
+                                   placeholder="Points for this answer" class="form-control"
+                                   [disabled]="answer.isCorrect">
+                        </div>
+                        
+                        <div class="form-group half-width radio-group">
+                            <label>
+                                <input type="radio" name="correctAnswer" [value]="i" 
+                                       [checked]="answer.isCorrect"
+                                       (change)="setCorrectAnswer(i)">
+                                Correct Answer
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="add-answer-btn" (click)="addAnswer()">+ Add Answer</button>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditTestCardPopup($event)">Cancel</button>
+            <button class="save-btn" [disabled]="!isTestCardFormValid()" 
+                    (click)="saveTestCard()">Save Test</button>
+        </div>
+    </div>
+</div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { LoginFormComponent } from '../login-form/login-form.component';
 import { SignupFormComponent } from '../signup-form/signup-form.component';
 import { trigger, state, style, transition, animate, keyframes  } from '@angular/animations';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-auth-page',
@@ -52,7 +52,7 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 export class AuthPageComponent {
   activeForm: 'login' | 'signup' = 'login';
 
-  constructor(private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute, private router: Router) {
     // Check query param on init
     this.route.queryParams.subscribe(params => {
       if (params['signup'] === '1') {
@@ -63,5 +63,18 @@ export class AuthPageComponent {
   
   switchForm() {
     this.activeForm = this.activeForm === 'login' ? 'signup' : 'login';
+  }
+
+  logout(): void {
+    // Set role to "User" before clearing token
+    localStorage.setItem('Role', 'User');
+    
+    // Clear auth token
+    localStorage.removeItem('auth-token');
+    
+    // Any other logout logic...
+    
+    // Navigate to login page
+    this.router.navigate(['/auth']);
   }
 }

@@ -1,0 +1,687 @@
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    font-size: 28px;
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.admin-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+}
+
+.add-lesson-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.add-lesson-btn:hover {
+    background-color: #3367d6;
+}
+
+/* Loading state */
+.loading-state {
+    text-align: center;
+    padding: 40px 0;
+    color: #666;
+}
+
+/* Error state */
+.error-state {
+    background-color: #fef7f7;
+    border: 1px solid #f9d7d7;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    color: #d32f2f;
+    text-align: center;
+}
+
+.error-state .retry-button {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+/* Lessons list styling */
+.admin-lessons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-lesson-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s;
+}
+
+.admin-lesson-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-info h2 {
+    font-size: 18px;
+    margin: 0 0 4px 0;
+    color: #333;
+}
+
+.lesson-info p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.lesson-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.edit-btn {
+    background-color: #4285f4;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #3367d6;
+}
+
+.view-cards-btn {
+    background-color: #34a853;
+    color: white;
+}
+
+.view-cards-btn:hover {
+    background-color: #2a8743;
+}
+
+.delete-btn {
+    background-color: #ea4335;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* No data state */
+.no-data {
+    text-align: center;
+    padding: 40px 0;
+    color: #666;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-top: 24px;
+}
+
+/* Cards Popup */
+.cards-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cards-popup-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+}
+
+.popup-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.close-popup-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-popup-btn:hover {
+    color: #333;
+}
+
+.cards-container {
+    padding: 16px 24px;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.admin-card-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid #ccc;
+}
+
+.admin-card-item.educational-card {
+    border-left-color: #4285f4;
+}
+
+.admin-card-item.test-card {
+    border-left-color: #ea4335;
+}
+
+.admin-card-item.sandbox-card {
+    border-left-color: #34a853;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.card-type-badge {
+    background-color: #f0f0f0;
+    color: #666;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.card-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+    flex-grow: 1;
+}
+
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.card-action-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.no-cards-message {
+    text-align: center;
+    padding: 32px;
+    color: #666;
+    grid-column: 1 / -1;
+}
+
+.popup-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Add Lesson Popup Styles */
+.add-lesson-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-lesson-popup-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.popup-body {
+    padding: 20px 24px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4285f4;
+}
+
+.popup-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.cancel-btn {
+    background-color: #f5f5f5;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.create-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.create-btn:hover {
+    background-color: #3367d6;
+}
+
+.create-btn:disabled {
+    background-color: #a8c7fa;
+    cursor: not-allowed;
+}
+
+.add-card-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-card-btn:hover {
+    background-color: #3367d6;
+}
+
+/* Add Card Popup Styles */
+.add-card-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100; /* Increased z-index to be higher than card popup */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-card-popup-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+select.form-control {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 30px;
+}
+
+/* Test Card Edit Popup Styles */
+.edit-test-card-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.edit-test-card-popup-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.edit-test-card-popup-content .popup-body {
+    overflow-y: auto;
+    max-height: calc(90vh - 130px); /* Account for header and footer */
+}
+
+.answers-section {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.answers-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #333;
+}
+
+.answer-item {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #eee;
+}
+
+.answer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.answer-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #444;
+}
+
+.remove-answer-btn {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.remove-answer-btn:hover {
+    background-color: #f5c6cb;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.half-width {
+    flex: 1;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+}
+
+.add-answer-btn {
+    background-color: #e7f3ff;
+    color: #0366d6;
+    border: 1px dashed #0366d6;
+    border-radius: 4px;
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.add-answer-btn:hover {
+    background-color: #dbeeff;
+}
+
+.save-btn {
+    background-color: #34a853;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.save-btn:hover {
+    background-color: #2a8743;
+}
+
+.save-btn:disabled {
+    background-color: #a8d5b1;
+    cursor: not-allowed;
+}
+
+/* Radio Button Group Styles */
+.radio-group {
+    display: flex;
+    align-items: center;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Test Questions List Popup Styles */
+.view-test-questions-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.view-test-questions-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.view-test-questions-content .popup-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    max-height: calc(90vh - 140px);
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.question-item {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 16px;
+    border-left: 4px solid #4285f4;
+    position: relative;
+}
+
+.question-header {
+    margin-bottom: 10px;
+}
+
+.question-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.question-text {
+    font-size: 16px;
+    color: #444;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.answer-count {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.question-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.no-questions-message {
+    text-align: center;
+    padding: 32px;
+    color: #666;
+}
+
+.add-question-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-question-btn:hover {
+    background-color: #3367d6;
+}

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from "@angular/common";
 import { RouterModule } from '@angular/router';
 
@@ -14,11 +14,46 @@ import { RouterModule } from '@angular/router';
             <li class="tab-item"><a [routerLink]="['/lessons']">Lessons</a></li>
             <li class="tab-item"><a href="#materials">Materials</a></li>
             <li class="tab-item"><a href="#other">Other</a></li>
+            <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']">Edit content</a></li>
         </ul>
     </nav>
   `,
   styleUrl: './navigation.component.css'
 })
-export class NavigationComponent {
+export class NavigationComponent implements OnInit, OnDestroy {
+  isAdmin: boolean = false;
+  private authCheckInterval: any = null;
 
+  ngOnInit() {
+    // Check admin status immediately
+    this.checkAdminStatus();
+    
+    // Set up regular checks to catch login/logout events
+    this.authCheckInterval = setInterval(() => {
+      this.checkAdminStatus();
+    }, 2000); // Check every 2 seconds
+  }
+
+  ngOnDestroy() {
+    // Clear the interval when component is destroyed
+    if (this.authCheckInterval) {
+      clearInterval(this.authCheckInterval);
+    }
+  }
+
+  private checkAdminStatus() {
+    try {
+      // Default to false (not admin)
+      const newAdminStatus = localStorage.getItem('Role') === 'Admin';
+      
+      // Only update if there's a change to avoid unnecessary renders
+      if (this.isAdmin !== newAdminStatus) {
+        this.isAdmin = newAdminStatus;
+        console.log('Admin status updated:', this.isAdmin);
+      }
+    } catch (e) {
+      console.error('Error accessing localStorage:', e);
+      this.isAdmin = false;
+    }
+  }
 }
