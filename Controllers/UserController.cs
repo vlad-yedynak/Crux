@@ -12,14 +12,14 @@ public class UserController (
     IUserService userService) : ControllerBase
 {
     [HttpPost("sign-up")]
-    public Response SignUp([FromBody] UserRequest request)
+    public async Task<ActionResult<Response>> SignUpAsync([FromBody] UserRequest request)
     {
         try
         {
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
-                Body = authenticationService.SignUp(request)
+                Body = await authenticationService.SignUpAsync(request)
             };
         }
         catch (Exception ex)
@@ -33,14 +33,14 @@ public class UserController (
     }
 
     [HttpPost("sign-in")]
-    public Response SignIn([FromBody] UserRequest request)
+    public async Task<ActionResult<Response>> SignInAsync([FromBody] UserRequest request)
     {
         try
         {
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
-                Body = authenticationService.SignIn(request)
+                Body = await authenticationService.SignInAsync(request)
             };
         }
         catch (Exception ex)
@@ -54,14 +54,14 @@ public class UserController (
     }
 
     [HttpGet("sign-out")]
-    public new Response SignOut()
+    public new async Task<ActionResult<Response>> SignOutAsync()
     {
         try
         {
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
-                Body = authenticationService.SignOut(HttpContext)
+                Body = await authenticationService.SignOutAsync(HttpContext)
             };
         }
         catch (Exception ex)
@@ -75,14 +75,14 @@ public class UserController (
     }
 
     [HttpGet("info")]
-    public Response Info()
+    public async Task<ActionResult<Response>> InfoAsync()
     {
         try
         {
             return new ControllerResponse<UserResponse>
             {
                 Success = true,
-                Body = userService.GetUserInfoFromContext(HttpContext)
+                Body = await userService.GetUserInfoFromContextAsync(HttpContext)
             };
         }
         catch (Exception ex)
@@ -96,11 +96,11 @@ public class UserController (
     }
     
     [HttpGet("get-users")]
-    public Response GetUsers()
+    public async Task<ActionResult<Response>> GetUsersAsync()
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -109,7 +109,7 @@ public class UserController (
                 };
             }
             
-            var usersInfo = userService.GetUsersInfo(HttpContext);
+            var usersInfo = await userService.GetUsersInfoAsync(HttpContext);
 
             return new ControllerResponse<ICollection<KeyValuePair<int, UserResponse>>>
             {
@@ -128,11 +128,11 @@ public class UserController (
     }
     
     [HttpPut("change-first-name")]
-    public Response ChangeFirstName([FromBody] string firstName)
+    public async Task<ActionResult<Response>> ChangeFirstNameAsync([FromBody] string firstName)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -141,7 +141,7 @@ public class UserController (
                 };
             }
             
-            var user = userService.ChangeFirstName(HttpContext, firstName);
+            var user = await userService.ChangeFirstNameAsync(HttpContext, firstName);
 
             return new ControllerResponse<UserResponse>
             {
@@ -160,11 +160,11 @@ public class UserController (
     }
     
     [HttpPut("change-last-name")]
-    public Response ChangeLastName([FromBody] string lastName)
+    public async Task<ActionResult<Response>> ChangeLastNameAsync([FromBody] string lastName)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -173,7 +173,7 @@ public class UserController (
                 };
             }
             
-            var user = userService.ChangeLastName(HttpContext, lastName);
+            var user = await userService.ChangeLastNameAsync(HttpContext, lastName);
 
             return new ControllerResponse<UserResponse>
             {

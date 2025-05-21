@@ -11,11 +11,11 @@ public class TestingController(
     ITestService testService) : ControllerBase
 {
     [HttpPost("validate-question")]
-    public Response ValidateQuestion([FromBody] ValidateQuestionRequest request)
+    public async Task<ActionResult<Response>> ValidateQuestionAsync([FromBody] ValidateQuestionRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<bool>
                 {
@@ -24,7 +24,7 @@ public class TestingController(
                 };
             }
             
-            bool isCorrect = testService.ValidateQuestion(HttpContext, request.QuestionId , request.AnswerId);
+            bool isCorrect = await testService.ValidateQuestionAsync(HttpContext, request.QuestionId , request.AnswerId);
 
             return new ControllerResponse<bool>
             {
@@ -43,11 +43,11 @@ public class TestingController(
     }
 
     [HttpPost("validate-task")]
-    public Response ValidateTask([FromBody] ValidateTaskRequest request)
+    public async Task<ActionResult<Response>> ValidateTaskAsync([FromBody] ValidateTaskRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<bool>
                 {
@@ -56,7 +56,7 @@ public class TestingController(
                 };
             }
             
-            bool isCorrect = testService.ValidateTask(HttpContext, request.TaskId , request.InputData);
+            bool isCorrect = await testService.ValidateTaskAsync(HttpContext, request.TaskId , request.InputData);
 
             return new ControllerResponse<bool>
             {

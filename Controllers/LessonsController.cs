@@ -12,11 +12,11 @@ public class LessonsController (
     ILessonService lessonService) : ControllerBase
 {
     [HttpPost("create-lesson")]
-    public Response CreateLesson([FromBody] string title)
+    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -25,7 +25,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.AddLesson(HttpContext, title);
+            var response = await lessonService.AddLessonAsync(HttpContext, title);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -44,11 +44,11 @@ public class LessonsController (
     }
     
     [HttpPut("update-lesson")]
-    public Response UpdateLesson([FromBody] UpdateLessonRequest request)
+    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] UpdateLessonRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -57,7 +57,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.UpdateLessonName(HttpContext, request);
+            var response = await lessonService.UpdateLessonNameAsync(HttpContext, request);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -76,11 +76,11 @@ public class LessonsController (
     }
     
     [HttpDelete("delete-lesson")]
-    public Response UpdateLesson([FromBody] int id)
+    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -89,7 +89,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.DeleteLesson(HttpContext, id);
+            var response = await lessonService.DeleteLessonAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -108,11 +108,11 @@ public class LessonsController (
     }
     
     [HttpPost("create-card")]
-    public Response CreateCard([FromBody] CardRequest cardRequest)
+    public async Task<ActionResult<Response>> CreateCardAsync([FromBody] CardRequest cardRequest)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -121,7 +121,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.AddCard(HttpContext, cardRequest);
+            var response = await lessonService.AddCardAsync(HttpContext, cardRequest);
 
             return new ControllerResponse<FullCardResponse>
             {
@@ -140,11 +140,11 @@ public class LessonsController (
     }
     
     [HttpPut("update-card")]
-    public Response UpdateCard([FromBody] CardRequest request)
+    public async Task<ActionResult<Response>> UpdateCardAsync([FromBody] CardRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -153,7 +153,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.UpdateCard(HttpContext, request);
+            var response = await lessonService.UpdateCardAsync(HttpContext, request);
 
             return new ControllerResponse<FullCardResponse>
             {
@@ -172,11 +172,11 @@ public class LessonsController (
     }
     
     [HttpDelete("delete-card")]
-    public Response DeleteCard([FromBody] int id)
+    public async Task<ActionResult<Response>> DeleteCardAsync([FromBody] int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -185,7 +185,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.DeleteCard(HttpContext, id);
+            var response = await lessonService.DeleteCardAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -203,15 +203,12 @@ public class LessonsController (
         }
     }
     
-    
-    
-
     [HttpPost("create-question")]
-    public Response CreateQuestion([FromBody] QuestionRequest questionRequest)
+    public async Task<ActionResult<Response>> CreateQuestionAsync([FromBody] QuestionRequest questionRequest)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -220,7 +217,7 @@ public class LessonsController (
                 };
             }
 
-            var response = lessonService.AddQuestion(HttpContext, questionRequest);
+            var response = await lessonService.AddQuestionAsync(HttpContext, questionRequest);
 
             return new ControllerResponse<QuestionResponse>
             {
@@ -239,11 +236,11 @@ public class LessonsController (
     }
     
     [HttpPut("update-question")]
-    public Response UpdateQuestion([FromBody] QuestionRequest request)
+    public async Task<ActionResult<Response>> UpdateQuestionAsync([FromBody] QuestionRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -252,7 +249,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.UpdateQuestion(HttpContext, request);
+            var response = await lessonService.UpdateQuestionAsync(HttpContext, request);
 
             return new ControllerResponse<QuestionResponse>
             {
@@ -271,11 +268,11 @@ public class LessonsController (
     }
     
     [HttpDelete("delete-question")]
-    public Response DeleteQuestion([FromBody] int id)
+    public async Task<ActionResult<Response>> DeleteQuestion([FromBody] int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -284,7 +281,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.DeleteQuestion(HttpContext, id);
+            var response = await lessonService.DeleteQuestionAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -303,11 +300,11 @@ public class LessonsController (
     }
     
     [HttpPost("create-task")]
-    public Response CreateTask([FromBody] TaskRequest taskRequest)
+    public async Task<ActionResult<Response>> CreateTaskAsync([FromBody] TaskRequest taskRequest)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -316,7 +313,7 @@ public class LessonsController (
                 };
             }
 
-            var response = lessonService.AddTask(HttpContext, taskRequest);
+            var response = await lessonService.AddTaskAsync(HttpContext, taskRequest);
 
             return new ControllerResponse<TaskResponse>
             {
@@ -335,11 +332,11 @@ public class LessonsController (
     }
     
     [HttpPut("update-task")]
-    public Response UpdateTask([FromBody] TaskRequest request)
+    public async Task<ActionResult<Response>> UpdateTaskAsync([FromBody] TaskRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -348,7 +345,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.UpdateTask(HttpContext, request);
+            var response = await lessonService.UpdateTaskAsync(HttpContext, request);
 
             return new ControllerResponse<TaskResponse>
             {
@@ -367,11 +364,11 @@ public class LessonsController (
     }
     
     [HttpDelete("delete-task")]
-    public Response DeleteTask([FromBody] int id)
+    public async Task<ActionResult<Response>> DeleteTaskAsync([FromBody] int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -380,7 +377,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.DeleteTask(HttpContext, id);
+            var response = await lessonService.DeleteTaskAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -399,11 +396,11 @@ public class LessonsController (
     }
     
     [HttpPost("add-educational-data")]
-    public Response AddEducationalData([FromBody] EducationalCardDataRequest educationalCardDataRequest)
+    public async Task<ActionResult<Response>> AddEducationalDataAsync([FromBody] EducationalCardDataRequest educationalCardDataRequest)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -412,7 +409,7 @@ public class LessonsController (
                 };
             }
 
-            var response = lessonService.AddEducationalData(HttpContext, educationalCardDataRequest);
+            var response = await lessonService.AddEducationalDataAsync(HttpContext, educationalCardDataRequest);
 
             return new ControllerResponse<EducationalDataResponse>
             {
@@ -431,11 +428,11 @@ public class LessonsController (
     }
     
     [HttpPut("update-educational-data")]
-    public Response UpdateEducationalData([FromBody] EducationalCardDataRequest request)
+    public async Task<ActionResult<Response>> UpdateEducationalDataAsync([FromBody] EducationalCardDataRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin))
             {
                 return new ControllerResponse<UserResponse>
                 {
@@ -444,7 +441,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.UpdateEducationalData(HttpContext, request);
+            var response = await lessonService.UpdateEducationalDataAsync(HttpContext, request);
 
             return new ControllerResponse<EducationalDataResponse>
             {
@@ -463,11 +460,11 @@ public class LessonsController (
     }
     
     [HttpGet("get-lessons")]
-    public Response GetLessons()
+    public async Task<ActionResult<Response>> GetLessonsAsync()
     {
         try
         {
-            var lessons = lessonService.GetLessons(HttpContext);
+            var lessons = await lessonService.GetLessonsAsync(HttpContext);
 
             return new ControllerResponse<ICollection<LessonResponse>>
             {
@@ -486,11 +483,11 @@ public class LessonsController (
     }
     
     [HttpGet("get-card/{id:int}")]
-    public Response GetCard(int id)
+    public async Task<ActionResult<Response>> GetCardAsync(int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<AuthenticationResponse>
                 {
@@ -499,7 +496,7 @@ public class LessonsController (
                 };
             }
             
-            var card = lessonService.GetCardFull(HttpContext, id);
+            var card = await lessonService.GetCardFullAsync(HttpContext, id);
 
             return new ControllerResponse<FullCardResponse>
             {

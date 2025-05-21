@@ -13,11 +13,11 @@ public class LessonTrackerController(
 {
 
     [HttpPost("update-lesson-time")]
-    public Response UpdateLessonTime([FromBody] LessonTrackerRequest request)
+    public async Task<ActionResult<Response>> UpdateLessonTimeAsync([FromBody] LessonTrackerRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<bool>
                 {
@@ -26,7 +26,7 @@ public class LessonTrackerController(
                 };
             }
             
-            var response = trackerService.UpdateLessonTime(HttpContext, request);
+            var response = await trackerService.UpdateLessonTimeAsync(HttpContext, request);
 
             return new ControllerResponse<LessonTrackerResponse>
             {
@@ -46,11 +46,11 @@ public class LessonTrackerController(
     }
     
     [HttpDelete("reset-lesson-time/{id:int}")]
-    public Response ResetLessonTime(int id)
+    public async Task<ActionResult<Response>> ResetLessonTimeAsync(int id)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<bool>
                 {
@@ -59,7 +59,7 @@ public class LessonTrackerController(
                 };
             }
             
-            var response = trackerService.ResetLessonTime(HttpContext, id);
+            var response = await trackerService.ResetLessonTimeAsync(HttpContext, id);
 
             return new ControllerResponse<LessonTrackerResponse>
             {
@@ -79,11 +79,11 @@ public class LessonTrackerController(
     }
     
     [HttpDelete("reset-all-time")]
-    public Response ResetAllLessonTime()
+    public async Task<ActionResult<Response>> ResetAllLessonTime()
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
+            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
             {
                 return new ControllerResponse<bool>
                 {
@@ -92,7 +92,7 @@ public class LessonTrackerController(
                 };
             }
             
-            var response = trackerService.ResetAll(HttpContext);
+            var response = await trackerService.ResetAllAsync(HttpContext);
 
             return new ControllerResponse<LessonTrackerResponse>
             {

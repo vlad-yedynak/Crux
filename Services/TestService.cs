@@ -84,6 +84,82 @@ public class TestService(
         return false;
     }
     
+    public async Task<bool> ValidateQuestionAsync(HttpContext context, int questionId, int answerId)
+    {
+        var userId = await authenticationService.GetUserIdFromContextAsync(context);
+        
+        if (!userId.HasValue)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+        
+        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
+        if (user == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var answer = await dbContext.Answers.FirstOrDefaultAsync(x => x.Id == answerId &&  x.QuestionId == questionId);
+        if (answer == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var question = await dbContext.Questions.FirstOrDefaultAsync(x => x.Id == answer.QuestionId);
+        if (question == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+
+        var card = await dbContext.TestCards.FirstOrDefaultAsync(x => x.Id == question.TestCardId);
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var isPreviouslyCompleted = await dbContext.UserQuestionProgresses.AnyAsync(progress => progress.UserId == user.Id 
+            && progress.QuestionId == questionId);
+
+        if (answer.IsCorrect)
+        {
+            if (!isPreviouslyCompleted)
+            {
+                var scoreProgress = await dbContext.UserLessonProgresses
+                    .FirstOrDefaultAsync(p => p.UserId == user.Id && p.LessonId == card.LessonId);
+                
+                if (scoreProgress == null)
+                {
+                    await dbContext.UserLessonProgresses.AddAsync(new UserLessonProgress
+                    {
+                        UserId = user.Id,
+                        LessonId = card.LessonId,
+                        ScorePoint = answer.Score
+                    });
+                }
+                else
+                {
+                    scoreProgress.ScorePoint += answer.Score;
+                }
+                
+                await dbContext.UserQuestionProgresses.AddAsync(new UserQuestionProgress
+                {
+                    UserId = user.Id,
+                    QuestionId = questionId
+                });
+            }
+            
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+        
+        return false;
+    }
+    
     public bool ValidateTask(HttpContext context, int taskId, ICollection<TaskData> inputData)
     {
         var userId = authenticationService.GetUserIdFromContext(context);
@@ -157,6 +233,85 @@ public class TestService(
             }
             
             dbContext.SaveChanges();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public async Task<bool> ValidateTaskAsync(HttpContext context, int taskId, ICollection<TaskData> inputData)
+    {
+        var userId = await authenticationService.GetUserIdFromContextAsync(context);
+        
+        if (!userId.HasValue)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return false;
+        }
+        
+        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
+        
+        if (user == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+
+        var task = await dbContext.Tasks
+            .Include(t => t.ExpectedData)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+        if (task == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var card = await dbContext.SandboxCards.FirstOrDefaultAsync(x => x.Id == task.SandboxCardId);
+        if (card == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return false;
+        }
+        
+        var isPreviouslyCompleted = await dbContext.UserTaskProgresses.AnyAsync(progress => progress.UserId == user.Id 
+            && progress.TaskId == taskId);
+
+        if (task.ExpectedData.Count != inputData.Count)
+        {
+            return false;
+        }
+        
+        var areEqual = task.ExpectedData.SequenceEqual(inputData, new TaskDataValueComparer());
+
+        if (areEqual)
+        {
+            if (!isPreviouslyCompleted)
+            {
+                var scoreProgress = await dbContext.UserLessonProgresses
+                    .FirstOrDefaultAsync(p => p.UserId == user.Id && p.LessonId == card.LessonId);
+                
+                if (scoreProgress == null)
+                {
+                    await dbContext.UserLessonProgresses.AddAsync(new UserLessonProgress
+                    {
+                        UserId = user.Id,
+                        LessonId = card.LessonId,
+                        ScorePoint = task.Points
+                    });
+                }
+                else
+                {
+                    scoreProgress.ScorePoint += task.Points;
+                }
+                
+                await dbContext.UserTaskProgresses.AddAsync(new UserTaskProgress
+                {
+                    UserId = user.Id,
+                    TaskId = taskId
+                });
+            }
+            
+            await dbContext.SaveChangesAsync();
             return true;
         }
         
