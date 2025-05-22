@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.Entities;
 
 namespace Crux.Models.Requests;
 
@@ -11,5 +12,5 @@ public class UpdateLessonRequest
     
     [Required]
     [JsonPropertyName("title")]
-    public string Title { get; set; }
+    public required string Title { get; set; }
 }

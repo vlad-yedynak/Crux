@@ -6,10 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Controllers;
 
-[Route("lessons")]
+[Route("content")]
 public class LessonsController (
     IAuthenticationService authenticationService,
-    ILessonService lessonService) : ControllerBase
+    ILessonManagementService lessonManagementService,
+    ICardManagementService cardManagementService,
+    IQuestionService questionService,
+    ITaskService taskService,
+    IEducationalDataService educationalDataService) : ControllerBase
 {
     [HttpPost("create-lesson")]
     public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
@@ -25,7 +29,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.AddLessonAsync(HttpContext, title);
+            var response = await lessonManagementService.AddLessonAsync(HttpContext, title);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -57,7 +61,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.UpdateLessonNameAsync(HttpContext, request);
+            var response = await lessonManagementService.UpdateLessonNameAsync(HttpContext, request);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -89,7 +93,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.DeleteLessonAsync(HttpContext, id);
+            var response = await lessonManagementService.DeleteLessonAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -121,7 +125,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.AddCardAsync(HttpContext, cardRequest);
+            var response = await cardManagementService.AddCardAsync(HttpContext, cardRequest);
 
             return new ControllerResponse<FullCardResponse>
             {
@@ -153,7 +157,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.UpdateCardAsync(HttpContext, request);
+            var response = await cardManagementService.UpdateCardAsync(HttpContext, request);
 
             return new ControllerResponse<FullCardResponse>
             {
@@ -185,7 +189,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.DeleteCardAsync(HttpContext, id);
+            var response = await cardManagementService.DeleteCardAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -217,7 +221,7 @@ public class LessonsController (
                 };
             }
 
-            var response = await lessonService.AddQuestionAsync(HttpContext, questionRequest);
+            var response = await questionService.AddQuestionAsync(HttpContext, questionRequest);
 
             return new ControllerResponse<QuestionResponse>
             {
@@ -249,7 +253,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.UpdateQuestionAsync(HttpContext, request);
+            var response = await questionService.UpdateQuestionAsync(HttpContext, request);
 
             return new ControllerResponse<QuestionResponse>
             {
@@ -281,7 +285,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.DeleteQuestionAsync(HttpContext, id);
+            var response = await questionService.DeleteQuestionAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -313,7 +317,7 @@ public class LessonsController (
                 };
             }
 
-            var response = await lessonService.AddTaskAsync(HttpContext, taskRequest);
+            var response = await taskService.AddTaskAsync(HttpContext, taskRequest);
 
             return new ControllerResponse<TaskResponse>
             {
@@ -345,7 +349,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.UpdateTaskAsync(HttpContext, request);
+            var response = await taskService.UpdateTaskAsync(HttpContext, request);
 
             return new ControllerResponse<TaskResponse>
             {
@@ -377,7 +381,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.DeleteTaskAsync(HttpContext, id);
+            var response = await taskService.DeleteTaskAsync(HttpContext, id);
 
             return new ControllerResponse<bool>
             {
@@ -409,7 +413,7 @@ public class LessonsController (
                 };
             }
 
-            var response = await lessonService.AddEducationalDataAsync(HttpContext, educationalCardDataRequest);
+            var response = await educationalDataService.AddEducationalDataAsync(HttpContext, educationalCardDataRequest);
 
             return new ControllerResponse<EducationalDataResponse>
             {
@@ -441,7 +445,7 @@ public class LessonsController (
                 };
             }
             
-            var response = await lessonService.UpdateEducationalDataAsync(HttpContext, request);
+            var response = await educationalDataService.UpdateEducationalDataAsync(HttpContext, request);
 
             return new ControllerResponse<EducationalDataResponse>
             {
@@ -464,7 +468,7 @@ public class LessonsController (
     {
         try
         {
-            var lessons = await lessonService.GetLessonsAsync(HttpContext);
+            var lessons = await lessonManagementService.GetLessonsAsync(HttpContext);
 
             return new ControllerResponse<ICollection<LessonResponse>>
             {
@@ -496,7 +500,7 @@ public class LessonsController (
                 };
             }
             
-            var card = await lessonService.GetCardFullAsync(HttpContext, id);
+            var card = await cardManagementService.GetCardFullAsync(HttpContext, id);
 
             return new ControllerResponse<FullCardResponse>
             {

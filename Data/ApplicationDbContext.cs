@@ -26,6 +26,8 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     
     public DbSet<Models.Entities.Task> Tasks { get; set; }
     
+    public DbSet<TaskData> TaskData { get; set; }
+    
     public DbSet<UserTaskProgress> UserTaskProgresses { get; set; }
     
     public DbSet<UserQuestionProgress> UserQuestionProgresses { get; set; }

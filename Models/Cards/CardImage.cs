@@ -8,9 +8,9 @@ public class CardImage
     
     public required string Url { get; set; }
     
-    public required string Caption { get; set; }
+    public string? Caption { get; set; }
     
-    public required string AltText { get; set; }
+    public string? AltText { get; set; }
     
     [JsonIgnore]
     public EducationalCard EducationalCard { get; set; }
