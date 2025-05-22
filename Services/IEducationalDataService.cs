@@ -13,4 +13,6 @@ public interface IEducationalDataService
     
     EducationalDataResponse UpdateEducationalData(HttpContext context, EducationalCardDataRequest dataRequest);
     Task<EducationalDataResponse> UpdateEducationalDataAsync(HttpContext context, EducationalCardDataRequest dataRequest);
+
+    bool DeleteEducationalCardFiles(int cardId);
 }

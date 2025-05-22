@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using Crux.Data;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
@@ -9,7 +10,8 @@ namespace Crux.Services;
 
 public class EducationalDataService(
     IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext) : IEducationalDataService
+    ApplicationDbContext dbContext,
+    IWebHostEnvironment webHostEnvironment) : IEducationalDataService
 {
     public EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
     {
@@ -84,6 +86,7 @@ public class EducationalDataService(
     
     public async Task<EducationalDataResponse> AddEducationalDataAsync(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
     {
+        
         if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -118,26 +121,167 @@ public class EducationalDataService(
 
         if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Any())
         {
-            var images = educationalCardDataRequest.Images.Select(imageRequest => new CardImage
-            {
-                Url = imageRequest.Url,
-                Caption = imageRequest.Caption,
-                AltText = imageRequest.AltText,
-                EducationalCardId = educationalCard.Id
-            }).ToList();
-            
-            images.ForEach(img => educationalCard.Images.Add(img));
-        }
+            var cardImages = new List<CardImage>();
+            string uploadUrl = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", educationalCard.Id.ToString());
 
+            if (!Directory.Exists(uploadUrl))
+            {
+                Directory.CreateDirectory(uploadUrl);
+            }
+
+            foreach (var image in educationalCardDataRequest.Images)
+            {
+                if (string.IsNullOrWhiteSpace(image.Url) || !Uri.TryCreate(image.Url, UriKind.Absolute, out var uri))
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return new EducationalDataResponse
+                    {
+                        Success = false,
+                        Error = "Invalid Image"
+                    };
+                }
+                
+                try
+                {
+                    var client = new HttpClient();
+                    var response = await client.GetAsync(image.Url);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var imageResponse = await response.Content.ReadAsByteArrayAsync();
+                        var contentType = response.Content.Headers.ContentType?.MediaType;
+
+                        if (contentType == null)
+                        {
+                            return new EducationalDataResponse
+                            {
+                                Success = false,
+                                Error = "Invalid Image"
+                            };
+                        }
+                        
+                        var extension = Path.GetExtension(uri.AbsolutePath);
+                        if (string.IsNullOrEmpty(extension) || extension.Length > 5)
+                        {
+                            if (contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)) extension = ".jpg";
+                            else if (contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)) extension = ".png";
+                            else if (contentType.Equals("image/gif", StringComparison.OrdinalIgnoreCase)) extension = ".gif";
+                            else if (contentType.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) extension = ".webp";
+                            else extension = ".img";
+                        }
+
+                        var fileName = $"{Guid.NewGuid()}.{extension}";
+                        var filePath = Path.Combine(uploadUrl, fileName);
+                        await File.WriteAllBytesAsync(filePath, imageResponse);
+                        
+                        var serverUrl = $"/uploads/images/educational-cards/{educationalCard.Id}/{fileName}";
+                        
+                        cardImages.Add(new CardImage
+                        {
+                            Url = serverUrl,
+                            Caption = image.Caption,
+                            AltText = image.AltText,
+                            EducationalCardId = educationalCard.Id
+                        });
+                    }
+                    else
+                    {
+                        return new EducationalDataResponse
+                        {
+                            Success = false,
+                            Error = "Failed to receive image"
+                        };   
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    return new EducationalDataResponse
+                    {
+                        Success = false,
+                        Error = "Failed to save image"
+                    };
+                }
+            }
+            educationalCard.Images.AddRange(cardImages);
+        }
+        
         if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Any())
         {
-            var attachments = educationalCardDataRequest.Attachments.Select(attachmentRequest => new CardAttachment
+            var cardAttachment = new List<CardAttachment>();
+            string uploadUrl = Path.Combine(webHostEnvironment.WebRootPath,"uploads", "attachments", "educational-cards", educationalCard.Id.ToString());
+
+            if (!Directory.Exists(uploadUrl))
             {
-                Url = attachmentRequest.Url,
-                Description = attachmentRequest.Description,
-                EducationalCardId = educationalCard.Id
-            }).ToList();
-            attachments.ForEach(att => educationalCard.Attachments.Add(att));
+                Directory.CreateDirectory(uploadUrl);
+            }
+
+            foreach (var attachment in educationalCardDataRequest.Attachments)
+            {
+                if (string.IsNullOrWhiteSpace(attachment.Url) || !Uri.TryCreate(attachment.Url, UriKind.Absolute, out var uri))
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return new EducationalDataResponse
+                    {
+                        Success = false,
+                        Error = "Invalid attachment"
+                    };
+                }
+
+                try
+                {
+                    var client = new HttpClient();
+                    var response = await client.GetAsync(attachment.Url);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                        var originalFileName = Path.GetFileName(attachment.Url);
+
+                        if (string.IsNullOrEmpty(originalFileName))
+                        {
+                            originalFileName = "attachment";
+                        }
+                        
+                        var extension = Path.GetExtension(originalFileName);
+                        if (string.IsNullOrEmpty(extension))
+                        {
+                            extension = ".dat";
+                        }
+                        
+                        var serverFileName = $"{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(uploadUrl, serverFileName);
+                        await File.WriteAllBytesAsync(filePath, fileBytes);
+                        
+                        var serverUrl = $"/uploads/attachments/educational-cards/{educationalCard.Id}/{serverFileName}";
+                        
+                        cardAttachment.Add(new CardAttachment
+                        {
+                            Url = serverUrl,
+                            Description = attachment.Description,
+                            EducationalCardId = educationalCard.Id
+                        });
+                    }
+                    else
+                    {
+                        return new EducationalDataResponse
+                        {
+                            Success = false,
+                            Error = "Failed to receive file"
+                        };   
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    return new EducationalDataResponse
+                    {
+                        Success = false,
+                        Error = "Failed to save file"
+                    };
+                }
+            }
+            educationalCard.Attachments.AddRange(cardAttachment);
         }
         
         await dbContext.SaveChangesAsync();
@@ -150,6 +294,38 @@ public class EducationalDataService(
             Images = educationalCard.Images.ToList(),
             Attachments = educationalCard.Attachments.ToList()
         };
+    }
+    
+    public bool DeleteEducationalCardFiles(int cardId)
+    {
+        var imagesDirectory = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", cardId.ToString());
+        var attachmentsDirectory = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "attachments", "educational-cards", cardId.ToString());
+        
+        if (Directory.Exists(imagesDirectory))
+        {
+            try
+            {
+                Directory.Delete(imagesDirectory, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting educational card images: {ex.Message}");
+            }
+        }
+        
+        if (Directory.Exists(attachmentsDirectory))
+        {
+            try
+            {
+                Directory.Delete(attachmentsDirectory, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting educational card attachments: {ex.Message}");
+            }
+        }
+        
+        return true;
     }
 
     public EducationalDataResponse UpdateEducationalData(HttpContext context, EducationalCardDataRequest dataRequest)

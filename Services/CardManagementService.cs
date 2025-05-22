@@ -538,6 +538,11 @@ public class CardManagementService(
         var card = await dbContext.Cards.FirstOrDefaultAsync(c => c.Id == id);
         if (card != null)
         {
+            if (card.CardType == CardType.Educational)
+            {
+                educationalDataService.DeleteEducationalCardFiles(id);
+            }
+            
             dbContext.Cards.Remove(card);
             await dbContext.SaveChangesAsync();
             return true;
