@@ -42,14 +42,13 @@ export class LessonsPageComponent implements OnInit {
   hasError = false;
   errorMessage = '';
   
-  // Properties for the popup
   selectedCard: Card | null = null;
   isPopupVisible = false;
   safeCardContent: SafeHtml | null = null;
 
-  // New properties for View All mode
   isViewAllMode = false;
   selectedLessonId: number | null = null;
+  isAnimating = false; 
 
   constructor(
     private http: HttpClient,
@@ -71,7 +70,22 @@ export class LessonsPageComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.lessons = response.body;
-          console.log('Lessons loaded:', this.lessons);
+          
+          const typeOrder: { [key: string]: number } = {
+            'Educational': 1,
+            'Test': 2,
+            'Sandbox': 3
+          };
+          
+          this.lessons.forEach(lesson => {
+            lesson.cards.sort((a, b) => {
+              const orderA = typeOrder[a.type] || 999;
+              const orderB = typeOrder[b.type] || 999;
+              return orderA - orderB;
+            });
+          });
+          
+          console.log('Lessons loaded and cards sorted:', this.lessons);
         } else {
           this.hasError = true;
           this.errorMessage = response.error || 'Failed to load lessons';
@@ -91,14 +105,12 @@ export class LessonsPageComponent implements OnInit {
    * Open popup for educational cards and fetch detailed card information
    */
   openCardDetails(card: Card): void {
-    // First fetch detailed card data from API
+    if (this.isAnimating) return;
     this.fetchCardDetails(card.id);
     console.log('Card loaded:', card);
-    // Check if this is an educational card type
     if (card.type === 'Educational') {
       this.selectedCard = card;
       
-      // Sanitize the HTML content for safe display
       if (card.content) {
         this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(card.content);
       } else {
@@ -106,7 +118,6 @@ export class LessonsPageComponent implements OnInit {
       }
       
       this.isPopupVisible = true;
-      // Prevent scrolling on the body when popup is open
       document.body.style.overflow = 'hidden';
     }
     else if (card.type === 'Test') {
@@ -147,10 +158,8 @@ export class LessonsPageComponent implements OnInit {
         console.log('Card details received:', response);
         
         if (response.success && response.body) {
-          // Update the selected card with the fetched details
           this.selectedCard = response.body;
           
-          // Sanitize the HTML content for safe display
           if (this.selectedCard.content) {
             this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(this.selectedCard.content);
           } else {
@@ -213,22 +222,19 @@ export class LessonsPageComponent implements OnInit {
    * Scroll the lesson container horizontally
    */
   scrollLessons(event: MouseEvent, direction: 'left' | 'right'): void {
+    if (this.isAnimating) return; 
     const button = event.currentTarget as HTMLButtonElement;
-    // First find the parent category container
     const categoryContainer = button.closest('.category-container');
     if (!categoryContainer) return;
     
-    // Then find the scroll container within this category
     const scrollContainer = categoryContainer.querySelector('.scroll-container');
     if (!scrollContainer) return;
     
     const lessonContainer = scrollContainer.querySelector('.lesson-container') as HTMLElement;
     if (!lessonContainer) return;
     
-    // Scroll amount - approximately one card width plus gap
     const scrollAmount = 341; // 325px card width + 16px gap
     
-    // Scroll left or right
     if (direction === 'left') {
       lessonContainer.scrollBy({
         left: -scrollAmount,
@@ -246,13 +252,90 @@ export class LessonsPageComponent implements OnInit {
    * Toggle View All mode for a specific lesson
    */
   toggleViewAllMode(lessonId: number): void {
+    if (this.isAnimating) {
+      return;
+    }
+
     if (this.isViewAllMode && this.selectedLessonId === lessonId) {
-      // If already viewing this lesson, exit view all mode
       this.closeViewAll();
-    } else {
-      // Enter view all mode for the selected lesson
-      this.isViewAllMode = true;
-      this.selectedLessonId = lessonId;
+    } else if (!this.isViewAllMode) {
+      this.isAnimating = true;
+
+      const allCategoryContainers = document.querySelectorAll('.category-container');
+      allCategoryContainers.forEach(container => {
+        const htmlContainer = container as HTMLElement;
+        htmlContainer.classList.add('animated');
+        const catId = parseInt(htmlContainer.dataset['category'] || '0');
+        if (catId !== lessonId) {
+          htmlContainer.classList.add('category-container-fade-out');
+        }
+      });
+
+      const selectedCategoryContainer = document.querySelector(`.category-container[data-category="${lessonId}"]`);
+      if (selectedCategoryContainer) {
+        selectedCategoryContainer.classList.add('animated');
+        const scrollerCards = selectedCategoryContainer.querySelectorAll('.lesson-container .lesson-card');
+        const numCards = scrollerCards.length;
+
+        scrollerCards.forEach((card, index) => {
+          const htmlCard = card as HTMLElement;
+          htmlCard.classList.add('animated');
+
+          if (numCards === 1) {
+            htmlCard.classList.add('card-scroller-slide-out-far-left');
+          } else if(numCards === 2) {
+            if(index === 0) 
+              htmlCard.classList.add('card-scroller-slide-out-far-left');
+            else if(index === 1) 
+              htmlCard.classList.add('card-scroller-slide-out-far-right');
+          } else if(numCards === 3) {
+            if(index === 0) 
+              htmlCard.classList.add('card-scroller-slide-out-far-left');
+            else if(index === 1) 
+              htmlCard.classList.add('card-scroller-slide-out-left');
+            else if(index === 2) 
+              htmlCard.classList.add('card-scroller-slide-out-far-right');
+          } else { 
+            if (index === 0 || index === 1) { 
+              htmlCard.classList.add('card-scroller-slide-out-far-left');
+            } else { //index === numCards - 1 || index === numCards - 2
+              htmlCard.classList.add('card-scroller-slide-out-far-right');
+            } 
+            /*else { 
+              if ((index - 2) % 2 === 0) { 
+                htmlCard.classList.add('card-scroller-slide-out-left');
+              } else {
+                htmlCard.classList.add('card-scroller-slide-out-right');
+              }
+            }*/
+          }
+        });
+      }
+
+      setTimeout(() => {
+        this.selectedLessonId = lessonId;
+        this.isViewAllMode = true;
+
+        setTimeout(() => {
+          const viewAllCards = document.querySelectorAll('.view-all-mode .lesson-card');
+          viewAllCards.forEach(card => {
+            card.classList.add('card-grid-fade-in');
+          });
+        }, 50);
+
+      }, 300); 
+
+      setTimeout(() => {
+        this.isAnimating = false;
+        document.querySelectorAll('.category-container.animated').forEach(el => el.classList.remove('category-container-fade-out', 'animated'));
+        document.querySelectorAll('.lesson-card.animated').forEach(el => el.classList.remove(
+            'card-scroller-slide-out-left', 
+            'card-scroller-slide-out-right', 
+            'card-scroller-slide-out-far-left', 
+            'card-scroller-slide-out-far-right', 
+            'animated'
+        ));
+      }, 1200);
     }
   }
 
@@ -260,8 +343,14 @@ export class LessonsPageComponent implements OnInit {
    * Exit View All mode
    */
   closeViewAll(): void {
-    this.isViewAllMode = false;
-    this.selectedLessonId = null;
+    if (this.isAnimating && this.isViewAllMode) {
+    }
+
+    if (this.isViewAllMode) { 
+        this.isViewAllMode = false;
+        this.selectedLessonId = null;
+        this.isAnimating = false; 
+    }
   }
 
   /**

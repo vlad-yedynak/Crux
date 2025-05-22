@@ -243,9 +243,6 @@
     border: 1px solid var(--color-secondary-light);
 }
 
-.lesson-card:first-child {
-}
-
 .lesson-title {
     font-size: 24px;
     font-weight: 600;
@@ -496,7 +493,6 @@
 .test-card:hover,
 .sandbox-card:hover {
   cursor: pointer;
-  /* No border styling here - let .lesson-card:hover handle it */
 }
 
 /* Style for the view button */
@@ -539,12 +535,12 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 5px; /* Further reduced from 6px */
+    gap: 5px; 
     flex-shrink: 0; 
     height: auto;
     position: static;
     top: unset;
-    margin-left: auto; /* Push to the right side */
+    margin-left: auto; 
 }
 
 /* View All mode styles */
@@ -562,10 +558,10 @@
 
 .view-all-cards {
     display: flex;
-    flex-direction: row; /* Changed from column to row */
-    flex-wrap: wrap; /* Allow cards to wrap to next line */
-    justify-content: center; /* Center cards horizontally */
-    gap: 20px; /* Equal spacing between cards */
+    flex-direction: row; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 20px; 
     width: 100%;
 }
 
@@ -585,14 +581,96 @@
     background-color: var(--color-accent);
 }
 
-/* Ensure lesson cards in view-all mode maintain their original styling and dimensions */
+
 .view-all-mode .lesson-card {
-    min-width: 325px; /* Same as original cards */
-    width: 325px;     /* Same as original cards */
-    height: 215px;    /* Same as original cards */
+    min-width: 325px; 
+    width: 325px;     
+    height: 215px;   
     max-width: unset;
-    flex: 0 0 auto;   /* Prevent cards from growing/shrinking */
+    flex: 0 0 auto;   
     margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Animation: Cards in scroller sliding out */
+.card-scroller-slide-out-left {
+  animation: cardScrollerSlideOutLeft 0.5s forwards ease-out;
+}
+
+.card-scroller-slide-out-right {
+  animation: cardScrollerSlideOutRight 0.5s forwards ease-out;
+}
+
+@keyframes cardScrollerSlideOutLeft {
+  to {
+    transform: translateX(-150%);
+    opacity: 0;
+  }
+}
+
+@keyframes cardScrollerSlideOutRight {
+  to {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+}
+
+/* Animation: Cards in scroller sliding out FAR */
+.card-scroller-slide-out-far-left {
+  animation: cardScrollerSlideOutFarLeft 0.5s forwards ease-out;
+}
+
+.card-scroller-slide-out-far-right {
+  animation: cardScrollerSlideOutFarRight 0.5s forwards ease-out;
+}
+
+@keyframes cardScrollerSlideOutFarLeft {
+  to {
+    transform: translateX(-250%); /* Increased distance to ensure off-screen */
+    opacity: 0;
+  }
+}
+
+@keyframes cardScrollerSlideOutFarRight {
+  to {
+    transform: translateX(250%); /* Increased distance to ensure off-screen */
+    opacity: 0;
+  }
+}
+
+/* Animation: Other category containers fading out */
+.category-container-fade-out {
+  animation: categoryContainerFadeOut 0.4s forwards ease-out;
+}
+
+@keyframes categoryContainerFadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Animation: Cards in grid view fading in */
+.card-grid-fade-in {
+  animation: cardGridFadeIn 0.6s forwards ease-in;
+  animation-delay: 0.2s; 
+}
+
+@keyframes cardGridFadeIn {
+  from {
+    opacity: 0.3;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lesson-card.animated, .category-container.animated {
+    opacity: 1;
+    transform: none;
 }
 
 @media (max-width: 1300px) {
@@ -602,7 +680,6 @@
     }
     .lesson-container {
         width: 100%; 
-        /* Adjust for 2 cards on smaller screens */
         max-width: calc((340px * 2) + (20px * 1)); 
     }
 }
@@ -619,7 +696,6 @@
     }
     .lesson-container {
         width: 100%; 
-        /* Adjust for 1 card on medium screens */
         max-width: 340px; 
     }
 }
@@ -648,7 +724,6 @@
     }
     .lesson-container {
         width: 100%; 
-        /* Adjust for 2 cards on medium screens */
         max-width: calc((325px * 2) + (16px * 1)); 
     }
 }

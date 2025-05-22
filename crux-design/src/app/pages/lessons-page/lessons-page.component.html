@@ -70,7 +70,6 @@
             <button class="close-popup-btn" (click)="closePopup($event)">&times;</button>
             <div class="popup-content-area">
                 <div class="popup-left-content">
-                    <!-- Display educational content with fallback -->
                     <div *ngIf="safeCardContent" [innerHTML]="safeCardContent" class="educational-content"></div>
                     <div *ngIf="!safeCardContent" class="content-fallback">
                         <p>No content available for this lesson.</p>

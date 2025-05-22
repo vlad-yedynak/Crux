@@ -37,49 +37,25 @@
         </div>
         <div class="account-info points-info">
           <h2>Points Details</h2>
-          <div class="topic-points-container">
-            <div class="topic-row">
-              <div class="topic-name">C1</div>
+          <div class="topic-points-container" *ngIf="lessons && lessons.length > 0 && userInfo">
+            <div *ngFor="let lesson of lessons" class="topic-row">
+              <div class="topic-name">{{ lesson.title }}</div>
               <div class="topic-bar-container">
-                <div class="topic-bar" style="width: 85%;"></div>
+                <div class="topic-bar" [style.width.%]="getTopicPercentage(getLessonScore(lesson.id))"></div>
               </div>
-              <div class="topic-value">85</div>
+              <div class="topic-value">{{ getLessonScore(lesson.id) }}</div>
             </div>
-            <div class="topic-row">
-              <div class="topic-name">C2</div>
-              <div class="topic-bar-container">
-                <div class="topic-bar" style="width: 70%;"></div>
-              </div>
-              <div class="topic-value">70</div>
-            </div>
-            <div class="topic-row">
-              <div class="topic-name">C3</div>
-              <div class="topic-bar-container">
-                <div class="topic-bar" style="width: 92%;"></div>
-              </div>
-              <div class="topic-value">92</div>
-            </div>
-            <div class="topic-row">
-              <div class="topic-name">C4</div>
-              <div class="topic-bar-container">
-                <div class="topic-bar" style="width: 63%;"></div>
-              </div>
-              <div class="topic-value">63</div>
-            </div>
-            <div class="topic-row">
-              <div class="topic-name">C5</div>
-              <div class="topic-bar-container">
-                <div class="topic-bar" style="width: 45%;"></div>
-              </div>
-              <div class="topic-value">45</div>
-            </div>
+
             <div class="info-row total-points">
               <span class="label">Total Points:</span>
-              <span class="value">{{ userInfo?.scorePoints }}</span>
+              <span class="value">{{ getCalculatedTotalScorePoints() }}</span>
             </div>
             <div class="topic-bar-container total-points-bar">
-              <div class="topic-bar" style="width: 75%;"></div>
+              <div class="topic-bar" [style.width.%]="getTotalScorePercentage()"></div>
             </div>
+          </div>
+          <div *ngIf="!lessons || lessons.length === 0 || !userInfo">
+            <p>No points details available.</p>
           </div>
         </div>
       </div>

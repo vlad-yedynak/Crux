@@ -9,7 +9,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  scorePoints?: string;
+  scorePoints?: { [lessonId: string]: number }; // Changed from lessonScores, to match backend
   userRole: string;
   avatarUrl?: string;
 }
@@ -22,7 +22,6 @@ export class AuthServiceService {
   private baseUrl = 'http://localhost:8080/user';
   private readonly AUTH_TOKEN_KEY = 'auth-token';
   private readonly AUTH_USER_KEY = 'auth-user';
-  private readonly USER_ROLE_KEY = 'Role';
 
   constructor(
     private http: HttpClient,
@@ -47,13 +46,34 @@ export class AuthServiceService {
         this.userSubject.next(user);
       } catch (e) {
         console.error('Error parsing stored user data:', e);
+        localStorage.removeItem(this.AUTH_USER_KEY);
         this.logout(); 
       }
-    } else if (token) {
-      // Token exists, but no user data.
-      // HeaderComponent will attempt to fetch if user is not in subject.
-      console.log('Token found in localStorage, but no user data. User will be fetched if needed.');
+    } else if (token && this.userSubject.value === null) { 
+      this.fetchAndSetUser().subscribe({
+        next: (user) => {
+          if (user) {
+            console.log('AuthService: User data proactively fetched during loadUserFromStorage.');
+          } else {
+            console.warn('AuthService: Proactive fetch during loadUserFromStorage did not return a user (or token was invalid).');
+          }
+        },
+        error: (err) => {
+          console.error('AuthService: Error during proactive user data fetch in loadUserFromStorage:', err);
+        }
+      });
+    } else if (token && this.userSubject.value !== null) {
+      console.log('AuthService: Token found, and user data already present in the service.');
+    } else {
+      console.log('AuthService: No token found in localStorage.');
     }
+  }
+
+  public forceRefreshUserData(): Observable<User | null> {
+    if (this.isBrowser()) {
+      localStorage.removeItem(this.AUTH_USER_KEY);
+    }
+    return this.fetchAndSetUser();
   }
 
   createUser(formData: any): Observable<User | null> {
@@ -115,10 +135,6 @@ export class AuthServiceService {
     const token = localStorage.getItem(this.AUTH_TOKEN_KEY);
     if (!token) {
       this.userSubject.next(null);
-      if (this.isBrowser()) {
-        localStorage.removeItem(this.AUTH_USER_KEY);
-        localStorage.removeItem(this.USER_ROLE_KEY); // Also clear role if token is gone
-      }
       return of(null);
     }
 
@@ -134,7 +150,6 @@ export class AuthServiceService {
             this.userSubject.next(user);
             if (this.isBrowser()) {
               localStorage.setItem(this.AUTH_USER_KEY, JSON.stringify(user));
-              localStorage.setItem(this.USER_ROLE_KEY, user.userRole);
             }
             console.log('User info fetched and stored:', user);
           } else {
@@ -167,29 +182,69 @@ export class AuthServiceService {
     if (this.isBrowser()) {
       localStorage.removeItem(this.AUTH_TOKEN_KEY);
       localStorage.removeItem(this.AUTH_USER_KEY);
-      localStorage.removeItem(this.USER_ROLE_KEY);
     }
     this.userSubject.next(null);
     console.log('User logged out, all auth data cleared.');
   }
 
   changeFirstName(newFirstName: string) {
-    const token = localStorage.getItem('auth-token'); // Отримуємо токен із localStorage
+    const currentUser = this.userSubject.value;
+    if (currentUser && currentUser.firstName === newFirstName) {
+      console.log('First name is the same, no update needed.');
+      return of(currentUser); 
+    }
+    const token = localStorage.getItem(this.AUTH_TOKEN_KEY); 
+    if (!token || !this.isBrowser()) {
+      this.logout(); 
+      return throwError(() => new Error('User not authenticated or not in browser for changing first name.'));
+    }
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
   
-    return this.http.put(this.baseUrl + '/change-first-name', JSON.stringify(newFirstName), { headers });
+    return this.http.put(this.baseUrl + '/change-first-name', JSON.stringify(newFirstName), { headers }).pipe(
+      switchMap(() => {
+        return this.forceRefreshUserData();
+      }),
+      catchError(err => {
+        console.error('Error updating first name or refreshing user data:', err);
+        if (err.status === 401 || err.status === 403) {
+            this.logout();
+        }
+        return throwError(() => err);
+      })
+    );
   }
   
   changeLastName(newLastName: string) {
-    const token = localStorage.getItem('auth-token'); 
+    const currentUser = this.userSubject.value;
+    if (currentUser && currentUser.lastName === newLastName) {
+      console.log('First name is the same, no update needed.');
+      return of(currentUser); 
+    }
+
+    const token = localStorage.getItem(this.AUTH_TOKEN_KEY); 
+    if (!token || !this.isBrowser()) {
+      this.logout(); 
+      return throwError(() => new Error('User not authenticated or not in browser for changing last name.'));
+    }
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
   
-    return this.http.put(this.baseUrl + '/change-last-name', JSON.stringify(newLastName), { headers });
+    return this.http.put(this.baseUrl + '/change-last-name', JSON.stringify(newLastName), { headers }).pipe(
+      switchMap(() => {
+        return this.forceRefreshUserData();
+      }),
+      catchError(err => {
+        console.error('Error updating last name or refreshing user data:', err);
+        if (err.status === 401 || err.status === 403) {
+            this.logout();
+        }
+        return throwError(() => err);
+      })
+    );
   }
 }

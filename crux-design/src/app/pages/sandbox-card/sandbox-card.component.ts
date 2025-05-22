@@ -7,6 +7,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, animate, transition } from '@angular/animations'; // Import animation modules
 import { TimeTrackerService } from '../../services/time-tracker.service';
+import { AuthServiceService, User } from '../../auth/services/auth-service.service';
 
 export interface Task {
   id: number;
@@ -101,6 +102,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
+    private authService: AuthServiceService,
     @Inject(PLATFORM_ID) private platformId: Object,
     public canvasService: CanvasService, // Notice: no @Inject here
     private timeTrackerService: TimeTrackerService // Remove @Inject here
@@ -304,6 +306,19 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
                   taskInList.isCompleted = true;
                 }
               }
+
+              this.authService.forceRefreshUserData().subscribe({
+                next: (updatedUser: User | null) => {
+                  if (updatedUser) {
+                    console.log('User data refreshed after correct task answer. New score:', updatedUser.scorePoints);
+                  } else {
+                    console.warn('User data refresh after task did not return a user.');
+                  }
+                },
+                error: (err) => {
+                  console.error('Error refreshing user data after task:', err);
+                }
+              });
             }
           } else {
             // Show error in popup

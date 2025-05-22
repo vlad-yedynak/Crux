@@ -82,7 +82,6 @@ export class HeaderComponent implements OnInit{
     this.authService.getUser().subscribe(user => {
       this.user = user;
       this.isAdmin = user?.userRole === 'Admin';
-      console.log('Header received user:', user);
     });
 
     if (isPlatformBrowser(this.platformId)) {
