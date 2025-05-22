@@ -15,6 +15,7 @@ export class LoginFormComponent {
   @Output() switchToSignup = new EventEmitter<void>();
   
   loginForm: FormGroup;
+  loginError: string = '';
   
   constructor(
     private formBuilder: FormBuilder,
@@ -33,12 +34,19 @@ export class LoginFormComponent {
   
   onSubmit() {
     if (this.loginForm.valid) {
+      this.loginError = '';
       this.authService.loginUser(this.loginForm.value).subscribe({
-        next: () => {
-          console.log('Token after login:', localStorage.getItem('auth-token'));
-          this.router.navigate(['/profile']);
+        next: (response) => {
+          if (response?.body?.token) {
+            console.log('Token after login:', localStorage.getItem('auth-token'));
+            this.router.navigate(['/profile']);
+          } else {
+            this.loginError = 'Login failed. Please check your credentials.';
+            console.error('Login failed: No valid token received');
+          }
         },
         error: (err) => {
+          this.loginError = 'Invalid email or password. Please try again.';
           console.error('Login failed:', err);
         }
       });

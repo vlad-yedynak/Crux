@@ -214,34 +214,76 @@
       <div class="panel" *ngIf="activePanel === 'tasks'">
         <div class="task-section">
           <div *ngIf="!selectedTask" class="task-list">
-            <h3>Список завдань</h3>
-            <ul>
-              <li *ngFor="let task of card?.tasks" (click)="selectTask(task)">
-                ID: {{ task.id }} - {{ task.name }}
+            <h4>Список завдань:</h4>
+            <ul *ngIf="card && card.tasks && card.tasks.length > 0; else noTasks">
+              <li *ngFor="let task of card?.tasks" (click)="selectTask(task)" [ngClass]="{'completed-task': task.isCompleted}">
+                <div class="shape-info">
+                  <span>{{ task.name }}</span>
+                </div>
+                <div class="task-status" *ngIf="task.isCompleted">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" class="completed-icon">
+                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                  <span class="completed-text">Виконано</span>
+                </div>
               </li>
             </ul>
+            <ng-template #noTasks>
+              <p class="no-shapes-message">Немає доступних завдань.</p>
+            </ng-template>
           </div>
-          <div *ngIf="selectedTask" class="task-details">
-            <h3>{{ selectedTask.name }}</h3>
-            <p>{{ selectedTask.description }}</p>
-            
-            <div class="input-group">
-              <label for="taskAnswerInt">Ціле число (Integer):</label>
-              <input id="taskAnswerInt" type="number" [(ngModel)]="taskAnswerInt" />
+          <div *ngIf="selectedTask" class="task-details shape-edit-panel" [ngClass]="{'completed-task': selectedTask.isCompleted}">
+            <div class="name-section">
+              <label>Завдання:</label>
+              <h4>{{ selectedTask.name }}</h4>
             </div>
             
-            <div class="input-group">
-              <label for="taskAnswerDouble">Дробове число (Double):</label>
-              <input id="taskAnswerDouble" type="number" step="0.01" [(ngModel)]="taskAnswerDouble" />
+            <div class="points-section">
+              <div class="points-header">Опис:</div>
+              <p class="task-description">{{ selectedTask.description }}</p>
             </div>
             
-            <div class="input-group">
-              <label for="taskAnswerString">Текст (String):</label>
-              <input id="taskAnswerString" type="text" [(ngModel)]="taskAnswerString" />
+            <div class="points-section">
+              <div class="points-header">Відповідь:</div>
+              
+              <div class="point-inputs">
+                <div class="point-header">
+                  <span class="point-label">Ціле число (Integer):</span>
+                </div>
+                <div class="coordinates">
+                  <div class="coordinate" style="width: 100%;">
+                    <input id="taskAnswerInt" type="number" [(ngModel)]="taskAnswerInt" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="point-inputs">
+                <div class="point-header">
+                  <span class="point-label">Дробове число (Double):</span>
+                </div>
+                <div class="coordinates">
+                  <div class="coordinate" style="width: 100%;">
+                    <input id="taskAnswerDouble" type="number" step="0.01" [(ngModel)]="taskAnswerDouble" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="point-inputs">
+                <div class="point-header">
+                  <span class="point-label">Текст (String):</span>
+                </div>
+                <div class="coordinates">
+                  <div class="coordinate" style="width: 100%;">
+                    <input id="taskAnswerString" type="text" [(ngModel)]="taskAnswerString" />
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <button class="submit-button" (click)="submitTaskAnswer()">Надіслати відповідь</button>
-            <button class="back-button" (click)="deselectTask()">Назад до списку</button>
+            <div class="form-actions">
+              <button class="save-btn" (click)="submitTaskAnswer()">Надіслати відповідь</button>
+              <button class="cancel-btn" (click)="deselectTask()">Назад</button>
+            </div>
           </div>
         </div>
       </div>
@@ -256,4 +298,41 @@
   <div *ngIf="card?.sandboxType === 'color'">
     <h1>Кольорова палітра</h1>
     <p>Тут буде відображено кольорову палітру.</p>
+  </div>
+
+  <!-- Task Results Popup -->
+  <div *ngIf="showResultsPopup" class="results-popup-overlay">
+    <div class="results-popup">
+      <h2>Результат завдання</h2>
+      <div class="results-content">
+        <p class="results-score" *ngIf="taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#4caf50" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+          <span class="highlight success">Правильна відповідь!</span>
+        </p>
+        
+        <!-- Add points animation here -->
+        <div *ngIf="taskResultCorrect" class="points-animation-container">
+          <div class="points-badge">+{{ selectedTask?.points || 0 }}</div>
+        </div>
+
+        <p class="results-score" *ngIf="!taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#EB5E28" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+          <span class="highlight error">Неправильна відповідь!</span>
+        </p>
+        <div class="task-message" *ngIf="taskResultCorrect">
+          <p>Завдання виконано успішно! Ви можете повернутися до списку завдань.</p>
+        </div>
+        <div class="task-message" *ngIf="!taskResultCorrect">
+          <p>Спробуйте ще раз. Перевірте правильність відповіді.</p>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="retry-btn" *ngIf="!taskResultCorrect" (click)="closeResultsPopup()">Спробувати ще</button>
+        <button class="return-btn" (click)="closeResultsPopup()">{{ taskResultCorrect ? 'Повернутися до завдань' : 'Закрити' }}</button>
+      </div>
+    </div>
   </div>

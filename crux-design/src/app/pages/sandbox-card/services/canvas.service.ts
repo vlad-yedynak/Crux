@@ -1,4 +1,5 @@
-import { Injectable, ElementRef } from '@angular/core';
+import { Injectable, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface ShapeData {
   id: string; 
@@ -710,14 +711,19 @@ export function validateTrianglePoints(points: Point[], currentIndex: number): b
 })
 export class CanvasService {
   private controllerInstance: CanvasController | null = null;
+  private isBrowser: boolean;
 
-  constructor() { }
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   public initializeCanvas(
     canvasElRef: ElementRef<HTMLCanvasElement>,
     width: number,
     height: number
   ): void {
+    if (!this.isBrowser) return;
+    
     if (canvasElRef && canvasElRef.nativeElement) {
       const canvas = canvasElRef.nativeElement;
       
@@ -784,6 +790,8 @@ export class CanvasService {
   }
 
   public saveShapesToLocalStorage(): void {
+    if (!this.isBrowser) return;
+    
     if (this.controllerInstance) {
       const shapes = this.controllerInstance.getShapes();
       
@@ -801,6 +809,8 @@ export class CanvasService {
   }
 
   public loadShapesFromLocalStorage(): ShapeData[] {
+    if (!this.isBrowser) return [];
+    
     try {
       const savedShapes = localStorage.getItem('savedCanvasShapes');
       if (savedShapes) {

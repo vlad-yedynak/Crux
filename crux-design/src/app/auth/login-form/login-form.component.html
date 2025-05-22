@@ -17,6 +17,10 @@
       </div>
     </div>
     
+    <div *ngIf="loginError" class="login-error">
+      {{ loginError }}
+    </div>
+    
     <button type="submit">Log in</button>
     <p>Don't have an account? <a (click)="onSwitchToSignup()" style="cursor: pointer;">Sign up</a></p>
   </form>

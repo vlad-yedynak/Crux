@@ -94,6 +94,9 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
 
   invalidPoints: {[key: string]: boolean} = {}; 
 
+  showResultsPopup = false;
+  taskResultCorrect = false;
+
   constructor(
     private route: ActivatedRoute, 
     private http: HttpClient,
@@ -106,6 +109,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    // Only run browser-specific code when in browser environment
     if (this.isBrowser()) {
       const cardId = localStorage.getItem('selectedCardId');
       if (cardId) {
@@ -123,6 +127,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    // Only run canvas setup in browser environment
     if (this.isBrowser()) {
       setTimeout(() => this.setupCanvasIfReady(), 100);
     }
@@ -130,17 +135,21 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:resize')
   onResize(): void {
-    if (this.canvasInitialized) {
-      this.updateCanvasSize();
-      const shapes = this.canvasService.loadShapesFromLocalStorage();
-      if (shapes && shapes.length > 0) {
-        this.canvasService.restoreShapes(shapes);
-        this.refreshDrawnShapesList();
-      }
+    // Skip if not in browser or canvas isn't initialized
+    if (!this.isBrowser() || !this.canvasInitialized) return;
+    
+    this.updateCanvasSize();
+    const shapes = this.canvasService.loadShapesFromLocalStorage();
+    if (shapes && shapes.length > 0) {
+      this.canvasService.restoreShapes(shapes);
+      this.refreshDrawnShapesList();
     }
   }
 
   private updateCanvasSize(): void {
+    // Skip if not in browser
+    if (!this.isBrowser()) return;
+    
     if (
       this.containerRef && 
       this.containerRef.nativeElement && 
@@ -157,6 +166,9 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   private setupCanvasIfReady(): void {
+    // Skip if not in browser
+    if (!this.isBrowser()) return;
+    
     if (
       this.card?.sandboxType === 'CoordinateSystem' &&
       !this.canvasInitialized &&
@@ -180,6 +192,9 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   fetchCardDetails(cardId: number): void {
+    // Skip if not in browser
+    if (!this.isBrowser()) return;
+    
     const token = localStorage.getItem('auth-token');
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
@@ -223,7 +238,6 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
       let payload;
       
       if (this.selectedTask.id === 9) {
-        
         payload = {
           taskId: this.selectedTask.id,
           inputData: [
@@ -252,17 +266,47 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
       ).subscribe({
         next: (response) => {
           if (response.success) {
-            alert(response.body ? 'Correct answer!' : 'Incorrect answer.');
+            const isCorrect = response.body;
+            
+            // Set popup state
+            this.taskResultCorrect = isCorrect;
+            this.showResultsPopup = true;
+            
+            if (isCorrect) {
+              // Update the selected task status
+              if (this.selectedTask) {
+                this.selectedTask.isCompleted = true;
+              }
+              
+              // Also update the task in the card's tasks array for when we return to the list
+              if (this.card && this.card.tasks) {
+                const taskInList = this.card.tasks.find(t => t.id === this.selectedTask!.id);
+                if (taskInList) {
+                  taskInList.isCompleted = true;
+                }
+              }
+            }
           } else {
-            alert(`Validation failed: ${response.error}`);
+            // Show error in popup
+            this.taskResultCorrect = false;
+            this.showResultsPopup = true;
+            console.error(`Validation error: ${response.error}`);
           }
         },
         error: (err) => {
           console.error('Error validating task answer:', err);
-          alert('Failed to validate the answer. Please try again.');
+          // Show error in popup
+          this.taskResultCorrect = false;
+          this.showResultsPopup = true;
         }
       });
+    }
+  }
 
+  // Add method to close the popup
+  closeResultsPopup(): void {
+    this.showResultsPopup = false;
+    if (this.taskResultCorrect) {
       this.deselectTask();
     }
   }
@@ -270,14 +314,14 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   //Shape Management Methods
 
   refreshDrawnShapesList(): void {
-    if (this.canvasInitialized) {
-      const canvasShapes = this.canvasService.getDrawnShapes();
-      console.log('Refreshed drawn shapes list:', canvasShapes);
-      
-      const placeholderShapes = this.drawnShapes.filter(s => s.isPlaceholder);
-      
-      this.drawnShapes = [...canvasShapes, ...placeholderShapes];
-    }
+    if (!this.isBrowser() || !this.canvasInitialized) return;
+    
+    const canvasShapes = this.canvasService.getDrawnShapes();
+    console.log('Refreshed drawn shapes list:', canvasShapes);
+    
+    const placeholderShapes = this.drawnShapes.filter(s => s.isPlaceholder);
+    
+    this.drawnShapes = [...canvasShapes, ...placeholderShapes];
   }
 
   getRequiredPointsCount(shapeType: string): number {
@@ -292,8 +336,8 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   onDrawShape(): void {
-    if (!this.canvasInitialized) {
-      alert('Canvas is not ready.');
+    if (!this.isBrowser() || !this.canvasInitialized) {
+      if (this.isBrowser()) alert('Canvas is not ready.');
       return;
     }
 
@@ -518,7 +562,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   onDeleteShape(shapeId: string): void {
-    if (!this.canvasInitialized) return;
+    if (!this.isBrowser() || !this.canvasInitialized) return;
     
     const shape = this.drawnShapes.find(s => s.id === shapeId);
     if (!shape) return;
@@ -651,13 +695,13 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
   
   private updateTempShapeOnCanvas(shape: ShapeData): void {
-    if (this.canvasInitialized && shape) {
-      const tempShape = { 
-        ...shape, 
-        isPlaceholder: true 
-      };
-      this.canvasService.setTempShape(tempShape);
-    }
+    if (!this.isBrowser() || !this.canvasInitialized || !shape) return;
+    
+    const tempShape = { 
+      ...shape, 
+      isPlaceholder: true 
+    };
+    this.canvasService.setTempShape(tempShape);
   }
 
   switchPanel(panel: 'shapes' | 'tasks'): void {
