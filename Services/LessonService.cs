@@ -438,7 +438,8 @@ public class LessonService(
                     Title = cardRequest.Title,
                     CardType = cardRequest.CardType.ToCardType(),
                     Description = cardRequest.Description,
-                    LessonId = cardRequest.LessonId
+                    LessonId = cardRequest.LessonId,
+                    Type = cardRequest.SandBoxCardType?.ToSandboxCardType() ?? SandboxCardType.Primitives
                 });
                 
                 break;
@@ -513,7 +514,8 @@ public class LessonService(
                     Title = cardRequest.Title,
                     CardType = cardRequest.CardType.ToCardType(),
                     Description = cardRequest.Description,
-                    LessonId = cardRequest.LessonId
+                    LessonId = cardRequest.LessonId,
+                    Type = cardRequest.SandBoxCardType?.ToSandboxCardType() ?? SandboxCardType.Primitives
                 });
                 
                 break;
@@ -587,7 +589,12 @@ public class LessonService(
         card.Title = cardRequest.Title;
         card.Description = cardRequest.Description;
         card.LessonId = cardRequest.LessonId;
-        
+
+        if (card is SandboxCard sandboxCard && cardRequest.SandBoxCardType != null)
+        {
+            sandboxCard.Type = cardRequest.SandBoxCardType.ToSandboxCardType();
+        }
+
         dbContext.SaveChanges();
         
         return new FullCardResponse
@@ -653,6 +660,11 @@ public class LessonService(
         card.Title = cardRequest.Title;
         card.Description = cardRequest.Description;
         card.LessonId = cardRequest.LessonId;
+        
+        if (card is SandboxCard sandboxCard && cardRequest.SandBoxCardType != null)
+        {
+            sandboxCard.Type = cardRequest.SandBoxCardType.ToSandboxCardType();
+        }
         
         await dbContext.SaveChangesAsync();
         

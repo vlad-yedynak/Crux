@@ -26,4 +26,8 @@ public class CardRequest
     [Required]
     [JsonPropertyName("cardType")]
     public required string CardType { get; set; }
+    
+    [JsonPropertyName("sandBoxCardType")]
+    public string? SandBoxCardType { get; set; }
+    
 }

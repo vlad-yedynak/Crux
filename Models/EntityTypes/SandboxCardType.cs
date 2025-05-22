@@ -2,7 +2,8 @@ namespace Crux.Models.EntityTypes;
 
 public enum SandboxCardType
 {
-    CoordinateSystem,
+    Primitives,
+    Bezier,
     FractalSystem,
     ColorSystem
 }

@@ -8,7 +8,8 @@ public static class SandboxCardTypeExtension
     {
         return type switch
         {
-            SandboxCardType.CoordinateSystem => nameof(SandboxCardType.CoordinateSystem),
+            SandboxCardType.Primitives => nameof(SandboxCardType.Primitives),
+            SandboxCardType.Bezier => nameof(SandboxCardType.Bezier),
             SandboxCardType.FractalSystem => nameof(SandboxCardType.FractalSystem),
             SandboxCardType.ColorSystem => nameof(SandboxCardType.ColorSystem),
             _ => null
@@ -19,10 +20,11 @@ public static class SandboxCardTypeExtension
     {
         return type switch
         {
-            nameof(SandboxCardType.CoordinateSystem) => SandboxCardType.CoordinateSystem,
+            nameof(SandboxCardType.Primitives) => SandboxCardType.Primitives,
+            nameof(SandboxCardType.Bezier) => SandboxCardType.Bezier,
             nameof(SandboxCardType.FractalSystem) => SandboxCardType.FractalSystem,
             nameof(SandboxCardType.ColorSystem) => SandboxCardType.ColorSystem,
-            _ => SandboxCardType.CoordinateSystem
+            _ => SandboxCardType.Primitives
         };
     }
 }
