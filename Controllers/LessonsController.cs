@@ -75,8 +75,8 @@ public class LessonsController (
         }
     }
     
-    [HttpDelete("delete-lesson")]
-    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] int id)
+    [HttpDelete("delete-lesson/{id:int}")]
+    public async Task<ActionResult<Response>> UpdateLessonAsync(int id)
     {
         try
         {
@@ -171,8 +171,8 @@ public class LessonsController (
         }
     }
     
-    [HttpDelete("delete-card")]
-    public async Task<ActionResult<Response>> DeleteCardAsync([FromBody] int id)
+    [HttpDelete("delete-card/{id:int}")]
+    public async Task<ActionResult<Response>> DeleteCardAsync(int id)
     {
         try
         {
@@ -267,8 +267,8 @@ public class LessonsController (
         }
     }
     
-    [HttpDelete("delete-question")]
-    public async Task<ActionResult<Response>> DeleteQuestion([FromBody] int id)
+    [HttpDelete("delete-question/{id:int}")]
+    public async Task<ActionResult<Response>> DeleteQuestion(int id)
     {
         try
         {
@@ -363,8 +363,8 @@ public class LessonsController (
         }
     }
     
-    [HttpDelete("delete-task")]
-    public async Task<ActionResult<Response>> DeleteTaskAsync([FromBody] int id)
+    [HttpDelete("delete-task/{id:int}")]
+    public async Task<ActionResult<Response>> DeleteTaskAsync(int id)
     {
         try
         {
