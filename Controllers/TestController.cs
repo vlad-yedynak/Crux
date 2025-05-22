@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Controllers;
 
-[Route("testing")]
-public class TestingController(
+[Route("test")]
+public class TestController(
     IAuthenticationService authenticationService,
     ITestService testService) : ControllerBase
 {
@@ -15,29 +15,32 @@ public class TestingController(
     {
         try
         {
-            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
             {
-                return new ControllerResponse<bool>
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
                 {
                     Success = false,
-                    Error = "Failed authenticate user."
+                    Error = "Failed to authenticate user"
                 };
             }
             
-            bool isCorrect = await testService.ValidateQuestionAsync(HttpContext, request.QuestionId , request.AnswerId);
-
+            var isCorrect = await testService.ValidateQuestionAsync(userId.Value, request.QuestionId , request.AnswerId);
+            
             return new ControllerResponse<bool>
             {
                 Success = true,
                 Body = isCorrect
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<bool>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occurred: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }
@@ -47,16 +50,18 @@ public class TestingController(
     {
         try
         {
-            if (!await authenticationService.CheckAuthenticationAsync(HttpContext))
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
             {
-                return new ControllerResponse<bool>
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
                 {
                     Success = false,
-                    Error = "Failed authenticate user."
+                    Error = "Failed to authenticate user"
                 };
             }
             
-            bool isCorrect = await testService.ValidateTaskAsync(HttpContext, request.TaskId , request.InputData);
+            var isCorrect = await testService.ValidateTaskAsync(userId.Value, request.TaskId , request.InputData);
 
             return new ControllerResponse<bool>
             {
@@ -64,12 +69,13 @@ public class TestingController(
                 Body = isCorrect
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<bool>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occurred: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }

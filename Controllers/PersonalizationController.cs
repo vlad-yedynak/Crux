@@ -1,20 +1,21 @@
-using Microsoft.AspNetCore.Mvc;
-using Crux.Models.EntityTypes;
 using Crux.Models.Responses;
-using Crux.Models.Requests;
 using Crux.Services;
+using Microsoft.AspNetCore.Mvc;
+using Crux.Models.Requests;
 
 namespace Crux.Controllers;
 
-[Route("lesson")]
-public class LessonsController (IAuthenticationService authenticationService, ILessonService lessonService) : ControllerBase
+[Route("tracker")]
+public class PersonalizationController(
+    IAuthenticationService authenticationService,
+    IPersonalizationService trackerService) : ControllerBase
 {
-    [HttpPost("create-lesson")]
-    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
+    [HttpPost("update-lesson-time")]
+    public async Task<ActionResult<Response>> UpdateLessonTimeAsync([FromBody] PersonalizationRequest request)
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -25,13 +26,14 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.AddLessonAsync(title);
+            var response = await trackerService.UpdateLessonTimeAsync(userId.Value, request);
 
-            return new ControllerResponse<LessonResponse>
+            return new ControllerResponse<PersonalizationResponse>
             {
                 Success = true,
                 Body = response
             };
+            
         }
         catch (Exception)
         {
@@ -44,12 +46,12 @@ public class LessonsController (IAuthenticationService authenticationService, IL
         }
     }
     
-    [HttpPut("update-lesson")]
-    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] UpdateLessonRequest request)
+    [HttpDelete("reset-lesson-time/{id:int}")]
+    public async Task<ActionResult<Response>> ResetLessonTimeAsync(int lessonId)
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -60,13 +62,14 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.UpdateLessonNameAsync(request);
+            var response = await trackerService.ResetLessonTimeAsync(userId.Value, lessonId);
 
-            return new ControllerResponse<LessonResponse>
+            return new ControllerResponse<PersonalizationResponse>
             {
                 Success = true,
                 Body = response
             };
+            
         }
         catch (Exception)
         {
@@ -79,12 +82,12 @@ public class LessonsController (IAuthenticationService authenticationService, IL
         }
     }
     
-    [HttpDelete("delete-lesson/{id:int}")]
-    public async Task<ActionResult<Response>> UpdateLessonAsync(int id)
+    [HttpDelete("reset-all-time")]
+    public async Task<ActionResult<Response>> ResetAllLessonTime()
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -95,37 +98,14 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.DeleteLessonAsync(id);
+            var response = await trackerService.ResetAllAsync(userId.Value);
 
-            return new ControllerResponse<bool>
-            {
-                Success = response,
-                Body = response
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-    
-    [HttpGet("get-lessons")]
-    public async Task<ActionResult<Response>> GetLessonsAsync()
-    {
-        try
-        {
-            var lessons = await lessonService.GetLessonsAsync();
-
-            return new ControllerResponse<ICollection<LessonResponse>>
+            return new ControllerResponse<PersonalizationResponse>
             {
                 Success = true,
-                Body = lessons
+                Body = response
             };
+            
         }
         catch (Exception)
         {

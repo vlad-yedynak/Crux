@@ -18,7 +18,7 @@ public class AuthenticationService(
     {
         if (request.FirstName == null)
         {
-            return new AuthenticationResponse()
+            return new AuthenticationResponse
             {
                 Success = false,
                 Error = "First name is required"
@@ -27,19 +27,10 @@ public class AuthenticationService(
         
         if (request.LastName == null)
         {
-            return new AuthenticationResponse()
+            return new AuthenticationResponse
             {
                 Success = false,
                 Error = "Last name is required"
-            };
-        }
-        
-        if (request.Email == null)
-        {
-            return new AuthenticationResponse()
-            {
-                Success = false,
-                Error = "Email is required"
             };
         }
         
@@ -89,15 +80,6 @@ public class AuthenticationService(
             };
         }
         
-        if (request.Email == null)
-        {
-            return new AuthenticationResponse()
-            {
-                Success = false,
-                Error = "Email is required"
-            };
-        }
-        
         var user = new User
         {
             FirstName = request.FirstName,
@@ -138,7 +120,12 @@ public class AuthenticationService(
         }
 
         var token = Guid.NewGuid().ToByteArray();
-          distributedCache.Set(user.Id.ToString(), token);
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(3),
+            SlidingExpiration = TimeSpan.FromHours(1)
+        };
+        distributedCache.Set(user.Id.ToString(), token, options);
 
         return new AuthenticationResponse
         {
@@ -162,7 +149,12 @@ public class AuthenticationService(
         }
 
         var token = Guid.NewGuid().ToByteArray();
-        await distributedCache.SetAsync(user.Id.ToString(), token);
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(3),
+            SlidingExpiration = TimeSpan.FromHours(1)
+        };
+        await distributedCache.SetAsync(user.Id.ToString(), token, options);
 
         return new AuthenticationResponse
         {
@@ -172,12 +164,13 @@ public class AuthenticationService(
         };
     }
     
-    public AuthenticationResponse SignOut(HttpContext context)
+    public AuthenticationResponse SignOut(int id)
     {
-        
-        var userId = GetUserIdFromContext(context);
-
-        if (!userId.HasValue)
+        try
+        {
+            distributedCache.Remove(id.ToString());
+        }
+        catch (Exception)
         {
             return new AuthenticationResponse
             {
@@ -186,20 +179,19 @@ public class AuthenticationService(
             };
         }
 
-        distributedCache.Remove(userId.Value.ToString());
-
         return new AuthenticationResponse
         {
             Success = true
         };
     }
 
-    public async Task<AuthenticationResponse> SignOutAsync(HttpContext context)
+    public async Task<AuthenticationResponse> SignOutAsync(int id)
     {
-        
-        var userId = await GetUserIdFromContextAsync(context);
-
-        if (!userId.HasValue)
+        try
+        {
+            await distributedCache.RemoveAsync(id.ToString());
+        }
+        catch (Exception)
         {
             return new AuthenticationResponse
             {
@@ -208,22 +200,18 @@ public class AuthenticationService(
             };
         }
 
-        await distributedCache.RemoveAsync(userId.Value.ToString());
-
         return new AuthenticationResponse
         {
             Success = true
         };
     }
 
-    public bool CheckAuthentication(HttpContext context, UserRole? role = null)
+    public int? CheckAuthentication(HttpContext context, UserRole? role = null)
     {
-
         var userId = GetUserIdFromContext(context);
-
         if (userId == null)
         {
-            return false;
+            return null;
         }
 
         if (role.HasValue)
@@ -231,42 +219,40 @@ public class AuthenticationService(
             var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
             {
-                return false;
+                return null;
             }
             
-            return user.Role == role;
+            return user.Role == role ? user.Id : null;
         }
 
         context.Response.StatusCode = StatusCodes.Status200OK;
-        return true;
+        return userId;
     }
     
-    public async Task<bool> CheckAuthenticationAsync(HttpContext context, UserRole? role = null)
+    public async Task<int?> CheckAuthenticationAsync(HttpContext context, UserRole? role = null)
     {
-
         var userId = await GetUserIdFromContextAsync(context);
-
         if (userId == null)
         {
-            return false;
+            return null;
         }
-
+        
         if (role.HasValue)
         {
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
-                return false;
+                return null;
             }
             
-            return user.Role == role;
+            return user.Role == role ? user.Id : null;
         }
 
         context.Response.StatusCode = StatusCodes.Status200OK;
-        return true;
+        return userId;
     }
     
-    public int? GetUserIdFromContext(HttpContext context)
+    private int? GetUserIdFromContext(HttpContext context)
     {
         if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
         {
@@ -301,7 +287,7 @@ public class AuthenticationService(
         return null;
     }
 
-    public async Task<int?> GetUserIdFromContextAsync(HttpContext context)
+    private async Task<int?> GetUserIdFromContextAsync(HttpContext context)
     {
         if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
         {

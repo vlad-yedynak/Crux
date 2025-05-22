@@ -5,14 +5,14 @@ namespace Crux.Services;
 
 public interface IEducationalDataService
 {
-    EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest dataRequest);
-    Task<EducationalDataResponse> AddEducationalDataAsync(HttpContext context, EducationalCardDataRequest dataRequest);
+    EducationalDataResponse AddEducationalData(EducationalCardDataRequest dataRequest);
+    Task<EducationalDataResponse> AddEducationalDataAsync(EducationalCardDataRequest dataRequest);
     
     EducationalDataResponse GetEducationalData(int id);
     Task<EducationalDataResponse> GetEducationalDataAsync(int id);
     
-    EducationalDataResponse UpdateEducationalData(HttpContext context, EducationalCardDataRequest dataRequest);
-    Task<EducationalDataResponse> UpdateEducationalDataAsync(HttpContext context, EducationalCardDataRequest dataRequest);
+    EducationalDataResponse UpdateEducationalData(EducationalCardDataRequest dataRequest);
+    Task<EducationalDataResponse> UpdateEducationalDataAsync(EducationalCardDataRequest dataRequest);
 
     bool DeleteEducationalCardFiles(int cardId);
 }

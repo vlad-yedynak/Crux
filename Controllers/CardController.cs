@@ -1,128 +1,19 @@
-using Crux.Models.EntityTypes;
-using Crux.Services;
-using Crux.Models.Requests;
-using Crux.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Crux.Models.EntityTypes;
+using Crux.Models.Responses;
+using Crux.Models.Requests;
+using Crux.Services;
 
 namespace Crux.Controllers;
 
-[Route("user")]
-public class UserController (
+[Route("card")]
+public class CardController (
     IAuthenticationService authenticationService,
-    IUserService userService) : ControllerBase
+    ICardManagementService cardManagementService,
+    IEducationalDataService educationalDataService) : ControllerBase
 {
-    [HttpPost("sign-up")]
-    public async Task<ActionResult<Response>> SignUpAsync([FromBody] UserRequest request)
-    {
-        try
-        {
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = true,
-                Body = await authenticationService.SignUpAsync(request)
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-
-    [HttpPost("sign-in")]
-    public async Task<ActionResult<Response>> SignInAsync([FromBody] UserRequest request)
-    {
-        try
-        {
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = true,
-                Body = await authenticationService.SignInAsync(request)
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-
-    [HttpGet("sign-out")]
-    public async Task<ActionResult<Response>> SignOutAsync()
-    {
-        try
-        {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
-            if (userId == null)
-            {
-                HttpContext.Response.StatusCode = 404;
-                return new ControllerResponse<UserResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-            
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = true,
-                Body = await authenticationService.SignOutAsync(userId.Value)
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-
-    [HttpGet("info")]
-    public async Task<ActionResult<Response>> InfoAsync()
-    {
-        try
-        {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
-            if (userId == null)
-            {
-                HttpContext.Response.StatusCode = 404;
-                return new ControllerResponse<UserResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-            
-            return new ControllerResponse<UserResponse>
-            {
-                Success = true,
-                Body = await userService.GetUserInfoAsync(userId.Value)
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<UserResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-    
-    [HttpGet("get-users")]
-    public async Task<ActionResult<Response>> GetUsersAsync()
+    [HttpPost("create-card")]
+    public async Task<ActionResult<Response>> CreateCardAsync([FromBody] CardRequest cardRequest)
     {
         try
         {
@@ -137,18 +28,18 @@ public class UserController (
                 };
             }
             
-            var usersInfo = await userService.GetUsersInfoAsync();
+            var response = await cardManagementService.AddCardAsync(userId.Value, cardRequest);
 
-            return new ControllerResponse<ICollection<KeyValuePair<int, UserResponse>>>
+            return new ControllerResponse<FullCardResponse>
             {
                 Success = true,
-                Body = usersInfo
+                Body = response
             };
         }
         catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<UserResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = "Internal Server Error"
@@ -156,12 +47,12 @@ public class UserController (
         }
     }
     
-    [HttpPut("change-first-name")]
-    public async Task<ActionResult<Response>> ChangeFirstNameAsync([FromBody] string firstName)
+    [HttpPut("update-card")]
+    public async Task<ActionResult<Response>> UpdateCardAsync([FromBody] CardRequest request)
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -172,18 +63,18 @@ public class UserController (
                 };
             }
             
-            var user = await userService.ChangeFirstNameAsync(userId.Value, firstName);
+            var response = await cardManagementService.UpdateCardAsync(userId.Value, request);
 
-            return new ControllerResponse<UserResponse>
+            return new ControllerResponse<FullCardResponse>
             {
                 Success = true,
-                Body = user
+                Body = response
             };
         }
         catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<UserResponse>
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = "Internal Server Error"
@@ -191,12 +82,12 @@ public class UserController (
         }
     }
     
-    [HttpPut("change-last-name")]
-    public async Task<ActionResult<Response>> ChangeLastNameAsync([FromBody] string lastName)
+    [HttpDelete("delete-card/{id:int}")]
+    public async Task<ActionResult<Response>> DeleteCardAsync(int id)
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;
@@ -207,18 +98,123 @@ public class UserController (
                 };
             }
             
-            var user = await userService.ChangeLastNameAsync(userId.Value, lastName);
+            var response = await cardManagementService.DeleteCardAsync(id);
 
-            return new ControllerResponse<UserResponse>
+            return new ControllerResponse<bool>
             {
-                Success = true,
-                Body = user
+                Success = response,
+                Body = response
             };
         }
         catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<UserResponse>
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPost("add-educational-data")]
+    public async Task<ActionResult<Response>> AddEducationalDataAsync([FromBody] EducationalCardDataRequest educationalCardDataRequest)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+
+            var response = await educationalDataService.AddEducationalDataAsync(educationalCardDataRequest);
+
+            return new ControllerResponse<EducationalDataResponse>
+            {
+                Success = true,
+                Body = response
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPut("update-educational-data")]
+    public async Task<ActionResult<Response>> UpdateEducationalDataAsync([FromBody] EducationalCardDataRequest request)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var response = await educationalDataService.UpdateEducationalDataAsync(request);
+
+            return new ControllerResponse<EducationalDataResponse>
+            {
+                Success = true,
+                Body = response
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpGet("get-card/{id:int}")]
+    public async Task<ActionResult<Response>> GetCardAsync(int cardId)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var card = await cardManagementService.GetCardFullAsync(userId.Value, cardId);
+
+            return new ControllerResponse<FullCardResponse>
+            {
+                Success = true,
+                Body = card
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
                 Error = "Internal Server Error"
@@ -226,5 +222,3 @@ public class UserController (
         }
     }
 }
-
-// TODO: move repeating code sections across all controllers to middleware :P

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Crux.Models.Requests;
 
-public class LessonTrackerRequest
+public class PersonalizationRequest
 {
     [Required]
     [JsonPropertyName("userId")]

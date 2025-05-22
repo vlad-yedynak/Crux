@@ -1,50 +1,14 @@
 using Crux.Data;
 using Crux.Models.Entities;
 using Crux.Models.Responses;
-using Crux.Models.EntityTypes;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
 public class UserService(
-    IAuthenticationService authenticationService,
     ApplicationDbContext dbContext) : IUserService
 {
-    public UserResponse GetUserInfoFromContext(HttpContext context)
-    {
-        var userId = authenticationService.GetUserIdFromContext(context);
-
-        if (userId.HasValue)
-        {
-            return GetUserInfoFromId(context, userId.Value);
-        }
-        
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return new UserResponse
-        {
-            Success = false,
-            Error = "Unauthorized access"
-        };
-    }
-    
-    public async Task<UserResponse> GetUserInfoFromContextAsync(HttpContext context)
-    {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-
-        if (userId.HasValue)
-        {
-            return await GetUserInfoFromIdAsync(context, userId.Value);
-        }
-        
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return new UserResponse
-        {
-            Success = false,
-            Error = "Unauthorized access"
-        };
-    }
-
-    private UserResponse GetUserInfoFromId(HttpContext context, int userId)
+    public UserResponse GetUserInfo(int userId)
     {
         var user = dbContext.Users
             .Include(u => u.ScorePoints)
@@ -63,7 +27,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -71,11 +34,11 @@ public class UserService(
         };
     }
     
-    private async Task<UserResponse> GetUserInfoFromIdAsync(HttpContext context, int userId)
+    public async Task<UserResponse> GetUserInfoAsync(int id)
     {
         var user = await dbContext.Users
             .Include(u => u.ScorePoints)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == id);
         
         if (user != null)
         {
@@ -90,7 +53,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -98,35 +60,23 @@ public class UserService(
         };
     }
 
-    public ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo(HttpContext context)
+    public ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo()
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return [];
-        }
-        
         var users = new List<KeyValuePair<int, UserResponse>>();
         
         dbContext.Users
             .Select(u => u.Id)
             .ToList()
-            .ForEach(id =>
+            .ForEach(userId =>
             {
-                users.Add(new KeyValuePair<int, UserResponse>(id, GetUserInfoFromId(context, id)));
+                users.Add(new KeyValuePair<int, UserResponse>(userId, GetUserInfo(userId)));
             });
         
         return users;
     }
     
-    public async Task<ICollection<KeyValuePair<int, UserResponse>>> GetUsersInfoAsync(HttpContext context)
+    public async Task<ICollection<KeyValuePair<int, UserResponse>>> GetUsersInfoAsync()
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return [];
-        }
-        
         var users = new List<KeyValuePair<int, UserResponse>>();
 
         var userIds = await dbContext.Users
@@ -135,29 +85,17 @@ public class UserService(
 
         foreach (var id in userIds)
         {
-            users.Add(new KeyValuePair<int, UserResponse>(id, await GetUserInfoFromIdAsync(context, id)));
+            users.Add(new KeyValuePair<int, UserResponse>(id, await GetUserInfoAsync(id)));
         }
         
         return users;
     }
 
-    public UserResponse ChangeFirstName(HttpContext context, string firstName)
+    public UserResponse ChangeFirstName(int id, string firstName)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var user = dbContext.Users
             .Include(u => u.ScorePoints)
-            .FirstOrDefault(u => u.Id == userId);
+            .FirstOrDefault(u => u.Id == id);
         
         if (user != null)
         {
@@ -175,7 +113,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -183,23 +120,11 @@ public class UserService(
         };
     }
     
-    public async Task<UserResponse> ChangeFirstNameAsync(HttpContext context, string firstName)
+    public async Task<UserResponse> ChangeFirstNameAsync(int id, string firstName)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var user = await dbContext.Users
             .Include(u => u.ScorePoints)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == id);
         
         if (user != null)
         {
@@ -217,7 +142,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -225,23 +149,11 @@ public class UserService(
         };
     }
 
-    public UserResponse ChangeLastName(HttpContext context, string lastName)
+    public UserResponse ChangeLastName(int id, string lastName)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var user = dbContext.Users
             .Include(u => u.ScorePoints)
-            .FirstOrDefault(u => u.Id == userId);
+            .FirstOrDefault(u => u.Id == id);
         
         if (user != null)
         {
@@ -259,7 +171,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -267,23 +178,11 @@ public class UserService(
         };
     }
     
-    public async Task<UserResponse> ChangeLastNameAsync(HttpContext context, string lastName)
+    public async Task<UserResponse> ChangeLastNameAsync(int id, string lastName)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var user = await dbContext.Users
             .Include(u => u.ScorePoints)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == id);
         
         if (user != null)
         {
@@ -301,7 +200,6 @@ public class UserService(
             };
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return new UserResponse
         {
             Success = false,
@@ -309,7 +207,7 @@ public class UserService(
         };
     }
 
-    private Dictionary<int, int> GetUserScorePoints(ICollection<UserLessonProgress> progresses)
+    private static Dictionary<int, int> GetUserScorePoints(ICollection<UserLessonProgress> progresses)
     {
         var scorePoints = new Dictionary<int, int>();
 

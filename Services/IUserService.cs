@@ -1,20 +1,18 @@
-using Crux.Models;
 using Crux.Models.Responses;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
 public interface IUserService
 {
-    UserResponse GetUserInfoFromContext(HttpContext context);
-    Task<UserResponse> GetUserInfoFromContextAsync(HttpContext context);
+    UserResponse GetUserInfo(int id);
+    Task<UserResponse> GetUserInfoAsync(int id);
+        
+    ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo();
+    Task<ICollection<KeyValuePair<int, UserResponse>>> GetUsersInfoAsync();
     
-    ICollection<KeyValuePair<int, UserResponse>> GetUsersInfo(HttpContext context);
-    Task<ICollection<KeyValuePair<int, UserResponse>>> GetUsersInfoAsync(HttpContext context);
+    UserResponse ChangeFirstName(int id, string firstName);
+    Task<UserResponse> ChangeFirstNameAsync(int id, string firstName);
     
-    UserResponse ChangeFirstName(HttpContext context, string firstName);
-    Task<UserResponse> ChangeFirstNameAsync(HttpContext context, string firstName);
-    
-    UserResponse ChangeLastName(HttpContext context, string lastName);
-    Task<UserResponse> ChangeLastNameAsync(HttpContext context, string lastName);
+    UserResponse ChangeLastName(int id, string lastName);
+    Task<UserResponse> ChangeLastNameAsync(int id, string lastName);
 }

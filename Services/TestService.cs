@@ -5,44 +5,31 @@ using Crux.Models.Entities;
 namespace Crux.Services;
 
 public class TestService(
-    ApplicationDbContext dbContext,
-    IAuthenticationService authenticationService) : ITestService
+    ApplicationDbContext dbContext) : ITestService
 {
-    public bool ValidateQuestion(HttpContext context, int questionId, int answerId)
+    public bool ValidateQuestion(int userId, int questionId, int answerId)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-        
-        var user =  dbContext.Users.FirstOrDefault(x => x.Id == userId.Value);
+        var user =  dbContext.Users.FirstOrDefault(x => x.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var answer = dbContext.Answers.FirstOrDefault(x => x.Id == answerId &&  x.QuestionId == questionId);
         if (answer == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var question = dbContext.Questions.FirstOrDefault(x => x.Id == answer.QuestionId);
         if (question == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
 
         var card = dbContext.TestCards.FirstOrDefault(x => x.Id == question.TestCardId);
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
@@ -84,41 +71,29 @@ public class TestService(
         return false;
     }
     
-    public async Task<bool> ValidateQuestionAsync(HttpContext context, int questionId, int answerId)
+    public async Task<bool> ValidateQuestionAsync(int userId, int questionId, int answerId)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-        
-        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
+        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var answer = await dbContext.Answers.FirstOrDefaultAsync(x => x.Id == answerId &&  x.QuestionId == questionId);
         if (answer == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var question = await dbContext.Questions.FirstOrDefaultAsync(x => x.Id == answer.QuestionId);
         if (question == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
 
         var card = await dbContext.TestCards.FirstOrDefaultAsync(x => x.Id == question.TestCardId);
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
@@ -160,21 +135,12 @@ public class TestService(
         return false;
     }
     
-    public bool ValidateTask(HttpContext context, int taskId, ICollection<TaskData> inputData)
+    public bool ValidateTask(int userId, int taskId, ICollection<TaskData> inputData)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-        
-        var user =  dbContext.Users.FirstOrDefault(x => x.Id == userId.Value);
+        var user =  dbContext.Users.FirstOrDefault(x => x.Id == userId);
         
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
 
@@ -183,14 +149,12 @@ public class TestService(
             .FirstOrDefault(t => t.Id == taskId);
         if (task == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var card = dbContext.SandboxCards.FirstOrDefault(x => x.Id == task.SandboxCardId);
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
@@ -239,21 +203,11 @@ public class TestService(
         return false;
     }
     
-    public async Task<bool> ValidateTaskAsync(HttpContext context, int taskId, ICollection<TaskData> inputData)
-    {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-        
-        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId.Value);
+    public async Task<bool> ValidateTaskAsync(int userId, int taskId, ICollection<TaskData> inputData)
+    {var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
         
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
 
@@ -262,14 +216,12 @@ public class TestService(
             .FirstOrDefaultAsync(t => t.Id == taskId);
         if (task == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         
         var card = await dbContext.SandboxCards.FirstOrDefaultAsync(x => x.Id == task.SandboxCardId);
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return false;
         }
         

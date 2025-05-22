@@ -9,14 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class CardManagementService(
-    IAuthenticationService authenticationService,
+public class CardService(
     ApplicationDbContext dbContext,
     IEducationalDataService educationalDataService,
-    IQuestionService questionService,              
-    ITaskService taskService) : ICardManagementService      
+    IQuestionService questionService,
+    ITaskService taskService) : ICardManagementService
 {
-    public ICollection<BriefCardResponse> GetLessonCards(HttpContext context, int lessonId)
+    public ICollection<BriefCardResponse> GetLessonCards(int lessonId)
     {
         var lesson = dbContext.Lessons
             .Include(l => l.Cards)
@@ -31,12 +30,12 @@ public class CardManagementService(
         
         lesson.Cards
             .ToList()
-            .ForEach(card => cardsInfo.Add(GetCardBrief(context, card.Id)));
+            .ForEach(card => cardsInfo.Add(GetCardBrief(card.Id)));
         
         return cardsInfo;
     }
     
-    public async Task<ICollection<BriefCardResponse>> GetLessonCardsAsync(HttpContext context, int lessonId)
+    public async Task<ICollection<BriefCardResponse>> GetLessonCardsAsync(int lessonId)
     {
         var lesson = await dbContext.Lessons
             .Include(l => l.Cards)
@@ -51,19 +50,18 @@ public class CardManagementService(
 
         foreach (var card in lesson.Cards)
         {
-            cardsInfo.Add(await GetCardBriefAsync(context, card.Id));
+            cardsInfo.Add(await GetCardBriefAsync(card.Id));
         }
         
         return cardsInfo;
     }
 
-    public BriefCardResponse GetCardBrief(HttpContext context, int id)
+    public BriefCardResponse GetCardBrief(int id)
     {
         var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
 
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return new BriefCardResponse
             {
                 Success = false,
@@ -82,13 +80,12 @@ public class CardManagementService(
         };
     }
     
-    public async Task<BriefCardResponse> GetCardBriefAsync(HttpContext context, int id)
+    public async Task<BriefCardResponse> GetCardBriefAsync(int id)
     {
         var card = await dbContext.Cards.FirstOrDefaultAsync(card => card.Id == id);
 
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
             return new BriefCardResponse
             {
                 Success = false,
@@ -107,25 +104,12 @@ public class CardManagementService(
         };
     }
     
-    public FullCardResponse GetCardFull(HttpContext context, int id)
+    public FullCardResponse GetCardFull(int userId, int cardId)
     {
-        if (!authenticationService.CheckAuthentication(context))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
-        var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
+        var card = dbContext.Cards.FirstOrDefault(card => card.Id == cardId);
 
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -133,18 +117,6 @@ public class CardManagementService(
             };
         }
         
-        var userId = authenticationService.GetUserIdFromContext(context);
-        if (userId == null)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-
         return new FullCardResponse
         {
             Success = true,
@@ -154,47 +126,22 @@ public class CardManagementService(
             CardType = card.CardType.ToString(),
             Description = card.Description,
             EducationalData = card is EducationalCard educationalCard ? educationalDataService.GetEducationalData(educationalCard.Id) : null,
-            Questions = card is TestCard ? questionService.GetQuestions(userId.Value, card.Id) : null,
-            Tasks = card is SandboxCard ? taskService.GetTasks(userId.Value, card.Id) : null,
+            Questions = card is TestCard ? questionService.GetQuestions(userId, card.Id) : null,
+            Tasks = card is SandboxCard ? taskService.GetTasks(userId, card.Id) : null,
             SandboxType = card is SandboxCard sandboxCard ? sandboxCard.Type.ToString() : null
         };
     }
     
-    public async Task<FullCardResponse> GetCardFullAsync(HttpContext context, int id)
+    public async Task<FullCardResponse> GetCardFullAsync(int userId, int cardId)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
-        var card = await dbContext.Cards.FirstOrDefaultAsync(card => card.Id == id);
+        var card = await dbContext.Cards.FirstOrDefaultAsync(card => card.Id == cardId);
 
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            
             return new FullCardResponse
             {
                 Success = false,
                 Error = "Card not found"
-            };
-        }
-        
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        if (userId == null)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
             };
         }
 
@@ -207,30 +154,17 @@ public class CardManagementService(
             CardType = card.CardType.ToString(),
             Description = card.Description,
             EducationalData = card is EducationalCard educationalCard ? await educationalDataService.GetEducationalDataAsync(educationalCard.Id) : null,
-            Questions = card is TestCard ? await questionService.GetQuestionsAsync(userId.Value, card.Id) : null,
-            Tasks = card is SandboxCard ? await taskService.GetTasksAsync(userId.Value, card.Id) : null,
+            Questions = card is TestCard ? await questionService.GetQuestionsAsync(userId, card.Id) : null,
+            Tasks = card is SandboxCard ? await taskService.GetTasksAsync(userId, card.Id) : null,
             SandboxType = card is SandboxCard sandboxCard ? sandboxCard.Type.ToString() : null
         };
     }
 
-    public FullCardResponse AddCard(HttpContext context, CardRequest cardRequest)
+    public FullCardResponse AddCard(int userId, CardRequest cardRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == cardRequest.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -273,8 +207,6 @@ public class CardManagementService(
                 dbContext.SandboxCards.Add((SandboxCard)newCard);
                 break;
             default:
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                
                 return new FullCardResponse
                 {
                     Success = false,
@@ -284,27 +216,14 @@ public class CardManagementService(
         
         dbContext.SaveChanges();
         
-        return GetCardFull(context, newCard.Id);
+        return GetCardFull(userId, newCard.Id);
     }
     
-    public async Task<FullCardResponse> AddCardAsync(HttpContext context, CardRequest cardRequest)
+    public async Task<FullCardResponse> AddCardAsync(int userId, CardRequest cardRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == cardRequest.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -347,8 +266,6 @@ public class CardManagementService(
                 dbContext.SandboxCards.Add((SandboxCard)newCard);
                 break;
             default:
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                
                 return new FullCardResponse
                 {
                     Success = false,
@@ -358,26 +275,13 @@ public class CardManagementService(
         
         await dbContext.SaveChangesAsync();
         
-        return await GetCardFullAsync(context, newCard.Id);
+        return await GetCardFullAsync(userId, newCard.Id);
     }
 
-    public FullCardResponse UpdateCard(HttpContext context, CardRequest cardRequest)
+    public FullCardResponse UpdateCard(int userId, CardRequest cardRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-
         if (cardRequest.Id == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -386,11 +290,8 @@ public class CardManagementService(
         }
         
         var card = dbContext.Cards.FirstOrDefault(c => c.Id == cardRequest.Id);
-
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -401,8 +302,6 @@ public class CardManagementService(
         var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == cardRequest.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
             return new FullCardResponse
             {
                 Success = false,
@@ -412,7 +311,6 @@ public class CardManagementService(
         
         if (card.CardType != cardRequest.CardType.ToCardType())
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return new FullCardResponse
             {
                 Success = false,
@@ -431,26 +329,13 @@ public class CardManagementService(
         
         dbContext.SaveChanges();
         
-        return GetCardFull(context, card.Id);
+        return GetCardFull(userId, card.Id);
     }
     
-    public async Task<FullCardResponse> UpdateCardAsync(HttpContext context, CardRequest cardRequest)
+    public async Task<FullCardResponse> UpdateCardAsync(int userId, CardRequest cardRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new FullCardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-
         if (cardRequest.Id == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -462,8 +347,6 @@ public class CardManagementService(
 
         if (card == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            
             return new FullCardResponse
             {
                 Success = false,
@@ -474,8 +357,6 @@ public class CardManagementService(
         var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == cardRequest.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
             return new FullCardResponse
             {
                 Success = false,
@@ -485,7 +366,6 @@ public class CardManagementService(
 
         if (card.CardType != cardRequest.CardType.ToCardType())
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return new FullCardResponse
             {
                 Success = false,
@@ -504,37 +384,25 @@ public class CardManagementService(
         
         await dbContext.SaveChangesAsync();
         
-        return await GetCardFullAsync(context, card.Id);
+        return await GetCardFullAsync(userId, card.Id);
     }
 
-    public bool DeleteCard(HttpContext context, int id)
+    public bool DeleteCard(int id)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-
         var card = dbContext.Cards.FirstOrDefault(c => c.Id == id);
         if (card != null)
         {
             dbContext.Cards.Remove(card);
             dbContext.SaveChanges();
+            
             return true;
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
     
-    public async Task<bool> DeleteCardAsync(HttpContext context, int id)
+    public async Task<bool> DeleteCardAsync(int id)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-
         var card = await dbContext.Cards.FirstOrDefaultAsync(c => c.Id == id);
         if (card != null)
         {
@@ -548,7 +416,6 @@ public class CardManagementService(
             return true;
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
 }

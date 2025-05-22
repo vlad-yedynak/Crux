@@ -5,21 +5,21 @@ namespace Crux.Services;
 
 public interface ICardManagementService
 {
-    FullCardResponse GetCardFull(HttpContext context, int id);
-    Task<FullCardResponse> GetCardFullAsync(HttpContext context, int id);
+    FullCardResponse GetCardFull(int userId, int cardId);
+    Task<FullCardResponse> GetCardFullAsync(int userId, int cardId);
     
-    BriefCardResponse GetCardBrief(HttpContext context, int id);
-    Task<BriefCardResponse> GetCardBriefAsync(HttpContext context, int id);
+    BriefCardResponse GetCardBrief(int id);
+    Task<BriefCardResponse> GetCardBriefAsync(int id);
     
-    ICollection<BriefCardResponse> GetLessonCards(HttpContext context, int id);
-    Task<ICollection<BriefCardResponse>> GetLessonCardsAsync(HttpContext context, int id);
+    ICollection<BriefCardResponse> GetLessonCards(int id);
+    Task<ICollection<BriefCardResponse>> GetLessonCardsAsync(int id);
     
-    FullCardResponse AddCard(HttpContext context, CardRequest cardRequest);
-    Task<FullCardResponse> AddCardAsync(HttpContext context, CardRequest cardRequest);
+    FullCardResponse AddCard(int userId, CardRequest cardRequest);
+    Task<FullCardResponse> AddCardAsync(int userId, CardRequest cardRequest);
 
-    FullCardResponse UpdateCard(HttpContext context, CardRequest cardRequest);
-    Task<FullCardResponse> UpdateCardAsync(HttpContext context, CardRequest cardRequest);
+    FullCardResponse UpdateCard(int userId, CardRequest cardRequest);
+    Task<FullCardResponse> UpdateCardAsync(int userId, CardRequest cardRequest);
     
-    bool DeleteCard(HttpContext context, int id);
-    Task<bool> DeleteCardAsync(HttpContext context, int id);
+    bool DeleteCard(int id);
+    Task<bool> DeleteCardAsync(int id);
 }

@@ -3,7 +3,7 @@ using Crux.Models.Entities;
 using Crux.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
-using MySql.EntityFrameworkCore.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 Env.Load();
@@ -18,18 +18,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddDbContext<ApplicationDbContext>();
-builder.Services.AddMySQLServer<ApplicationDbContext>(connectionString);
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseMySQL(connectionString));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-builder.Services.AddScoped<ILessonManagementService, LessonManagementService>();
-builder.Services.AddScoped<ICardManagementService, CardManagementService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<ICardManagementService, CardService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IEducationalDataService, EducationalDataService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITestService, TestService>();
-builder.Services.AddScoped<ILessonTrackerService, LessonTrackerService>();
+builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -50,14 +49,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseStaticFiles();
-
 app.UseCors(option => option.WithOrigins("http://localhost:4200")
     .AllowAnyMethod()
     .AllowAnyHeader());
-
-app.UseAuthorization();
-app.UseAuthentication();
-
 app.MapControllers();
 
 app.MapGet("/", () => "Цьомчик");

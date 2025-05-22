@@ -3,13 +3,10 @@ using Crux.Models.Entities;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
-using Crux.Models.EntityTypes;
 
 namespace Crux.Services;
 
-public class QuestionService(
-    IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext) : IQuestionService
+public class QuestionService(ApplicationDbContext dbContext) : IQuestionService
 {
     public ICollection<QuestionResponse> GetQuestions(int userId, int cardId)
     {
@@ -53,9 +50,9 @@ public class QuestionService(
         return questionsInfo;
     }
 
-    private QuestionResponse GetQuestionInfo(int? userId, Question question, List<Answer> answers)
+    private QuestionResponse GetQuestionInfo(int userId, Question question, List<Answer> answers)
     {
-        var isCompleted = dbContext.UserQuestionProgresses.Any(progress => progress.UserId == userId
+        var isCompleted = dbContext.UserQuestionProgresses.Any(progress => progress.UserId == userId 
                                                                            && progress.QuestionId == question.Id);
 
         return new QuestionResponse
@@ -74,9 +71,9 @@ public class QuestionService(
         };
     }
 
-    private async Task<QuestionResponse> GetQuestionInfoAsync(int? userId, Question question, List<Answer> answers)
+    private async Task<QuestionResponse> GetQuestionInfoAsync(int userId, Question question, List<Answer> answers)
     {
-        var isCompleted = await dbContext.UserQuestionProgresses.AnyAsync(progress => progress.UserId == userId
+        var isCompleted = await dbContext.UserQuestionProgresses.AnyAsync(progress => progress.UserId == userId 
             && progress.QuestionId == question.Id);
 
         return new QuestionResponse
@@ -95,19 +92,16 @@ public class QuestionService(
         };
     }
 
-    public QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest)
+    public QuestionResponse AddQuestion(QuestionRequest questionRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new QuestionResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
         if (testCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Invalid Card Id" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
 
         var question = new Question
@@ -115,6 +109,7 @@ public class QuestionService(
             TestCardId = questionRequest.TestCardId,
             QuestionText = questionRequest.QuestionText
         };
+        
         dbContext.Questions.Add(question);
         dbContext.SaveChanges();
 
@@ -147,19 +142,16 @@ public class QuestionService(
         };
     }
 
-    public async Task<QuestionResponse> AddQuestionAsync(HttpContext context, QuestionRequest questionRequest)
+    public async Task<QuestionResponse> AddQuestionAsync(QuestionRequest questionRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new QuestionResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         var testCard = await dbContext.TestCards.FirstOrDefaultAsync(tc => tc.Id == questionRequest.TestCardId);
         if (testCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Invalid Card Id" };
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
         }
 
         var question = new Question
@@ -167,6 +159,7 @@ public class QuestionService(
             TestCardId = questionRequest.TestCardId,
             QuestionText = questionRequest.QuestionText
         };
+        
         dbContext.Questions.Add(question);
         await dbContext.SaveChangesAsync();
 
@@ -199,33 +192,38 @@ public class QuestionService(
         };
     }
 
-    public QuestionResponse UpdateQuestion(HttpContext context, QuestionRequest questionRequest)
+    public QuestionResponse UpdateQuestion(QuestionRequest questionRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new QuestionResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         if (!questionRequest.Id.HasValue)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Question Id not provided" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Question Id not provided"
+            };
         }
 
         var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
         if (testCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Invalid Card Id" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
 
-        var question = dbContext.Questions.Include(q => q.Answers)
+        var question = dbContext.Questions
+            .Include(q => q.Answers)
             .FirstOrDefault(q => q.Id == questionRequest.Id.Value);
+        
         if (question == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new QuestionResponse { Success = false, Error = "Question not found" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Question not found"
+            };
         }
 
         question.TestCardId = questionRequest.TestCardId;
@@ -234,7 +232,6 @@ public class QuestionService(
         dbContext.Answers.RemoveRange(question.Answers);
         question.Answers.Clear();
         dbContext.SaveChanges();
-
 
         var newAnswersList = new List<AnswerResponse>();
         if (questionRequest.Answers.Count != 0)
@@ -246,6 +243,7 @@ public class QuestionService(
                 Score = a.Score,
                 IsCorrect = a.IsCorrect
             }).ToList();
+            
             dbContext.Answers.AddRange(newAnswers);
             dbContext.SaveChanges();
 
@@ -267,33 +265,38 @@ public class QuestionService(
         };
     }
 
-    public async Task<QuestionResponse> UpdateQuestionAsync(HttpContext context, QuestionRequest questionRequest)
+    public async Task<QuestionResponse> UpdateQuestionAsync(QuestionRequest questionRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new QuestionResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         if (!questionRequest.Id.HasValue)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Question Id not provided" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Question Id not provided"
+            };
         }
 
         var testCard = await dbContext.TestCards.FirstOrDefaultAsync(tc => tc.Id == questionRequest.TestCardId);
         if (testCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse { Success = false, Error = "Invalid Card Id" };
+            return new QuestionResponse
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
 
-        var question = await dbContext.Questions.Include(q => q.Answers)
+        var question = await dbContext.Questions
+            .Include(q => q.Answers)
             .FirstOrDefaultAsync(q => q.Id == questionRequest.Id.Value);
+        
         if (question == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new QuestionResponse { Success = false, Error = "Question not found" };
+            return new QuestionResponse
+            {
+                Success = false,
+                Error = "Question not found"
+            };
         }
 
         question.TestCardId = questionRequest.TestCardId;
@@ -302,7 +305,6 @@ public class QuestionService(
         dbContext.Answers.RemoveRange(question.Answers);
         question.Answers.Clear();
         await dbContext.SaveChangesAsync();
-
 
         var newAnswersList = new List<AnswerResponse>();
         if (questionRequest.Answers.Count != 0)
@@ -314,6 +316,7 @@ public class QuestionService(
                 Score = a.Score,
                 IsCorrect = a.IsCorrect
             }).ToList();
+            
             await dbContext.Answers.AddRangeAsync(newAnswers);
             await dbContext.SaveChangesAsync();
 
@@ -336,45 +339,37 @@ public class QuestionService(
         };
     }
 
-    public bool DeleteQuestion(HttpContext context, int id)
+    public bool DeleteQuestion(int id)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-
-        var question = dbContext.Questions.Include(q => q.Answers)
+        var question = dbContext.Questions
+            .Include(q => q.Answers)
             .FirstOrDefault(q => q.Id == id);
+        
         if (question != null)
         {
             dbContext.Questions.Remove(question);
             dbContext.SaveChanges();
+            
             return true;
         }
 
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
 
-    public async Task<bool> DeleteQuestionAsync(HttpContext context, int id)
+    public async Task<bool> DeleteQuestionAsync(int id)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
-
-        var question = await dbContext.Questions.Include(q => q.Answers)
+        var question = await dbContext.Questions
+            .Include(q => q.Answers)
             .FirstOrDefaultAsync(q => q.Id == id);
+        
         if (question != null)
         {
             dbContext.Questions.Remove(question);
             await dbContext.SaveChangesAsync();
+            
             return true;
         }
 
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
 }

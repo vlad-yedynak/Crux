@@ -6,30 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class LessonTrackerService(
-    IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext) : ILessonTrackerService
+public class PersonalizationService(ApplicationDbContext dbContext) : IPersonalizationService
 {
-    public LessonTrackerResponse UpdateLessonTime(HttpContext context, LessonTrackerRequest request)
+    public PersonalizationResponse UpdateLessonTime(int userId, PersonalizationRequest request)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId.Value);
+        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -40,8 +24,7 @@ public class LessonTrackerService(
         var lesson =  dbContext.Lessons.FirstOrDefault(l => l.Id == request.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -61,7 +44,7 @@ public class LessonTrackerService(
             
             dbContext.SaveChanges();
             
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = request.TrackedTime,
                 Success = true
@@ -71,33 +54,19 @@ public class LessonTrackerService(
         tracker.TrackedTime += request.TrackedTime;
         dbContext.SaveChanges();
         
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = tracker.TrackedTime,
             Success = true
         };
     }
     
-    public async Task<LessonTrackerResponse> UpdateLessonTimeAsync(HttpContext context, LessonTrackerRequest request)
+    public async Task<PersonalizationResponse> UpdateLessonTimeAsync(int userId, PersonalizationRequest request)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId.Value);
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -108,8 +77,7 @@ public class LessonTrackerService(
         var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == request.LessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -129,7 +97,7 @@ public class LessonTrackerService(
             
             await dbContext.SaveChangesAsync();
             
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = request.TrackedTime,
                 Success = true
@@ -139,33 +107,19 @@ public class LessonTrackerService(
         tracker.TrackedTime += request.TrackedTime;
         await dbContext.SaveChangesAsync();
         
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = tracker.TrackedTime,
             Success = true
         };
     }
 
-    public LessonTrackerResponse ResetLessonTime(HttpContext context, int lessonId)
+    public PersonalizationResponse ResetLessonTime(int userId, int lessonId)
     {
-        var userId = authenticationService.GetUserIdFromContext(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId.Value);
+        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -176,8 +130,7 @@ public class LessonTrackerService(
         var lesson =  dbContext.Lessons.FirstOrDefault(l => l.Id == lessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -188,8 +141,7 @@ public class LessonTrackerService(
         var tracker = dbContext.LessonTrackers.FirstOrDefault(t => t.LessonId == lessonId && t.UserId == userId);
         if (tracker == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -199,33 +151,19 @@ public class LessonTrackerService(
         
         tracker.TrackedTime = 0;
         dbContext.SaveChanges();
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = tracker.TrackedTime,
             Success = true
         };
     }
     
-    public async Task<LessonTrackerResponse> ResetLessonTimeAsync(HttpContext context, int lessonId)
+    public async Task<PersonalizationResponse> ResetLessonTimeAsync(int userId, int lessonId)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId.Value);
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -236,8 +174,7 @@ public class LessonTrackerService(
         var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == lessonId);
         if (lesson == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -248,8 +185,7 @@ public class LessonTrackerService(
         var tracker = await dbContext.LessonTrackers.FirstOrDefaultAsync(t => t.LessonId == lessonId && t.UserId == userId);
         if (tracker == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -259,33 +195,19 @@ public class LessonTrackerService(
         
         tracker.TrackedTime = 0;
         await dbContext.SaveChangesAsync();
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = tracker.TrackedTime,
             Success = true
         };
     }
 
-    public LessonTrackerResponse ResetAll(HttpContext context)
-    {
-        var userId = authenticationService.GetUserIdFromContext(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId.Value);
+    public PersonalizationResponse ResetAll(int userId)
+    { 
+        var user =  dbContext.Users.FirstOrDefault(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -294,43 +216,29 @@ public class LessonTrackerService(
         }
         
         var userTrackers = dbContext.LessonTrackers
-            .Where(t => t.UserId == userId.Value)
+            .Where(t => t.UserId == userId)
             .ToList();
         
         foreach (var tracker in userTrackers)
-        {
-                tracker.TrackedTime = 0;
+        { 
+            tracker.TrackedTime = 0;
         }
         
         dbContext.SaveChanges();
 
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = 0,
             Success = true
         };
     }
     
-    public async Task<LessonTrackerResponse> ResetAllAsync(HttpContext context)
+    public async Task<PersonalizationResponse> ResetAllAsync(int userId)
     {
-        var userId = await authenticationService.GetUserIdFromContextAsync(context);
-        
-        if (!userId.HasValue)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonTrackerResponse
-            {
-                TrackedTime = 0,
-                Success = false,
-                Error = "Missing user ID"
-            };
-        }
-        
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId.Value);
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new LessonTrackerResponse
+            return new PersonalizationResponse
             {
                 TrackedTime = 0,
                 Success = false,
@@ -339,7 +247,7 @@ public class LessonTrackerService(
         }
         
         var userTrackers = await dbContext.LessonTrackers
-            .Where(t => t.UserId == userId.Value)
+            .Where(t => t.UserId == userId)
             .ToListAsync();
         
         foreach (var tracker in userTrackers)
@@ -349,7 +257,7 @@ public class LessonTrackerService(
         
         await dbContext.SaveChangesAsync();
 
-        return new LessonTrackerResponse
+        return new PersonalizationResponse
         {
             TrackedTime = 0,
             Success = true
@@ -357,7 +265,12 @@ public class LessonTrackerService(
     }
 
     // TODO: Create service for AI suggested feed content
-    public UserFeedResponse GetUserFeed(HttpContext context)
+    public UserFeedResponse GetUserFeed(int userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<UserFeedResponse> GetUserFeedAsync(int userId)
     {
         throw new NotImplementedException();
     }

@@ -6,11 +6,11 @@ using Crux.Services;
 
 namespace Crux.Controllers;
 
-[Route("lesson")]
-public class LessonsController (IAuthenticationService authenticationService, ILessonService lessonService) : ControllerBase
+[Route("question")]
+public class QuestionController (IAuthenticationService authenticationService, IQuestionService questionService) : ControllerBase
 {
-    [HttpPost("create-lesson")]
-    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
+    [HttpPost("create-question")]
+    public async Task<ActionResult<Response>> CreateQuestionAsync([FromBody] QuestionRequest questionRequest)
     {
         try
         {
@@ -24,10 +24,10 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                     Error = "Failed to authenticate user"
                 };
             }
-            
-            var response = await lessonService.AddLessonAsync(title);
 
-            return new ControllerResponse<LessonResponse>
+            var response = await questionService.AddQuestionAsync(questionRequest);
+
+            return new ControllerResponse<QuestionResponse>
             {
                 Success = true,
                 Body = response
@@ -44,8 +44,8 @@ public class LessonsController (IAuthenticationService authenticationService, IL
         }
     }
     
-    [HttpPut("update-lesson")]
-    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] UpdateLessonRequest request)
+    [HttpPut("update-question")]
+    public async Task<ActionResult<Response>> UpdateQuestionAsync([FromBody] QuestionRequest request)
     {
         try
         {
@@ -60,9 +60,9 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.UpdateLessonNameAsync(request);
+            var response = await questionService.UpdateQuestionAsync(request);
 
-            return new ControllerResponse<LessonResponse>
+            return new ControllerResponse<QuestionResponse>
             {
                 Success = true,
                 Body = response
@@ -79,8 +79,8 @@ public class LessonsController (IAuthenticationService authenticationService, IL
         }
     }
     
-    [HttpDelete("delete-lesson/{id:int}")]
-    public async Task<ActionResult<Response>> UpdateLessonAsync(int id)
+    [HttpDelete("delete-question/{id:int}")]
+    public async Task<ActionResult<Response>> DeleteQuestion(int id)
     {
         try
         {
@@ -95,36 +95,12 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.DeleteLessonAsync(id);
+            var response = await questionService.DeleteQuestionAsync(id);
 
             return new ControllerResponse<bool>
             {
                 Success = response,
                 Body = response
-            };
-        }
-        catch (Exception)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = "Internal Server Error"
-            };
-        }
-    }
-    
-    [HttpGet("get-lessons")]
-    public async Task<ActionResult<Response>> GetLessonsAsync()
-    {
-        try
-        {
-            var lessons = await lessonService.GetLessonsAsync();
-
-            return new ControllerResponse<ICollection<LessonResponse>>
-            {
-                Success = true,
-                Body = lessons
             };
         }
         catch (Exception)

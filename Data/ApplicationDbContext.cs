@@ -173,10 +173,6 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .Property(e => e.Description)
                 .HasMaxLength(255)
                 .IsRequired();
-
-            entity
-                .Property(e => e.Url)
-                .IsRequired();
         });
         
         modelBuilder.Entity<TestCard>(entity =>

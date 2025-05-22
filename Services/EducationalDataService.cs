@@ -1,31 +1,15 @@
-using System.Net.Mail;
 using Crux.Data;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 using Crux.Models.Cards;
-using Crux.Models.EntityTypes;
 
 namespace Crux.Services;
 
-public class EducationalDataService(
-    IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext,
-    IWebHostEnvironment webHostEnvironment) : IEducationalDataService
+public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment) : IEducationalDataService
 {
-    public EducationalDataResponse AddEducationalData(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
+    public EducationalDataResponse AddEducationalData(EducationalCardDataRequest educationalCardDataRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new EducationalDataResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var educationalCard = dbContext.EducationalCards.
             Include(ec => ec.Images).
             Include(ec => ec.Attachments).
@@ -33,8 +17,6 @@ public class EducationalDataService(
 
         if (educationalCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new EducationalDataResponse
             {
                 Success = false,
@@ -47,7 +29,7 @@ public class EducationalDataService(
         educationalCard.Images.Clear(); 
         educationalCard.Attachments.Clear();
 
-        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Any())
+        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Count != 0)
         {
             var images = educationalCardDataRequest.Images.Select(imageRequest => new CardImage
             {
@@ -84,20 +66,8 @@ public class EducationalDataService(
         };
     }
     
-    public async Task<EducationalDataResponse> AddEducationalDataAsync(HttpContext context, EducationalCardDataRequest educationalCardDataRequest)
+    public async Task<EducationalDataResponse> AddEducationalDataAsync(EducationalCardDataRequest educationalCardDataRequest)
     {
-        
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
-            return new EducationalDataResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
         var educationalCard = await dbContext.EducationalCards.
             Include(ec => ec.Images).
             Include(ec => ec.Attachments).
@@ -105,8 +75,6 @@ public class EducationalDataService(
 
         if (educationalCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            
             return new EducationalDataResponse
             {
                 Success = false,
@@ -119,10 +87,10 @@ public class EducationalDataService(
         educationalCard.Images.Clear();
         educationalCard.Attachments.Clear();
 
-        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Any())
+        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Count != 0)
         {
             var cardImages = new List<CardImage>();
-            string uploadUrl = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", educationalCard.Id.ToString());
+            var uploadUrl = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", educationalCard.Id.ToString());
 
             if (!Directory.Exists(uploadUrl))
             {
@@ -133,7 +101,6 @@ public class EducationalDataService(
             {
                 if (string.IsNullOrWhiteSpace(image.Url) || !Uri.TryCreate(image.Url, UriKind.Absolute, out var uri))
                 {
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     return new EducationalDataResponse
                     {
                         Success = false,
@@ -193,9 +160,8 @@ public class EducationalDataService(
                         };   
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     return new EducationalDataResponse
                     {
                         Success = false,
@@ -206,10 +172,10 @@ public class EducationalDataService(
             educationalCard.Images.AddRange(cardImages);
         }
         
-        if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Any())
+        if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Count != 0)
         {
             var cardAttachment = new List<CardAttachment>();
-            string uploadUrl = Path.Combine(webHostEnvironment.WebRootPath,"uploads", "attachments", "educational-cards", educationalCard.Id.ToString());
+            var uploadUrl = Path.Combine(webHostEnvironment.WebRootPath,"uploads", "attachments", "educational-cards", educationalCard.Id.ToString());
 
             if (!Directory.Exists(uploadUrl))
             {
@@ -220,7 +186,6 @@ public class EducationalDataService(
             {
                 if (string.IsNullOrWhiteSpace(attachment.Url) || !Uri.TryCreate(attachment.Url, UriKind.Absolute, out var uri))
                 {
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     return new EducationalDataResponse
                     {
                         Success = false,
@@ -271,9 +236,8 @@ public class EducationalDataService(
                         };   
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     return new EducationalDataResponse
                     {
                         Success = false,
@@ -328,14 +292,14 @@ public class EducationalDataService(
         return true;
     }
 
-    public EducationalDataResponse UpdateEducationalData(HttpContext context, EducationalCardDataRequest dataRequest)
+    public EducationalDataResponse UpdateEducationalData(EducationalCardDataRequest dataRequest)
     {
-        return AddEducationalData(context, dataRequest); 
+        return AddEducationalData(dataRequest); 
     }
     
-    public async Task<EducationalDataResponse> UpdateEducationalDataAsync(HttpContext context, EducationalCardDataRequest dataRequest)
+    public async Task<EducationalDataResponse> UpdateEducationalDataAsync(EducationalCardDataRequest dataRequest)
     {
-        return await AddEducationalDataAsync(context, dataRequest);
+        return await AddEducationalDataAsync(dataRequest);
     }
 
     public EducationalDataResponse GetEducationalData(int cardId)

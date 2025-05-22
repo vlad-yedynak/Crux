@@ -1,27 +1,26 @@
 using Crux.Data;
 using Crux.Models.Entities;
-using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class TaskService(
-    IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext) : ITaskService
+public class TaskService(ApplicationDbContext dbContext) : ITaskService
 {
     public ICollection<TaskResponse> GetTasks(int userId, int cardId)
     {
-        var card = dbContext.SandboxCards.Include(sc => sc.Tasks)
-                                        .ThenInclude(t => t.ExpectedData)
-                                        .FirstOrDefault(sc => sc.Id == cardId);
-        var tasksInfo = new List<TaskResponse>();
-
+        var card = dbContext.SandboxCards
+            .Include(sc => sc.Tasks)
+            .ThenInclude(t => t.ExpectedData)
+            .FirstOrDefault(sc => sc.Id == cardId);
+        
         if (card == null)
         {
             return [];
         }
+        
+        var tasksInfo = new List<TaskResponse>();
 
         foreach (var task in card.Tasks)
         {
@@ -33,15 +32,17 @@ public class TaskService(
     
     public async Task<ICollection<TaskResponse>> GetTasksAsync(int userId, int cardId)
     {
-        var card = await dbContext.SandboxCards.Include(sc => sc.Tasks)
-                                             .ThenInclude(t => t.ExpectedData)
-                                             .FirstOrDefaultAsync(sc => sc.Id == cardId);
-        var tasksInfo = new List<TaskResponse>();
-
+        var card = await dbContext.SandboxCards
+            .Include(sc => sc.Tasks)
+            .ThenInclude(t => t.ExpectedData)
+            .FirstOrDefaultAsync(sc => sc.Id == cardId);
+        
         if (card == null)
         {
             return [];
         }
+        
+        var tasksInfo = new List<TaskResponse>();
 
         foreach (var task in card.Tasks)
         {
@@ -52,7 +53,7 @@ public class TaskService(
         return tasksInfo;
     }
 
-    private TaskResponse GetTaskInfo(int? userId, Models.Entities.Task task)
+    private TaskResponse GetTaskInfo(int userId, Models.Entities.Task task)
     {
         var isCompleted = dbContext.UserTaskProgresses.Any(progress => progress.UserId == userId
                                                                        && progress.TaskId == task.Id);
@@ -68,7 +69,7 @@ public class TaskService(
         };
     }
     
-    private async Task<TaskResponse> GetTaskInfoAsync(int? userId, Models.Entities.Task task)
+    private async Task<TaskResponse> GetTaskInfoAsync(int userId, Models.Entities.Task task)
     {
         var isCompleted = await dbContext.UserTaskProgresses.AnyAsync(progress => progress.UserId == userId
                                                                        && progress.TaskId == task.Id);
@@ -84,19 +85,16 @@ public class TaskService(
         };
     }
 
-    public TaskResponse AddTask(HttpContext context, TaskRequest taskRequest)
+    public TaskResponse AddTask(TaskRequest taskRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new TaskResponse { Success = false, Error = "Unauthorized access" };
-        }
-        
         var sandboxCard = dbContext.SandboxCards.FirstOrDefault(sc => sc.Id == taskRequest.SandboxCardId);
         if (sandboxCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Invalid Card Id" };
+            return new TaskResponse
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
         
         var task = new Models.Entities.Task
@@ -107,6 +105,7 @@ public class TaskService(
             SandboxCardId = taskRequest.SandboxCardId,
             ExpectedData = new List<TaskData>()
         };
+        
         dbContext.Tasks.Add(task);
         dbContext.SaveChanges(); 
 
@@ -120,6 +119,7 @@ public class TaskService(
             
             task.ExpectedData.Add(taskData);
         }
+        
         dbContext.SaveChanges();
 
         return new TaskResponse
@@ -132,19 +132,16 @@ public class TaskService(
         };
     }
     
-    public async Task<TaskResponse> AddTaskAsync(HttpContext context, TaskRequest taskRequest)
+    public async Task<TaskResponse> AddTaskAsync(TaskRequest taskRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new TaskResponse { Success = false, Error = "Unauthorized access" };
-        }
-        
         var sandboxCard = await dbContext.SandboxCards.FirstOrDefaultAsync(sc => sc.Id == taskRequest.SandboxCardId);
         if (sandboxCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Invalid Card Id" };
+            return new TaskResponse
+            {
+                Success = false,
+                Error = "Invalid Card Id"
+            };
         }
         
         var task = new Models.Entities.Task
@@ -155,6 +152,7 @@ public class TaskService(
             SandboxCardId = taskRequest.SandboxCardId,
             ExpectedData = new List<TaskData>()
         };
+        
         dbContext.Tasks.Add(task);
         await dbContext.SaveChangesAsync();
 
@@ -181,33 +179,38 @@ public class TaskService(
         };
     }
 
-    public TaskResponse UpdateTask(HttpContext context, TaskRequest taskRequest)
+    public TaskResponse UpdateTask(TaskRequest taskRequest)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new TaskResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         if (!taskRequest.Id.HasValue)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Task Id not provided" };
+            return new TaskResponse
+            {
+                Success = false, 
+                Error = "Task Id not provided"
+            };
         }
         
         var sandboxCard = dbContext.SandboxCards.FirstOrDefault(sc => sc.Id == taskRequest.SandboxCardId);
         if (sandboxCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Invalid Card Id" };
+            return new TaskResponse
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
         
-        var task = dbContext.Tasks.Include(t => t.ExpectedData)
-                               .FirstOrDefault(t => t.Id == taskRequest.Id.Value);
+        var task = dbContext.Tasks
+            .Include(t => t.ExpectedData)
+            .FirstOrDefault(t => t.Id == taskRequest.Id.Value);
+        
         if (task == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new TaskResponse { Success = false, Error = "Task not found" };
+            return new TaskResponse
+            {
+                Success = false, 
+                Error = "Task not found"
+            };
         }
 
         task.Name = taskRequest.Name;
@@ -239,33 +242,38 @@ public class TaskService(
         };
     }
     
-    public async Task<TaskResponse> UpdateTaskAsync(HttpContext context, TaskRequest taskRequest)
+    public async Task<TaskResponse> UpdateTaskAsync(TaskRequest taskRequest)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new TaskResponse { Success = false, Error = "Unauthorized access" };
-        }
-
         if (!taskRequest.Id.HasValue)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Task Id not provided" };
+            return new TaskResponse 
+            {
+                Success = false, 
+                Error = "Task Id not provided"
+            };
         }
         
         var sandboxCard = await dbContext.SandboxCards.FirstOrDefaultAsync(sc => sc.Id == taskRequest.SandboxCardId);
         if (sandboxCard == null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new TaskResponse { Success = false, Error = "Invalid Card Id" };
+            return new TaskResponse 
+            {
+                Success = false, 
+                Error = "Invalid Card Id"
+            };
         }
         
-        var task = await dbContext.Tasks.Include(t => t.ExpectedData)
-                                     .FirstOrDefaultAsync(t => t.Id == taskRequest.Id.Value);
+        var task = await dbContext.Tasks
+            .Include(t => t.ExpectedData)
+            .FirstOrDefaultAsync(t => t.Id == taskRequest.Id.Value);
+        
         if (task == null)
         {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            return new TaskResponse { Success = false, Error = "Task not found" };
+            return new TaskResponse 
+            {
+                Success = false,
+                Error = "Task not found"
+            };
         }
 
         task.Name = taskRequest.Name;
@@ -297,16 +305,12 @@ public class TaskService(
         };
     }
     
-    public bool DeleteTask(HttpContext context, int id)
+    public bool DeleteTask(int id)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
+        var task = dbContext.Tasks
+            .Include(t => t.ExpectedData)
+            .FirstOrDefault(t => t.Id == id);
         
-        var task = dbContext.Tasks.Include(t => t.ExpectedData)
-                               .FirstOrDefault(t => t.Id == id);
         if (task != null)
         {
             dbContext.Tasks.Remove(task);
@@ -314,20 +318,15 @@ public class TaskService(
             return true;
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
     
-    public async Task<bool> DeleteTaskAsync(HttpContext context, int id)
+    public async Task<bool> DeleteTaskAsync(int id)
     {
-        if (!await authenticationService.CheckAuthenticationAsync(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return false;
-        }
+        var task = await dbContext.Tasks
+            .Include(t => t.ExpectedData)
+            .FirstOrDefaultAsync(t => t.Id == id);
         
-        var task = await dbContext.Tasks.Include(t => t.ExpectedData)
-                                     .FirstOrDefaultAsync(t => t.Id == id);
         if (task != null)
         {
             dbContext.Tasks.Remove(task);
@@ -335,7 +334,6 @@ public class TaskService(
             return true;
         }
         
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
         return false;
     }
 }

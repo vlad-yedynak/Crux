@@ -5,15 +5,15 @@ namespace Crux.Services;
 
 public interface IQuestionService
 {
-    QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest);
-    Task<QuestionResponse> AddQuestionAsync(HttpContext context, QuestionRequest questionRequest);
+    QuestionResponse AddQuestion(QuestionRequest questionRequest);
+    Task<QuestionResponse> AddQuestionAsync(QuestionRequest questionRequest);
 
-    QuestionResponse UpdateQuestion(HttpContext context, QuestionRequest questionRequest);
-    Task<QuestionResponse> UpdateQuestionAsync(HttpContext context, QuestionRequest questionRequest);
+    QuestionResponse UpdateQuestion(QuestionRequest questionRequest);
+    Task<QuestionResponse> UpdateQuestionAsync(QuestionRequest questionRequest);
     
     ICollection<QuestionResponse> GetQuestions(int userId, int cardId);
     Task<ICollection<QuestionResponse>> GetQuestionsAsync(int userId, int cardId);
 
-    bool DeleteQuestion(HttpContext context, int id);
-    Task<bool> DeleteQuestionAsync(HttpContext context, int id);
+    bool DeleteQuestion(int id);
+    Task<bool> DeleteQuestionAsync(int id);
 }
