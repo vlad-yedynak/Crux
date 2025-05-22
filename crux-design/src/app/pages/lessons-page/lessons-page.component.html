@@ -12,19 +12,37 @@
         <button (click)="fetchLessons()" class="retry-button">Retry</button>
     </div>
     
-    <!-- Dynamic categories from API response -->
-    <div *ngIf="!isLoading && !hasError">
+    <!-- View All Mode -->
+    <div *ngIf="!isLoading && !hasError && isViewAllMode" class="view-all-mode">
+        <div class="view-all-header">
+            <h2 class="category-title">{{ getSelectedLesson()?.title }}</h2>
+            <button class="control-btn back-btn" (click)="closeViewAll()">Back to All Lessons</button>
+        </div>
+        
+        <div class="view-all-cards">
+            <div *ngFor="let card of getSelectedLesson()?.cards" class="lesson-card" [ngClass]="getCardTypeClass(card.type)"
+                 [attr.data-id]="card.id" 
+                 [attr.data-type]="card.type"
+                 (click)="openCardDetails(card)">
+                <div class="lesson-title">{{ card.title }}</div>
+                <div class="lesson-description">{{ card.description }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Normal view (all categories) -->
+    <div *ngIf="!isLoading && !hasError && !isViewAllMode">
         <div *ngFor="let lesson of lessons" class="category-container" [attr.data-category]="lesson.id">
             <div class="category-header">
                 <h2 class="category-title">{{ lesson.title }}</h2>
-                <div class="category-controls">
+                <div class="scroll-controls">
                     <button class="control-btn scroll-btn" (click)="scrollLessons($event, 'left')">
                         <span class="arrow-icon">&#10094;</span>
                     </button>
                     <button class="control-btn scroll-btn" (click)="scrollLessons($event, 'right')">
                         <span class="arrow-icon">&#10095;</span>
                     </button>
-                    <button class="control-btn view-all-btn">View all</button>
+                    <button class="control-btn view-all-btn" (click)="toggleViewAllMode(lesson.id)">View all</button>
                 </div>
             </div>
             <div class="scroll-container">

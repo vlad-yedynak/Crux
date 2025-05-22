@@ -1,9 +1,11 @@
-/* Add a wrapper to set the background color */
+/* Ensure the host container doesn't overflow */
 :host {
     display: block;
+    width: 100%;
     background-color: var(--color-primary-light);
-    /* min-height: 100vh; */ /* Removed as main-layout handles this */
     padding-bottom: 40px;
+    overflow-x: hidden; 
+    box-sizing: border-box;
 }
 
 .main-content {
@@ -12,11 +14,14 @@
     align-items: flex-start;
     justify-content: flex-start;
     text-align: left;
+    width: 100%;
+    max-width: 1400px; 
     margin: 0 auto;
-    max-width: 1400px;
-    padding: 0 20px;
-    position: relative; /* Added for circle positioning */
-     /* Add this line to prevent horizontal overflow */
+    padding-left: 24px; 
+    padding-right: 24px; 
+    position: relative;
+    overflow-x: hidden; 
+    box-sizing: border-box;
 }
 
 /* Circle decorations - copied from landing page */
@@ -58,14 +63,24 @@
     width: 100%;
     margin-bottom: 40px;
     text-align: left;
+    padding-left: 0;   
+    padding-right: 0;  
+    box-sizing: border-box;
+    position: relative; /* Added for proper positioning of elements */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the contents */
 }
 
 /* New category header styling */
 .category-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; 
     align-items: center;
     margin-bottom: 15px;
+    gap: 16px; 
+    width: 100%; 
+    box-sizing: border-box;
 }
 
 .category-title {
@@ -73,13 +88,20 @@
     color: var(--color-secondary-dark);
     padding-left: 10px;
     border-left: 4px solid var(--color-accent);
-    margin-bottom: 0; /* Override existing margin */
+    margin-bottom: 0; 
+    flex-grow: 1; 
+    min-width: 0; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    box-sizing: border-box; 
 }
 
 .category-controls {
     display: flex;
-    gap: 8px;
+    gap: 8px; 
     align-items: center;
+    flex-shrink: 0; 
 }
 
 .control-btn {
@@ -95,36 +117,54 @@
 }
 
 .scroll-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px; 
+    height: 32px; 
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 18px; 
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s, background-color 0.3s;
+    opacity: 0.85;
+}
+
+.scroll-btn:hover {
+    background-color: var(--color-accent);
+    opacity: 1;
 }
 
 .view-all-btn {
-    padding: 8px 16px;
+    padding: 4px 10px; /* Reduced padding from 6px 12px */
     border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 /* Scroll container for arrows and lessons */
 .scroll-container {
-    position: relative;
+    display: flex;
+    align-items: flex-start;
     width: 100%;
+    overflow: hidden; /* Changed from visible to hidden to clip content */
+    position: relative;
+    padding-left: 0;   
+    padding-right: 0;
+    box-sizing: border-box;
 }
 
 /* Arrow button styling - with inverted rounded corners */
 .scroll-arrow {
-    display: flex; /* Always visible */
+    display: flex; 
     align-items: center;
     justify-content: center;
     width: 40px;
-    height: 100%; /* Match height of the lesson container */
-    background-color: var(--color-secondary-light); /* Changed from secondary-dark to secondary-light */
+    height: 100%; 
+    background-color: var(--color-secondary-light); 
     color: white;
     border: none;
     cursor: pointer;
@@ -136,7 +176,7 @@
     top: 0;
     bottom: 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    border-radius: 0; /* Reset border radius */
+    border-radius: 0; 
 }
 
 .scroll-arrow:hover {
@@ -146,13 +186,13 @@
 
 .scroll-left {
     left: 0;
-    border-top-left-radius: 4px; /* Only round the outer corners */
+    border-top-left-radius: 4px; 
     border-bottom-left-radius: 4px;
 }
 
 .scroll-right {
     right: 0;
-    border-top-right-radius: 4px; /* Only round the outer corners */
+    border-top-right-radius: 4px; 
     border-bottom-right-radius: 4px;
 }
 
@@ -165,28 +205,30 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: flex-start;
-    gap: 30px;
-    width: 100%;
+    gap: 16px; /* Reduced from 20px for better fitting */
     overflow-x: auto;
-    padding: 10px 0 20px 0; /* Adjust padding with no arrows on sides */
-    margin-left: -10px;
-    padding-right: 20px;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-    scroll-padding-left: 10px;
+    width: 100%; 
+    min-width: 0;
+    padding: 10px 0 20px 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    transition: width 0.2s, max-width 0.2s;
+    box-sizing: border-box;
+    /* Calculate width for exactly 4 cards with equal spacing */
+    max-width: calc((325px * 4) + (16px * 3)); /* 4 cards + 3 gaps = 1348px */
+    margin: 0 auto; /* Center the container */
 }
 
-/* Hide WebKit scrollbar */
 .lesson-container::-webkit-scrollbar {
     display: none;
 }
 
+/* Adjust card sizes to fit better */
 .lesson-card {
-    min-width: 300px;
-    width: 300px;
-    height: 200px;
-    background-color: white; /* Changed from var(--color-primary-light) to white */
+    min-width: 325px; /* Increased from 320px */
+    width: 325px;     /* Increased from 320px */
+    height: 215px;    /* Increased from 210px */
+    background-color: white; 
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -199,11 +241,9 @@
     justify-content: center;
     text-align: left;
     border: 1px solid var(--color-secondary-light);
-    margin-left: 5px;
 }
 
 .lesson-card:first-child {
-    margin-left: 0;
 }
 
 .lesson-title {
@@ -223,7 +263,7 @@
     width: 100%;
     height: 100%;
     background-color: var(--color-secondary-dark);
-    color: white; /* Changed to white for better contrast */
+    color: white; 
     font-size: 14px;
     padding: 20px;
     opacity: 0;
@@ -257,10 +297,11 @@
     transform: translateY(0);
 }
 
+/* Updated hover state to make left border disappear on hover for all card types */
 .lesson-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--color-accent);
+    border: 1px solid var(--color-accent); /* This replaces all borders including left */
 }
 
 /* Popup styles */
@@ -415,7 +456,6 @@
 
 /* Make educational cards visually distinct */
 .lesson-card[data-type="Educational"] {
-    border-left: 4px solid var(--color-accent);
     cursor: pointer;
 }
 
@@ -435,13 +475,12 @@
 .educational-card,
 .test-card,
 .sandbox-card {
-  /* Base styles shared by all cards */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Individual border colors */
+/* Maintain left borders only in normal state, not hover */
 .educational-card {
-  /* Existing educational card styling with its original border color */
+  border-left: 4px solid var(--color-accent);
 }
 
 .test-card {
@@ -452,13 +491,12 @@
   border-left: 4px solid blue;
 }
 
-/* Shared hover effect for all card types */
+/* Remove these specific hover styles to prevent border preservation */
 .educational-card:hover,
 .test-card:hover,
 .sandbox-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   cursor: pointer;
+  /* No border styling here - let .lesson-card:hover handle it */
 }
 
 /* Style for the view button */
@@ -494,4 +532,150 @@
 
 .sandbox-card .view-button:hover {
   background-color: #138496;
+}
+
+/* Controls always visible on the right */
+.scroll-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px; /* Further reduced from 6px */
+    flex-shrink: 0; 
+    height: auto;
+    position: static;
+    top: unset;
+    margin-left: auto; /* Push to the right side */
+}
+
+/* View All mode styles */
+.view-all-mode {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.view-all-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.view-all-cards {
+    display: flex;
+    flex-direction: row; /* Changed from column to row */
+    flex-wrap: wrap; /* Allow cards to wrap to next line */
+    justify-content: center; /* Center cards horizontally */
+    gap: 20px; /* Equal spacing between cards */
+    width: 100%;
+}
+
+/* Back button styling */
+.back-btn {
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.back-btn:hover {
+    background-color: var(--color-accent);
+}
+
+/* Ensure lesson cards in view-all mode maintain their original styling and dimensions */
+.view-all-mode .lesson-card {
+    min-width: 325px; /* Same as original cards */
+    width: 325px;     /* Same as original cards */
+    height: 215px;    /* Same as original cards */
+    max-width: unset;
+    flex: 0 0 auto;   /* Prevent cards from growing/shrinking */
+    margin-bottom: 10px;
+}
+
+@media (max-width: 1300px) {
+    .main-content {
+        padding-left: 16px; 
+        padding-right: 16px; 
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Adjust for 2 cards on smaller screens */
+        max-width: calc((340px * 2) + (20px * 1)); 
+    }
+}
+@media (max-width: 980px) {
+    .main-content {
+        padding-left: 12px; 
+        padding-right: 12px; 
+    }
+    .category-header {
+        gap: 12px; 
+    }
+    .category-title {
+        font-size: 22px; 
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Adjust for 1 card on medium screens */
+        max-width: 340px; 
+    }
+}
+@media (max-width: 500px) {
+    .main-content {
+        padding-left: 8px; 
+        padding-right: 8px; 
+    }
+    .category-title {
+        font-size: 18px;
+        max-width: 50%; /* Further limit title width on very small screens */
+    }
+    .lesson-container {
+        width: 100%; 
+        gap: 10px;
+    }
+    .view-all-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+@media (max-width: 1200px) {
+    .main-content {
+        padding-left: 16px; 
+        padding-right: 16px; 
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Adjust for 2 cards on medium screens */
+        max-width: calc((325px * 2) + (16px * 1)); 
+    }
+}
+
+@media (max-width: 700px) {
+    .main-content {
+        padding-left: 10px; 
+        padding-right: 10px; 
+    }
+    .category-header {
+        gap: 8px;
+        align-items: center; 
+    }
+    .category-title {
+        font-size: 20px;
+        max-width: 65%; /* Ensure title doesn't push controls off screen */
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Adjust for 1 card on small screens */
+        max-width: 325px;
+    }
+    .scroll-controls {
+        gap: 4px; /* Reduce gap between buttons on small screens */
+    }
+    .view-all-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
 }

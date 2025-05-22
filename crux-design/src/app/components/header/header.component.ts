@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit} from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { NavigationComponent } from '../navigation/navigation.component';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,7 @@ import {
 } from '@angular/animations';
 import { RouterModule, Router } from '@angular/router';
 import { AuthServiceService, User} from '../../auth/services/auth-service.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-header',
@@ -70,17 +71,32 @@ export class HeaderComponent implements OnInit{
   user: User | null = null;
   isAdmin = false;
 
-  constructor(private eRef: ElementRef, private authService: AuthServiceService, private router: Router) {}
+  constructor(
+    private eRef: ElementRef, 
+    private authService: AuthServiceService, 
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object) 
+              {}
 
   ngOnInit(): void {
-    this.authService.fetchAndSetUser();
     this.authService.getUser().subscribe(user => {
       this.user = user;
+      this.isAdmin = user?.userRole === 'Admin';
+      console.log('Header received user:', user);
     });
 
-    if (localStorage.getItem('Role') === 'Admin') {
-      this.isAdmin = true;
-          //console.log('Header response; User role:', localStorage.getItem('Role'));
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('auth-token'); 
+      if (token && !this.authService.isLoggedIn()) { 
+        console.log('Header: Token found, but no user in service. Attempting to fetch user.');
+        this.authService.fetchAndSetUser().subscribe({
+            next: (fetchedUser) => {
+                if(fetchedUser) console.log('Header: User fetched successfully on init.');
+                else console.log('Header: User fetch on init did not return a user (e.g. bad token).');
+            },
+            error: (err) => console.error('Header: Error fetching user on init:', err)
+        });
+      }
     }
   }
 
@@ -110,6 +126,7 @@ export class HeaderComponent implements OnInit{
   logout() {
     this.isUserDropdownOpen = false;
     this.authService.logout();
+    this.isAdmin = false; // Reset admin status explicitly
     this.router.navigate(['/auth']);
   }
 

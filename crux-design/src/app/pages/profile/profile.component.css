@@ -1,8 +1,10 @@
 .profile-page {
   display: flex;
   gap: 1rem;
-  padding: 0rem;
+  padding: 0;
   height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .navigation-profile {
@@ -13,7 +15,9 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 1.5rem 0;
   margin-right: 1rem;
-  border-right: 1px solid  var(--color-secondary-dark);
+  border-right: 1px solid var(--color-secondary-dark);
+  height: 100%;
+  min-height: calc(100vh - 50px); 
 }
 
 .nav.flex-column {
@@ -66,28 +70,27 @@
   background-color: var(--color-accent);
   border-radius: 0 4px 4px 0;
 }
+
 .content-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
 }
 
 .content-area > div {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
 }
 
 .info-blocks-row {
   display: flex;
-  flex: 1;
-  align-items: stretch;
+  flex-wrap: wrap;
   gap: 2rem;
   padding: 0 1.5rem;
-  margin-top: 20px;
-  margin-bottom: 20px; 
-  height: 100%; 
+  margin: 20px 0;
 }
 
 .account-info {
@@ -96,11 +99,10 @@
   padding: 2rem;
   background-color: var(--color-secondary-light); 
   border-radius: 12px;
-  min-width: 0;
-  max-width: 50%;
+  min-width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
-  flex: 1 1 50%; 
-  height: 100%; 
+  flex: 1 1 calc(50% - 1rem);
+  height: auto;
 }
 
 .user-info {
@@ -236,11 +238,15 @@
 .settings-block {
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100%;
-  
-  margin-top: 20px;
-  margin-bottom: 20px; 
+  padding: 0 1.5rem;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.settings-block .account-info.user-info {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .input-field {
@@ -273,4 +279,50 @@
 .save-button:hover {
   background-color: var(--color-secondary-dark);
   color: var(--color-accent);
+}
+
+/* Prevent scrolling when not needed */
+:host {
+  display: block;
+  height: calc(100vh - 50px); /* Adjust based on header height */
+  overflow: hidden;
+}
+
+/* Add responsiveness for different screen sizes */
+@media (max-width: 992px) {
+  .info-blocks-row {
+    flex-direction: column;
+  }
+  
+  .account-info {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* Fix for zoom issues */
+@media (max-width: 768px) {
+  .profile-page {
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+  }
+  
+  .navigation-profile {
+    width: 100%;
+    margin-right: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: auto;
+    min-height: auto;
+    border-radius: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--color-secondary-dark);
+  }
+  
+  :host {
+    height: auto;
+    overflow-y: auto;
+  }
 }

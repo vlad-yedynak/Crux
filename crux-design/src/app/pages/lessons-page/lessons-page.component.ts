@@ -1,5 +1,5 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
@@ -47,15 +47,21 @@ export class LessonsPageComponent implements OnInit {
   isPopupVisible = false;
   safeCardContent: SafeHtml | null = null;
 
+  // New properties for View All mode
+  isViewAllMode = false;
+  selectedLessonId: number | null = null;
 
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
   ngOnInit(): void {
     this.fetchLessons();
-    console.log(localStorage.getItem('auth-token'));
+    if (isPlatformBrowser(this.platformId)) {
+      console.log(localStorage.getItem('auth-token'));
+    }
   }
 
 
@@ -105,12 +111,16 @@ export class LessonsPageComponent implements OnInit {
     }
     else if (card.type === 'Test') {
       this.selectedCard = card;
-      localStorage.setItem('selectedCardId', card.id.toString());
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('selectedCardId', card.id.toString());
+      }
       this.router.navigate(['lessons/test']);
       document.body.style.overflow = 'hidden';
     } else if (card.type === 'Sandbox') {
       this.selectedCard = card;
-      localStorage.setItem('selectedCardId', card.id.toString());
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('selectedCardId', card.id.toString());
+      }
 
       const element = document.documentElement;
       if (element.requestFullscreen) {
@@ -123,7 +133,10 @@ export class LessonsPageComponent implements OnInit {
   }
 
   fetchCardDetails(cardId: number): void {
-    const token = localStorage.getItem('auth-token'); 
+    let token = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('auth-token'); 
+    }
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -213,7 +226,7 @@ export class LessonsPageComponent implements OnInit {
     if (!lessonContainer) return;
     
     // Scroll amount - approximately one card width plus gap
-    const scrollAmount = 330; // 300px card width + 30px gap
+    const scrollAmount = 341; // 325px card width + 16px gap
     
     // Scroll left or right
     if (direction === 'left') {
@@ -227,5 +240,35 @@ export class LessonsPageComponent implements OnInit {
         behavior: 'smooth'
       });
     }
+  }
+
+  /**
+   * Toggle View All mode for a specific lesson
+   */
+  toggleViewAllMode(lessonId: number): void {
+    if (this.isViewAllMode && this.selectedLessonId === lessonId) {
+      // If already viewing this lesson, exit view all mode
+      this.closeViewAll();
+    } else {
+      // Enter view all mode for the selected lesson
+      this.isViewAllMode = true;
+      this.selectedLessonId = lessonId;
+    }
+  }
+
+  /**
+   * Exit View All mode
+   */
+  closeViewAll(): void {
+    this.isViewAllMode = false;
+    this.selectedLessonId = null;
+  }
+
+  /**
+   * Get the currently selected lesson data
+   */
+  getSelectedLesson(): Lesson | undefined {
+    if (this.selectedLessonId === null) return undefined;
+    return this.lessons.find(lesson => lesson.id === this.selectedLessonId);
   }
 }

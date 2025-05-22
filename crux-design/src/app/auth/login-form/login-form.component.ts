@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthServiceService } from '../services/auth-service.service';
+import { AuthServiceService, User } from '../services/auth-service.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -36,13 +36,13 @@ export class LoginFormComponent {
     if (this.loginForm.valid) {
       this.loginError = '';
       this.authService.loginUser(this.loginForm.value).subscribe({
-        next: (response) => {
-          if (response?.body?.token) {
-            console.log('Token after login:', localStorage.getItem('auth-token'));
+        next: (user: User | null) => {
+          if (user) {
+            console.log('Login successful, user data fetched by service:', user);
             this.router.navigate(['/profile']);
           } else {
-            this.loginError = 'Login failed. Please check your credentials.';
-            console.error('Login failed: No valid token received');
+            this.loginError = 'Login succeeded but failed to load user data. Please try again.';
+            console.error('Login succeeded but failed to load user data.');
           }
         },
         error: (err) => {

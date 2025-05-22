@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -79,25 +79,34 @@ export class TestPageComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    // Get the card ID from route params or state
-    // For now, we'll assume it's stored in local storage as a fallback
-    const cardId = localStorage.getItem('selectedCardId');
-    
-    if (cardId) {
-      this.fetchCardDetails(parseInt(cardId, 10));
+    if (isPlatformBrowser(this.platformId)) {
+      const cardId = localStorage.getItem('selectedCardId');
+      
+      if (cardId) {
+        this.fetchCardDetails(parseInt(cardId, 10));
+      } else {
+        this.hasError = true;
+        this.errorMessage = 'No card information available';
+        this.isLoading = false;
+      }
     } else {
+      // Handle non-browser environment (e.g., SSR)
       this.hasError = true;
-      this.errorMessage = 'No card information available';
+      this.errorMessage = 'Cannot fetch card details in this environment.';
       this.isLoading = false;
     }
   }
 
   fetchCardDetails(cardId: number): void {
-    const token = localStorage.getItem('auth-token'); 
+    let token = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('auth-token'); 
+    }
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -180,7 +189,10 @@ export class TestPageComponent implements OnInit {
     this.allQuestionsProcessed = false;
     this.correctAnswersCount = 0;
     
-    const token = localStorage.getItem('auth-token');
+    let token = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('auth-token');
+    }
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'

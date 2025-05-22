@@ -3,6 +3,14 @@
   margin: 0 auto;
   padding: 30px 20px;
   min-height: calc(100vh - 50px);
+  overflow-y: auto;
+  position: relative;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .loading-indicator, 
@@ -24,6 +32,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* Ensure content can be properly scrolled */
+  width: 100%;
+  height: auto;
 }
 
 .test-content h1 {
@@ -212,6 +223,8 @@
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(3px);
+  overflow-y: auto; /* Allow scrolling within the popup if needed */
+  padding: 20px 0;
 }
 
 .results-popup {
@@ -223,6 +236,7 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   text-align: center;
   animation: popup-fade-in 0.3s ease-out;
+  margin: auto; /* Center the popup even when scrolling */
 }
 
 @keyframes popup-fade-in {
@@ -320,4 +334,11 @@
 
 .return-btn:hover {
   background-color: #d54e20; /* Darker accent color */
+}
+
+/* Make sure the questions section can grow */
+.questions-section {
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }

@@ -2,8 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { first } from 'rxjs';
-import e from 'express';
-import { AuthServiceService } from '../services/auth-service.service';
+import { AuthServiceService, User } from '../services/auth-service.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -54,23 +53,21 @@ export class SignupFormComponent {
   onSubmit() {
     if (this.signupForm.valid) {
       console.log(this.signupForm.value);
-      //todo: Signup logic 
       this.service.createUser(this.signupForm.value).subscribe({
-        next:(res: any)=>{
-          const token = res.body.token;
-
-          localStorage.setItem('auth-token', token);
-
-          console.log("Response: ", res, "Token: ", token);
-
-          console.log("Token from header:", localStorage.getItem('auth-token'));
-
-          this.router.navigate(['/profile']);
+        next:(user: User | null)=>{
+          if (user) {
+            console.log("Signup successful, user data fetched by service:", user);
+            this.router.navigate(['/profile']);
+          } else {
+            console.error("Signup completed but failed to fetch user details.");
+            // Тут можна показати повідомлення користувачу
+          }
         },
         error:err=>{
-          console.log("Error: ", err);
+          console.log("Error during signup process: ", err);
+          // Тут можна показати повідомлення користувачу, наприклад, "Помилка реєстрації. Спробуйте пізніше."
         }
-      })
+      });
     } else {
       console.log('Form is invalid');
       Object.keys(this.signupForm.controls).forEach(field => {
@@ -79,7 +76,4 @@ export class SignupFormComponent {
       });
     }
   }
-
-
-
 }

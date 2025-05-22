@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from "@angular/common";
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from "@angular/common";
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -24,36 +24,42 @@ export class NavigationComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   private authCheckInterval: any = null;
 
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+
   ngOnInit() {
-    // Check admin status immediately
-    this.checkAdminStatus();
-    
-    // Set up regular checks to catch login/logout events
-    this.authCheckInterval = setInterval(() => {
+    if (isPlatformBrowser(this.platformId)) {
       this.checkAdminStatus();
-    }, 2000); // Check every 2 seconds
+      
+      this.authCheckInterval = setInterval(() => {
+        this.checkAdminStatus();
+      }, 2000); // Check every 2 seconds
+    }
   }
 
   ngOnDestroy() {
     // Clear the interval when component is destroyed
-    if (this.authCheckInterval) {
+    if (this.authCheckInterval && isPlatformBrowser(this.platformId)) {
       clearInterval(this.authCheckInterval);
     }
   }
 
   private checkAdminStatus() {
-    try {
-      // Default to false (not admin)
-      const newAdminStatus = localStorage.getItem('Role') === 'Admin';
-      
-      // Only update if there's a change to avoid unnecessary renders
-      if (this.isAdmin !== newAdminStatus) {
-        this.isAdmin = newAdminStatus;
-        console.log('Admin status updated:', this.isAdmin);
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        // Default to false (not admin)
+        const newAdminStatus = localStorage.getItem('Role') === 'Admin';
+        
+        // Only update if there's a change to avoid unnecessary renders
+        if (this.isAdmin !== newAdminStatus) {
+          this.isAdmin = newAdminStatus;
+          console.log('Admin status updated:', this.isAdmin);
+        }
+      } catch (e) {
+        console.error('Error accessing localStorage:', e);
+        this.isAdmin = false;
       }
-    } catch (e) {
-      console.error('Error accessing localStorage:', e);
-      this.isAdmin = false;
+    } else {
+      this.isAdmin = false; // Default for non-browser environments
     }
   }
 }

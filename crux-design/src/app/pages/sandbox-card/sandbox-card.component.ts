@@ -6,6 +6,7 @@ import { CanvasService, Point, ShapeData, validateSquarePoints, validateTriangle
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, animate, transition } from '@angular/animations'; // Import animation modules
+import { TimeTrackerService } from '../../services/time-tracker.service';
 
 export interface Task {
   id: number;
@@ -98,11 +99,12 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   taskResultCorrect = false;
 
   constructor(
-    private route: ActivatedRoute, 
+    private route: ActivatedRoute,
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    @Inject(CanvasService) public canvasService: CanvasService
-  ) {}
+    public canvasService: CanvasService, // Notice: no @Inject here
+    private timeTrackerService: TimeTrackerService // Remove @Inject here
+  ) { }
 
   private isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -113,7 +115,15 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
     if (this.isBrowser()) {
       const cardId = localStorage.getItem('selectedCardId');
       if (cardId) {
+        const cardIdNum = parseInt(cardId, 10);
         this.fetchCardDetails(+cardId);
+
+        // Add null check before calling startTracking
+        if (this.timeTrackerService) {
+          this.timeTrackerService.startTracking(cardIdNum);
+        } else {
+          console.error('TimeTrackerService is undefined in ngOnInit');
+        }
       }
 
       if (!sessionStorage.getItem('canvasSessionActive')) {
@@ -123,6 +133,15 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
       }
 
       sessionStorage.setItem('canvasSessionActive', 'true');
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Add null check before calling stopTracking
+    if (this.timeTrackerService) {
+      this.timeTrackerService.stopTracking();
+    } else {
+      console.error('TimeTrackerService is undefined in ngOnDestroy');
     }
   }
 
