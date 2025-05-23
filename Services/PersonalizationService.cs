@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class PersonalizationService(ApplicationDbContext dbContext) : IPersonalizationService
+public class PersonalizationService(ApplicationDbContext dbContext, IUserFeedService userFeedService) : IPersonalizationService
 {
     public PersonalizationResponse UpdateLessonTime(int userId, PersonalizationRequest request)
     {
@@ -264,14 +264,66 @@ public class PersonalizationService(ApplicationDbContext dbContext) : IPersonali
         };
     }
 
-    // TODO: Create service for AI suggested feed content
-    public UserFeedResponse GetUserFeed(int userId)
+    public ICollection<UserFeedResponse> GetUserFeed(int userId)
     {
-        throw new NotImplementedException();
+        return [];
     }
 
-    public Task<UserFeedResponse> GetUserFeedAsync(int userId)
+    public async Task<ICollection<UserFeedResponse>> GetUserFeedAsync(int userId)
     {
-        throw new NotImplementedException();
+        var user =  await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            return [];
+        }
+        
+        var lesson = await GetMostRelevantLessonAsync(user);
+        if (lesson == null)
+        {
+            return [];
+        }
+        
+        var lessonTopic = GetLessonDetailedTopic(lesson);
+        
+        return await userFeedService.GetLearningResourcesAsync(lessonTopic);
+    }
+
+    private async Task<Lesson?> GetMostRelevantLessonAsync(User user)
+    {
+        var mostRelevantLessonTracker = await dbContext.LessonTrackers
+            .Where(t => t.UserId == user.Id) // Ensure TrackedTime has a value
+            .OrderByDescending(t => t.TrackedTime)
+            .FirstOrDefaultAsync();
+
+        if (mostRelevantLessonTracker == null)
+        {
+            return null;
+        }
+
+        var lesson = await dbContext.Lessons
+            .Include(l => l.Cards)
+            .FirstOrDefaultAsync(l => l.Id == mostRelevantLessonTracker.LessonId);
+        
+        return lesson;
+    }
+
+    private static string GetLessonDetailedTopic(Lesson lesson)
+    {
+        var detailedTopic = lesson.Title;
+
+        if (lesson.Cards.Count != 0)
+        {
+            var cardTitles = lesson.Cards
+                .Select(card => card.Title)
+                .Where(title => !string.IsNullOrEmpty(title))
+                .ToList();
+            
+            if (cardTitles.Count != 0)
+            {
+                detailedTopic += ": " + string.Join(", ", cardTitles);
+            }
+        }
+        
+        return detailedTopic;
     }
 }
