@@ -130,6 +130,10 @@ export class AdminPageComponent implements OnInit {
   educationalAttachments: { url: string; description: string }[] = [];
   hasExistingContent = false;
   
+  // Add these properties to store original image data
+  originalImageUrls: {[index: number]: string} = {};
+  originalAttachmentUrls: {[index: number]: string} = {};
+  
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -399,7 +403,7 @@ export class AdminPageComponent implements OnInit {
     document.body.style.overflow = 'hidden';
   }
 
-  // Method to edit educational content - update to ensure proper content loading
+  // Modified to store original URLs but display blank input fields
   editEducationalData(card: Card): void {
     console.log('Editing educational data for card:', card);
     
@@ -414,6 +418,8 @@ export class AdminPageComponent implements OnInit {
     this.educationalContent = ''; // Clear existing content
     this.educationalImages = []; // Clear existing images
     this.educationalAttachments = []; // Clear existing attachments
+    this.originalImageUrls = {}; // Reset original image URLs
+    this.originalAttachmentUrls = {}; // Reset original attachment URLs
     this.hasExistingContent = false;
     
     // Fetch the card data
@@ -443,10 +449,44 @@ export class AdminPageComponent implements OnInit {
                     
                     // Check for images and attachments
                     if (parsedContent.images && Array.isArray(parsedContent.images)) {
-                      this.educationalImages = parsedContent.images;
+                      // Create images with blank URLs but store original URLs separately
+                      this.educationalImages = parsedContent.images.map((img: any, index: number) => {
+                        // Store original URL in our map with server prefix if needed
+                        let originalUrl = img.url || '';
+                        if (originalUrl && !originalUrl.startsWith('http')) {
+                          // Add server prefix for correct preview
+                          this.originalImageUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        } else {
+                          this.originalImageUrls[index] = originalUrl;
+                        }
+                        
+                        // Return image object with blank URL field
+                        return {
+                          url: '', // Blank URL for input field
+                          caption: img.caption || '',
+                          altText: img.altText || ''
+                        };
+                      });
                     }
+                    
                     if (parsedContent.attachments && Array.isArray(parsedContent.attachments)) {
-                      this.educationalAttachments = parsedContent.attachments;
+                      // Create attachments with blank URLs but store original URLs separately
+                      this.educationalAttachments = parsedContent.attachments.map((att: any, index: number) => {
+                        // Store original URL in our map with server prefix if needed
+                        let originalUrl = att.url || '';
+                        if (originalUrl && !originalUrl.startsWith('http')) {
+                          // Add server prefix for correct preview
+                          this.originalAttachmentUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        } else {
+                          this.originalAttachmentUrls[index] = originalUrl;
+                        }
+                        
+                        // Return attachment object with blank URL field
+                        return {
+                          url: '', // Blank URL for input field
+                          description: att.description || ''
+                        };
+                      });
                     }
                   } catch {
                     // If it's not valid JSON, use as-is (might be direct HTML)
@@ -456,14 +496,46 @@ export class AdminPageComponent implements OnInit {
                 // If content is already an object
                 else if (typeof cardData.content === 'object') {
                   this.educationalContent = cardData.content.content || 
-                                           (cardData.content.toString ? cardData.content.toString() : '');
+                                       (cardData.content.toString ? cardData.content.toString() : '');
                   
                   // Check for images and attachments
                   if (cardData.content.images && Array.isArray(cardData.content.images)) {
-                    this.educationalImages = cardData.content.images;
+                    // Create images with blank URLs but store original URLs separately
+                    this.educationalImages = cardData.content.images.map((img: any, index: number) => {
+                      // Store original URL in our map with server prefix if needed
+                      let originalUrl = img.url || '';
+                      if (originalUrl && !originalUrl.startsWith('http')) {
+                        // Add server prefix for correct preview
+                        this.originalImageUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                      } else {
+                        this.originalImageUrls[index] = originalUrl;
+                      }
+                      
+                      return {
+                        url: '', // Blank URL for input field
+                        caption: img.caption || '',
+                        altText: img.altText || ''
+                      };
+                    });
                   }
+                  
                   if (cardData.content.attachments && Array.isArray(cardData.content.attachments)) {
-                    this.educationalAttachments = cardData.content.attachments;
+                    // Create attachments with blank URLs but store original URLs separately
+                    this.educationalAttachments = cardData.content.attachments.map((att: any, index: number) => {
+                      // Store original URL in our map with server prefix if needed
+                      let originalUrl = att.url || '';
+                      if (originalUrl && !originalUrl.startsWith('http')) {
+                        // Add server prefix for correct preview
+                        this.originalAttachmentUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                      } else {
+                        this.originalAttachmentUrls[index] = originalUrl;
+                      }
+                      
+                      return {
+                        url: '', // Blank URL for input field
+                        description: att.description || ''
+                      };
+                    });
                   }
                 }
               }
@@ -474,6 +546,8 @@ export class AdminPageComponent implements OnInit {
           }
           
           console.log('Educational content loaded:', this.educationalContent);
+          console.log('Original image URLs with server prefix:', this.originalImageUrls);
+          console.log('Original attachment URLs with server prefix:', this.originalAttachmentUrls);
           this.isLoadingEducationalContent = false;
           this.cdr.detectChanges(); // Force UI update
         },
@@ -486,71 +560,89 @@ export class AdminPageComponent implements OnInit {
       });
   }
   
-  // Add these helper methods for the HTML editor
-  insertBold(): void {
-    this.insertHtmlTag('<strong>', '</strong>');
-  }
-  
-  insertItalic(): void {
-    this.insertHtmlTag('<em>', '</em>');
-  }
-  
-  insertHeader(level: number): void {
-    this.insertHtmlTag(`<h${level}>`, `</h${level}>`);
-  }
-  
-  insertLink(): void {
-    const url = prompt('Enter the URL:') || 'https://example.com';
-    const text = prompt('Enter the link text:') || url;
-    this.insertHtmlTag(`<a href="${url}" target="_blank">`, `${text}</a>`);
-  }
-  
-  insertImage(): void {
-    const url = prompt('Enter the image URL:') || '';
-    if (url) {
-      const alt = prompt('Enter alt text:') || 'Image';
-      this.insertHtmlTag(`<img src="${url}" alt="${alt}" style="max-width:100%;" />`, '');
-    }
-  }
-  
-  // Method to close educational content popup
-  closeEducationalContentPopup(event: MouseEvent): void {
-    if (
-      (event.target as HTMLElement).classList.contains('view-educational-content-overlay') ||
-      (event.target as HTMLElement).classList.contains('close-popup-btn')
-    ) {
-      this.isViewEducationalContentPopupVisible = false;
-      this.currentEditingCard = null;
-      document.body.style.overflow = 'auto';
-    }
-  }
-
-  // Modified to match the expected API format for add-educational-data
+  // Modified to handle blank URL fields by using original URLs when new ones aren't provided
+  // and to handle server prefixed URLs correctly
   saveEducationalContent(): void {
     if (!this.currentEditingCard) return;
     
+    // Clean up images - use original URL if new URL is empty, remove server prefix
+    const filteredImages = this.educationalImages
+      .map((img, index) => {
+        let url = '';
+        
+        // If new URL is provided, use it
+        if (img.url && img.url.trim()) {
+          url = img.url.trim();
+        } 
+        // Otherwise use original URL without the server prefix
+        else if (this.originalImageUrls[index]) {
+          url = this.originalImageUrls[index].replace('http://localhost:8080', '');
+        }
+        
+        return {
+          url: url,
+          caption: img.caption || '',
+          altText: img.altText || ''
+        };
+      })
+    .filter(img => img.url !== ''); // Only keep images with a URL
+    
+    // Clean up attachments - use original URL if new URL is empty, remove server prefix
+    const filteredAttachments = this.educationalAttachments
+      .map((att, index) => {
+        let url = '';
+        
+        // If new URL is provided, use it
+        if (att.url && att.url.trim()) {
+          url = att.url.trim();
+        } 
+        // Otherwise use original URL without the server prefix
+        else if (this.originalAttachmentUrls[index]) {
+          url = this.originalAttachmentUrls[index].replace('http://localhost:8080', '');
+        }
+        
+        return {
+          url: url,
+          description: att.description || ''
+        };
+      })
+    .filter(att => att.url !== ''); // Only keep attachments with a URL
+    
     const token = localStorage.getItem('auth-token');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
+    
+    // Debug token
+    console.log('Auth token being used:', token ? token.substring(0, 15) + '...' : 'null');
+    
+    // Create headers exactly like Postman
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json');
     
     // Format data according to the API's expected structure
     const educationalData = {
       cardId: this.currentEditingCard.id,
-      content: this.educationalContent,
-      images: this.educationalImages,
-      attachments: this.educationalAttachments
+      content: this.educationalContent || '',
+      images: filteredImages,
+      attachments: filteredAttachments
     };
     
     console.log('Sending educational content with payload:', JSON.stringify(educationalData, null, 2));
     
+    // Add options to observe the full HTTP response
+    const httpOptions = {
+      headers: headers,
+      observe: 'response' as const
+    };
+    
+    // Send the request
     this.http.post('http://localhost:8080/card/add-educational-data', 
-      educationalData, 
-      { headers }
+      educationalData,
+      httpOptions
     ).subscribe({
       next: (response: any) => {
-        console.log('Educational content updated:', response);
+        console.log('Educational content update successful!');
+        console.log('Full response:', response);
         
         // Close the content popup
         this.isViewEducationalContentPopupVisible = false;
@@ -559,14 +651,36 @@ export class AdminPageComponent implements OnInit {
         // Refresh lessons data
         this.fetchLessons();
         this.currentEditingCard = null;
+        
+        // Reset the original URL maps
+        this.originalImageUrls = {};
+        this.originalAttachmentUrls = {};
       },
       error: (error) => {
-        console.error('Error updating educational content:', error);
-        alert('Failed to update educational content. Please try again.');
+        console.error('Error updating educational content!');
+        console.error('Error status:', error.status);
+        console.error('Error status text:', error.statusText);
+        
+        // Log request details that failed
+        console.error('Failed request URL:', 'http://localhost:8080/card/add-educational-data');
+        console.error('Failed request payload:', educationalData);
+        
+        // Try to extract error details
+        if (error.error instanceof ErrorEvent) {
+          // Client-side error
+          console.error('Client error:', error.error.message);
+        } else {
+          // Server-side error
+          console.error('Server error body:', error.error);
+          console.error('Server error status:', error.status);
+          console.error('Server error headers:', error.headers?.keys?.());
+        }
+        
+        alert(`Failed to update educational content: ${error.message}`);
       }
     });
   }
-  
+
   // Add methods for rich text editing
   insertHtmlTag(openTag: string, closeTag: string): void {
     const textarea = document.querySelector('.html-editor') as HTMLTextAreaElement;
@@ -1194,6 +1308,93 @@ export class AdminPageComponent implements OnInit {
             alert('Failed to delete lesson. Please try again.');
           }
         });
+    }
+  }
+
+  // Method to close educational content popup - add the missing method
+  closeEducationalContentPopup(event: MouseEvent): void {
+    if (
+      (event.target as HTMLElement).classList.contains('view-educational-content-overlay') ||
+      (event.target as HTMLElement).classList.contains('close-popup-btn')
+    ) {
+      this.isViewEducationalContentPopupVisible = false;
+      this.currentEditingCard = null;
+      document.body.style.overflow = 'auto';
+    }
+  }
+  
+  // Add these HTML editor methods
+  insertHeader(level: number): void {
+    this.insertHtmlTag(`<h${level}>`, `</h${level}>`);
+  }
+  
+  insertBold(): void {
+    this.insertHtmlTag('<strong>', '</strong>');
+  }
+  
+  insertItalic(): void {
+    this.insertHtmlTag('<em>', '</em>');
+  }
+  
+  insertLink(): void {
+    const url = prompt('Enter the URL:') || 'https://example.com';
+    const text = prompt('Enter the link text:') || url;
+    this.insertHtmlTag(`<a href="${url}" target="_blank">`, `${text}</a>`);
+  }
+  
+  insertImage(): void {
+    const url = prompt('Enter the image URL:') || '';
+    if (url) {
+      const alt = prompt('Enter alt text:') || 'Image';
+      this.insertHtmlTag(`<img src="${url}" alt="${alt}" style="max-width:100%;" />`, '');
+    }
+  }
+  
+  // Add these methods for images and attachments
+  addImage(): void {
+    const newImage = {
+      url: '',
+      caption: '',
+      altText: ''
+    };
+    this.educationalImages.push(newImage);
+  }
+
+  removeImage(index: number): void {
+    if (index >= 0 && index < this.educationalImages.length) {
+      this.educationalImages.splice(index, 1);
+      delete this.originalImageUrls[index];
+      // Reindex remaining originalImageUrls
+      Object.keys(this.originalImageUrls).forEach((key) => {
+        const keyNum = parseInt(key);
+        if (keyNum > index) {
+          this.originalImageUrls[keyNum-1] = this.originalImageUrls[keyNum];
+          delete this.originalImageUrls[keyNum];
+        }
+      });
+    }
+  }
+
+  addAttachment(): void {
+    const newAttachment = {
+      url: '',
+      description: ''
+    };
+    this.educationalAttachments.push(newAttachment);
+  }
+
+  removeAttachment(index: number): void {
+    if (index >= 0 && index < this.educationalAttachments.length) {
+      this.educationalAttachments.splice(index, 1);
+      delete this.originalAttachmentUrls[index];
+      // Reindex remaining originalAttachmentUrls
+      Object.keys(this.originalAttachmentUrls).forEach((key) => {
+        const keyNum = parseInt(key);
+        if (keyNum > index) {
+          this.originalAttachmentUrls[keyNum-1] = this.originalAttachmentUrls[keyNum];
+          delete this.originalAttachmentUrls[keyNum];
+        }
+      });
     }
   }
 }

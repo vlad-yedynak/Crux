@@ -332,6 +332,77 @@
                             <div class="content-preview" [innerHTML]="educationalContent | sanitizeHtml"></div>
                         </div>
                     </div>
+
+                    <!-- Images Section -->
+                    <div class="content-section images-section">
+                        <div class="section-header">
+                            <h3>Images</h3>
+                            <button type="button" class="add-btn" (click)="addImage()">+ Add Image</button>
+                        </div>
+                        
+                        <div *ngIf="educationalImages.length === 0" class="no-items-message">
+                            <p>No images added. Use the "Add Image" button to include images.</p>
+                        </div>
+                        
+                        <div *ngFor="let image of educationalImages; let i = index" class="image-item">
+                            <div class="item-header">
+                                <h4>Image #{{ i + 1 }}</h4>
+                                <button type="button" class="remove-btn" (click)="removeImage(i)">Remove</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-url-{{ i }}">Image URL</label>
+                                <input type="text" id="image-url-{{ i }}" [(ngModel)]="image.url" placeholder="Enter image URL" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-caption-{{ i }}">Caption</label>
+                                <input type="text" id="image-caption-{{ i }}" [(ngModel)]="image.caption" placeholder="Enter image caption" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-alt-{{ i }}">Alt Text</label>
+                                <input type="text" id="image-alt-{{ i }}" [(ngModel)]="image.altText" placeholder="Enter alt text for accessibility" class="form-control">
+                            </div>
+                            
+                            <!-- Update the image preview section to use original URLs when available -->
+                            <div *ngIf="image.url || originalImageUrls[i]" class="image-preview">
+                                <img [src]="image.url || originalImageUrls[i]" [alt]="image.altText || 'Preview'" style="max-width: 100%; max-height: 150px;">
+                                <div *ngIf="originalImageUrls[i] && !image.url" class="original-image-note">
+                                    (Using original image - enter new URL to change)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attachments Section -->
+                    <div class="content-section attachments-section">
+                        <div class="section-header">
+                            <h3>Attachments</h3>
+                            <button type="button" class="add-btn" (click)="addAttachment()">+ Add Attachment</button>
+                        </div>
+                        
+                        <div *ngIf="educationalAttachments.length === 0" class="no-items-message">
+                            <p>No attachments added. Use the "Add Attachment" button to include downloadable files.</p>
+                        </div>
+                        
+                        <div *ngFor="let attachment of educationalAttachments; let i = index" class="attachment-item">
+                            <div class="item-header">
+                                <h4>Attachment #{{ i + 1 }}</h4>
+                                <button type="button" class="remove-btn" (click)="removeAttachment(i)">Remove</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="attachment-url-{{ i }}">File URL</label>
+                                <input type="text" id="attachment-url-{{ i }}" [(ngModel)]="attachment.url" placeholder="Enter file URL" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="attachment-desc-{{ i }}">Description</label>
+                                <input type="text" id="attachment-desc-{{ i }}" [(ngModel)]="attachment.description" placeholder="Enter file description" class="form-control">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
