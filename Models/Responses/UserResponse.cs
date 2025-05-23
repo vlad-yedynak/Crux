@@ -13,6 +13,9 @@ public class UserResponse : Response
     [JsonPropertyName("email")]
     public string? Email { get; set; }
     
+    [JsonPropertyName("avatar")]
+    public string? AvatarUrl { get; set; }
+    
     [JsonPropertyName("scorePoints")]
     public Dictionary<int, int>? ScorePoints { get; set; }
     

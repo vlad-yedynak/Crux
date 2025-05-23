@@ -1,3 +1,4 @@
+using Crux.Models.Requests;
 using Crux.Models.Responses;
 
 namespace Crux.Services;
@@ -15,4 +16,6 @@ public interface IUserService
     
     UserResponse ChangeLastName(int id, string lastName);
     Task<UserResponse> ChangeLastNameAsync(int id, string lastName);
+    
+    Task<UserResponse> UpdateAvatarAsync(int id, string url);
 }

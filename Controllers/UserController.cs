@@ -225,6 +225,41 @@ public class UserController (
             };
         }
     }
+    
+    [HttpPut("update-avatar")]
+    public async Task<ActionResult<Response>> UpdateAvatarAsync([FromBody] string url)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = await userService.UpdateAvatarAsync(userId.Value, url);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
 }
 
 // TODO: move repeating code sections across all controllers to middleware :P

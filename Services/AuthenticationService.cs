@@ -12,7 +12,8 @@ namespace Crux.Services;
 public class AuthenticationService(
     ApplicationDbContext dbContext,
     IPasswordHasher<User> passwordHasher,
-    IDistributedCache distributedCache) : IAuthenticationService
+    IDistributedCache distributedCache,
+    IConfiguration configuration) : IAuthenticationService
 {
     public AuthenticationResponse SignUp(UserRequest request)
     {
@@ -41,7 +42,7 @@ public class AuthenticationService(
             Email = request.Email,
             Password = request.Password,
             Role = UserRole.User,
-            Avatar = ""
+            Avatar = configuration["AppSettings:DefaultAvatarPath"]!
         };
 
         if (dbContext.Users.Any(u => u.Email == user.Email))
@@ -88,7 +89,7 @@ public class AuthenticationService(
             Email = request.Email,
             Password = request.Password,
             Role = UserRole.User,
-            Avatar = ""
+            Avatar = configuration["AppSettings:DefaultAvatarPath"]!
         };
 
         if (await dbContext.Users.AnyAsync(u => u.Email == user.Email))

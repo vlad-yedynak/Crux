@@ -33,4 +33,9 @@
       <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\placeholders\avatars\" />
+      <Folder Include="wwwroot\uploads\avatars\" />
+    </ItemGroup>
+
 </Project>
