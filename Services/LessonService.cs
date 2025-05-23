@@ -1,5 +1,6 @@
 using Crux.Data;
 using Crux.Models.Entities;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,7 @@ public class LessonService(ICardManagementService cardManagementService, Applica
             {
                 Id = lesson.Id,
                 Title = lesson.Title,
+                TotalPoints = await CalculateLessonTotalPointsAsync(lesson.Id),
                 BriefCards = await cardManagementService.GetLessonCardsAsync(lesson.Id)
             });
         }
@@ -144,5 +146,30 @@ public class LessonService(ICardManagementService cardManagementService, Applica
         }
         
         return false;
+    }
+    
+    private async Task<int> CalculateLessonTotalPointsAsync(int lessonId)
+    {
+        var totalPoints = 0;
+        
+        var sandboxTasks = await dbContext.SandboxCards
+            .Where(sc => dbContext.Cards
+                .Any(c => c.Id == sc.Id && c.LessonId == lessonId && c.CardType == CardType.Sandbox))
+            .SelectMany(sc => sc.Tasks)
+            .ToListAsync();
+
+        totalPoints += sandboxTasks.Sum(task => task.Points);
+        
+        var testQuestions = await dbContext.TestCards
+            .Where(tc => dbContext.Cards
+                .Any(c => c.Id == tc.Id && c.LessonId == lessonId && c.CardType == CardType.Test))
+            .SelectMany(tc => tc.Questions)
+            .Include(q => q.Answers.Where(a => a.IsCorrect))
+            .ToListAsync();
+
+        totalPoints += testQuestions.Sum(question => 
+            question.Answers.Where(a => a.IsCorrect).Max(a => a.Score));
+
+        return totalPoints;
     }
 }
