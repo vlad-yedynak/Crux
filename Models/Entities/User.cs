@@ -14,6 +14,8 @@ public class User
     
     public required string Password { get; set; }
     
+    public required string Avatar { get; set; }
+    
     public required UserRole Role { get; set; }
     
     public ICollection<UserTaskProgress> CompletedTasks { get; set; } = new List<UserTaskProgress>();

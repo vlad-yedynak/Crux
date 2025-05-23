@@ -76,6 +76,10 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .Property(e => e.Role)
                 .HasConversion(e => e.ToString(), e => e.ToUserRole())
                 .IsRequired();
+            
+            entity
+                .Property(e => e.Avatar)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Lesson>(entity =>

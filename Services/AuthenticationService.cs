@@ -40,7 +40,8 @@ public class AuthenticationService(
             LastName = request.LastName,
             Email = request.Email,
             Password = request.Password,
-            Role = UserRole.User
+            Role = UserRole.User,
+            Avatar = ""
         };
 
         if (dbContext.Users.Any(u => u.Email == user.Email))
@@ -86,7 +87,8 @@ public class AuthenticationService(
             LastName = request.LastName,
             Email = request.Email,
             Password = request.Password,
-            Role = UserRole.User
+            Role = UserRole.User,
+            Avatar = ""
         };
 
         if (await dbContext.Users.AnyAsync(u => u.Email == user.Email))
