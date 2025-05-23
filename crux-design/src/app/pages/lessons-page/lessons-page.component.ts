@@ -66,7 +66,7 @@ export class LessonsPageComponent implements OnInit {
 
   
   fetchLessons(): void {
-    this.http.get<LessonsResponse>('http://localhost:8080/lessons/get-lessons').subscribe({
+    this.http.get<LessonsResponse>('http://localhost:8080/lesson/get-lessons').subscribe({
       next: (response) => {
         if (response.success) {
           this.lessons = response.body;
@@ -153,7 +153,7 @@ export class LessonsPageComponent implements OnInit {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<{body: Card, success: boolean, error: string}>(`http://localhost:8080/lessons/get-card/${cardId}`, {headers}).subscribe({
+    this.http.get<{body: Card, success: boolean, error: string}>(`http://localhost:8080/card/get-card/${cardId}`, {headers}).subscribe({
       next: (response) => {
         console.log('Card details received:', response);
         

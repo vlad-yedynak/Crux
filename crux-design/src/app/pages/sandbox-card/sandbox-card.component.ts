@@ -223,7 +223,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
     });
 
     this.http.get<CardResponse>(
-      `http://localhost:8080/lessons/get-card/${cardId}`,
+      `http://localhost:8080/card/get-card/${cardId}`,
       { headers }
     ).subscribe({
       next: (response) => {

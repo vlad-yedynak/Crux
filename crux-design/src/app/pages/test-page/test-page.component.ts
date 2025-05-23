@@ -112,7 +112,7 @@ export class TestPageComponent implements OnInit {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<{body: any, success: boolean, error: string}>(`http://localhost:8080/lessons/get-card/${cardId}`, {headers}).subscribe({
+    this.http.get<{body: any, success: boolean, error: string}>(`http://localhost:8080/card/get-card/${cardId}`, {headers}).subscribe({
       next: (response) => {
         console.log('Card details received:', response);
         
@@ -203,7 +203,7 @@ export class TestPageComponent implements OnInit {
     
     // Validate each answer
     this.userAnswers.forEach(answer => {
-      this.http.post<ValidationResponse>('http://localhost:8080/testing/validate-question', answer, {headers})
+      this.http.post<ValidationResponse>('http://localhost:8080/test/validate-question', answer, {headers})
         .subscribe({
           next: (result) => {
             if (result.success) {

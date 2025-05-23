@@ -182,7 +182,7 @@
 <div *ngIf="isEditTestCardPopupVisible" class="edit-test-card-popup-overlay" (click)="closeEditTestCardPopup($event)">
     <div class="edit-test-card-popup-content">
         <div class="popup-header">
-            <h2>Edit Test Card</h2>
+            <h2 class="popup-title">{{ questionPopupTitle }}</h2>
             <button class="close-popup-btn" (click)="closeEditTestCardPopup($event)">&times;</button>
         </div>
         
@@ -232,8 +232,113 @@
         
         <div class="popup-footer">
             <button class="cancel-btn" (click)="closeEditTestCardPopup($event)">Cancel</button>
-            <button class="save-btn" [disabled]="!isTestCardFormValid()" 
-                    (click)="saveTestCard()">Save Test</button>
+            <button type="button" 
+                    class="save-btn" 
+                    [disabled]="!isTestCardFormValid()" 
+                    (click)="saveTestCard()">
+                {{ questionPopupSubmitText }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Edit Card Popup -->
+<div *ngIf="isEditCardPopupVisible" class="edit-card-popup-overlay" (click)="closeEditCardPopup($event)">
+    <div class="edit-card-popup-content">
+        <div class="popup-header">
+            <h2 class="popup-title">{{ questionPopupTitle }}</h2>
+            <button class="close-popup-btn" (click)="closeEditCardPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="form-group">
+                <label for="cardTitle">Card Title</label>
+                <input type="text" id="cardTitle" [(ngModel)]="editedCardData.title" 
+                       placeholder="Enter card title" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="cardDescription">Card Description</label>
+                <textarea id="cardDescription" [(ngModel)]="editedCardData.description" 
+                        placeholder="Enter card description" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <!-- Optional: Add additional content based on card type -->
+            <div *ngIf="cardBeingEdited?.type === 'Test'" class="edit-test-questions">
+                <button class="edit-questions-btn" (click)="editTestCardQuestions(cardBeingEdited!)">
+                    Edit Test Questions
+                </button>
+                <p class="help-text">Click to edit the test questions for this card.</p>
+            </div>
+            
+            <div *ngIf="cardBeingEdited?.type === 'Educational'" class="edit-educational-data">
+                <button class="edit-educational-btn" (click)="editEducationalData(cardBeingEdited!)">
+                    Edit Educational Content
+                </button>
+                <p class="help-text">Click to edit the educational content for this card.</p>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditCardPopup($event)">Cancel</button>
+            <button class="save-btn" [disabled]="!isEditCardFormValid()" 
+                    (click)="saveEditedCard()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Educational Content Edit Popup (Enhanced) -->
+<div *ngIf="isViewEducationalContentPopupVisible" class="view-educational-content-overlay" (click)="closeEducationalContentPopup($event)">
+    <div class="view-educational-content">
+        <div class="popup-header">
+            <h2>Edit Educational Content for "{{ currentEditingCard?.title }}"</h2>
+            <button class="close-popup-btn" (click)="closeEducationalContentPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Loading state for content -->
+            <div *ngIf="isLoadingEducationalContent" class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading content...</p>
+            </div>
+            
+            <div *ngIf="!isLoadingEducationalContent" class="educational-editor-container">
+                <div class="educational-content-form">
+                    <div class="content-section">
+                        <h3>HTML Content</h3>
+                        
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" title="Heading 1" (click)="insertHeader(1)">H1</button>
+                            <button type="button" class="toolbar-btn" title="Heading 2" (click)="insertHeader(2)">H2</button>
+                            <button type="button" class="toolbar-btn" title="Heading 3" (click)="insertHeader(3)">H3</button>
+                            <button type="button" class="toolbar-btn" title="Paragraph" (click)="insertHtmlTag('<p>', '</p>')">P</button>
+                            <button type="button" class="toolbar-btn" title="Bold" (click)="insertBold()"><strong>B</strong></button>
+                            <button type="button" class="toolbar-btn" title="Italic" (click)="insertItalic()"><em>I</em></button>
+                            <button type="button" class="toolbar-btn" title="Unordered List" (click)="insertHtmlTag('<ul>\n  <li>', '</li>\n</ul>')">List</button>
+                            <button type="button" class="toolbar-btn" title="List Item" (click)="insertHtmlTag('<li>', '</li>')">List Item</button>
+                            <button type="button" class="toolbar-btn" title="Code Block" (click)="insertHtmlTag('<pre><code>', '</code></pre>')">Code</button>
+                            <button type="button" class="toolbar-btn" title="Insert Link" (click)="insertLink()">Link</button>
+                            <button type="button" class="toolbar-btn" title="Insert Image" (click)="insertImage()">Image</button>
+                        </div>
+                        
+                        <textarea 
+                            class="html-editor form-control" 
+                            [(ngModel)]="educationalContent" 
+                            (ngModelChange)="onContentChange()"
+                            placeholder="Enter HTML content here"></textarea>
+                        
+                        <div *ngIf="educationalContent" class="content-preview-section">
+                            <h4>Preview:</h4>
+                            <div class="content-preview" [innerHTML]="educationalContent | sanitizeHtml"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEducationalContentPopup($event)">Cancel</button>
+            <button class="save-btn" (click)="saveEducationalContent()">Save Content</button>
         </div>
     </div>
 </div>
