@@ -187,7 +187,7 @@ public class CardController (
         }
     }
     
-    [HttpGet("get-card/{id:int}")]
+    [HttpGet("get-card/{cardId:int}")]
     public async Task<ActionResult<Response>> GetCardAsync(int cardId)
     {
         try
