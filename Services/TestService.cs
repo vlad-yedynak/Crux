@@ -73,66 +73,52 @@ public class TestService(
     
     public async Task<bool> ValidateQuestionAsync(int userId, int questionId, int answerId)
     {
-        var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
-        if (user == null)
-        {
-            return false;
-        }
-        
-        var answer = await dbContext.Answers.FirstOrDefaultAsync(x => x.Id == answerId &&  x.QuestionId == questionId);
-        if (answer == null)
-        {
-            return false;
-        }
-        
-        var question = await dbContext.Questions.FirstOrDefaultAsync(x => x.Id == answer.QuestionId);
-        if (question == null)
-        {
-            return false;
-        }
-
-        var card = await dbContext.TestCards.FirstOrDefaultAsync(x => x.Id == question.TestCardId);
-        if (card == null)
-        {
-            return false;
-        }
-        
-        var isPreviouslyCompleted = await dbContext.UserQuestionProgresses.AnyAsync(progress => progress.UserId == user.Id 
-            && progress.QuestionId == questionId);
-
-        if (answer.IsCorrect)
-        {
-            if (!isPreviouslyCompleted)
+        var result = await dbContext.Answers
+            .Where(a => a.Id == answerId && a.QuestionId == questionId)
+            .Include(a => a.Question)
+            .ThenInclude(q => q.TestCard)
+            .Select(a => new
             {
-                var scoreProgress = await dbContext.UserLessonProgresses
-                    .FirstOrDefaultAsync(p => p.UserId == user.Id && p.LessonId == card.LessonId);
-                
-                if (scoreProgress == null)
+                Answer = a,
+                LessonId = a.Question.TestCard.LessonId,
+                UserExists = dbContext.Users.Any(u => u.Id == userId),
+                IsPreviouslyCompleted = dbContext.UserQuestionProgresses
+                    .Any(p => p.UserId == userId && p.QuestionId == questionId),
+                ExistingProgress = dbContext.UserLessonProgresses
+                    .FirstOrDefault(p => p.UserId == userId && p.LessonId == a.Question.TestCard.LessonId)
+            })
+            .FirstOrDefaultAsync();
+
+        if (result?.Answer == null || !result.UserExists)
+            return false;
+
+        if (result.Answer.IsCorrect && !result.IsPreviouslyCompleted)
+        {
+            if (result.ExistingProgress == null)
+            {
+                await dbContext.UserLessonProgresses.AddAsync(new UserLessonProgress
                 {
-                    await dbContext.UserLessonProgresses.AddAsync(new UserLessonProgress
-                    {
-                        UserId = user.Id,
-                        LessonId = card.LessonId,
-                        ScorePoint = answer.Score
-                    });
-                }
-                else
-                {
-                    scoreProgress.ScorePoint += answer.Score;
-                }
-                
-                await dbContext.UserQuestionProgresses.AddAsync(new UserQuestionProgress
-                {
-                    UserId = user.Id,
-                    QuestionId = questionId
+                    UserId = userId,
+                    LessonId = result.LessonId,
+                    ScorePoint = result.Answer.Score
                 });
             }
-            
+            else
+            {
+                result.ExistingProgress.ScorePoint += result.Answer.Score;
+            }
+        
+            await dbContext.UserQuestionProgresses.AddAsync(new UserQuestionProgress
+            {
+                UserId = userId,
+                QuestionId = questionId
+            });
+        
             await dbContext.SaveChangesAsync();
             return true;
         }
-        
-        return false;
+    
+        return result.Answer.IsCorrect;
     }
     
     public bool ValidateTask(int userId, int taskId, ICollection<TaskData> inputData)

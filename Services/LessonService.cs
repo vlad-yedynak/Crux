@@ -30,22 +30,34 @@ public class LessonService(ICardManagementService cardManagementService, Applica
     
     public async Task<ICollection<LessonResponse>> GetLessonsAsync()
     {
-        var lessons = new List<LessonResponse>();
-        
-        var lessonEntities = await dbContext.Lessons.ToListAsync();
-        
-        foreach (var lesson in lessonEntities)
-        {
-            lessons.Add(new LessonResponse
+        var lessons = await dbContext.Lessons
+            .Include(l => l.Cards)
+            .Select(l => new 
             {
-                Id = lesson.Id,
-                Title = lesson.Title,
-                TotalPoints = await CalculateLessonTotalPointsAsync(lesson.Id),
-                BriefCards = await cardManagementService.GetLessonCardsAsync(lesson.Id)
-            });
-        }
+                Lesson = l,
+                Cards = l.Cards.Select(c => new { c.Id, c.Title, c.CardType, c.Description, c.LessonId })
+            })
+            .ToListAsync();
         
-        return lessons;
+        var lessonIds = lessons.Select(l => l.Lesson.Id).ToList();
+        var pointsData = await GetLessonsTotalPointsAsync(lessonIds);
+
+        return lessons.Select(l => new LessonResponse
+        {
+            Success = true,
+            Id = l.Lesson.Id,
+            Title = l.Lesson.Title,
+            TotalPoints = pointsData.GetValueOrDefault(l.Lesson.Id, 0),
+            BriefCards = l.Cards.Select(c => new BriefCardResponse
+            {
+                Success = true,
+                Id = c.Id,
+                LessonId = c.LessonId,
+                Title = c.Title,
+                CardType = c.CardType.ToString(),
+                Description = c.Description
+            }).ToList()
+        }).ToList();
     }
 
     public LessonResponse AddLesson(string title)
@@ -148,28 +160,55 @@ public class LessonService(ICardManagementService cardManagementService, Applica
         return false;
     }
     
+    private async Task<Dictionary<int, int>> GetLessonsTotalPointsAsync(List<int> lessonIds)
+    {
+        var result = new Dictionary<int, int>();
+        
+        var sandboxPoints = await dbContext.Cards
+            .Where(c => lessonIds.Contains(c.LessonId) && c.CardType == CardType.Sandbox)
+            .Join(dbContext.Tasks, 
+                c => c.Id, 
+                t => t.SandboxCardId, 
+                (c, t) => new { c.LessonId, t.Points })
+            .GroupBy(x => x.LessonId)
+            .Select(g => new { LessonId = g.Key, Points = g.Sum(x => x.Points) })
+            .ToListAsync();
+        
+        var testPoints = await dbContext.Cards
+            .Where(c => lessonIds.Contains(c.LessonId) && c.CardType == CardType.Test)
+            .Join(dbContext.Questions,
+                c => c.Id,
+                q => q.TestCardId,
+                (c, q) => new { c.LessonId, QuestionId = q.Id })
+            .Join(dbContext.Answers.Where(a => a.IsCorrect),
+                cq => cq.QuestionId,
+                a => a.QuestionId,
+                (cq, a) => new { cq.LessonId, a.Score })
+            .GroupBy(x => new { x.LessonId, x.Score })
+            .Select(g => new { g.Key.LessonId, g.Key.Score })
+            .GroupBy(x => x.LessonId)
+            .Select(g => new { LessonId = g.Key, Points = g.Sum(x => x.Score) })
+            .ToListAsync();
+        
+        foreach (var item in sandboxPoints)
+        {
+            result[item.LessonId] = item.Points;
+        }
+        
+        foreach (var item in testPoints)
+        {
+            if (result.ContainsKey(item.LessonId))
+                result[item.LessonId] += item.Points;
+            else
+                result[item.LessonId] = item.Points;
+        }
+        
+        return result;
+    }
+
     private async Task<int> CalculateLessonTotalPointsAsync(int lessonId)
     {
-        var totalPoints = 0;
-        
-        var sandboxTasks = await dbContext.SandboxCards
-            .Where(sc => dbContext.Cards
-                .Any(c => c.Id == sc.Id && c.LessonId == lessonId && c.CardType == CardType.Sandbox))
-            .SelectMany(sc => sc.Tasks)
-            .ToListAsync();
-
-        totalPoints += sandboxTasks.Sum(task => task.Points);
-        
-        var testQuestions = await dbContext.TestCards
-            .Where(tc => dbContext.Cards
-                .Any(c => c.Id == tc.Id && c.LessonId == lessonId && c.CardType == CardType.Test))
-            .SelectMany(tc => tc.Questions)
-            .Include(q => q.Answers.Where(a => a.IsCorrect))
-            .ToListAsync();
-
-        totalPoints += testQuestions.Sum(question => 
-            question.Answers.Where(a => a.IsCorrect).Max(a => a.Score));
-
-        return totalPoints;
+        var points = await GetLessonsTotalPointsAsync(new List<int> { lessonId });
+        return points.GetValueOrDefault(lessonId, 0);
     }
 }
