@@ -192,7 +192,7 @@ public class CardController (
     {
         try
         {
-            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
             if (userId == null)
             {
                 HttpContext.Response.StatusCode = 404;

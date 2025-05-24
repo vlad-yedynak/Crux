@@ -4,5 +4,5 @@ namespace Crux.Services;
 
 public interface IUserFeedService
 {
-    Task<ICollection<UserFeedResponse>> GetLearningResourcesAsync(string detailedTopic, int numberOfResourcesToRequest = 3);
+    Task<ICollection<UserFeedResponse>> GetUserFeedResourcesAsync(string detailedTopic, int numberOfResourcesToRequest = 3);
 }

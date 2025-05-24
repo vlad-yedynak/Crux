@@ -16,7 +16,8 @@ if (string.IsNullOrEmpty(connectionString))
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddSession();
+builder.Services.AddHttpClient();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseMySQL(connectionString));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -29,6 +30,8 @@ builder.Services.AddScoped<IEducationalDataService, EducationalDataService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
+builder.Services.AddScoped<IUserFeedService, UserFeedService>();
+builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(c =>
 {

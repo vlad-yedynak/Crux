@@ -285,7 +285,7 @@ public class PersonalizationService(ApplicationDbContext dbContext, IUserFeedSer
         
         var lessonTopic = GetLessonDetailedTopic(lesson);
         
-        return await userFeedService.GetLearningResourcesAsync(lessonTopic);
+        return await userFeedService.GetUserFeedResourcesAsync(lessonTopic);
     }
 
     private async Task<Lesson?> GetMostRelevantLessonAsync(User user)
