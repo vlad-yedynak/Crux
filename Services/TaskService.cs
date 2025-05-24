@@ -74,6 +74,9 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
         var isCompleted = await dbContext.UserTaskProgresses.AnyAsync(progress => progress.UserId == userId
                                                                        && progress.TaskId == task.Id);
 
+        var expectedDataTypes = task.ExpectedData.Select(d => d.GetValueType()).ToList();
+        var expectedDataCount = expectedDataTypes.Count;
+
         return new TaskResponse
         {
             Success = true,
@@ -81,7 +84,9 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
             Name = task.Name,
             Description = task.Description,
             Points = task.Points,
-            IsCompleted = isCompleted
+            IsCompleted = isCompleted,
+            ExpectedDataType = expectedDataTypes,
+            ExpectedDataCount = expectedDataCount
         };
     }
 

@@ -58,4 +58,13 @@ public class TaskData
     public int TaskId { get; set; }
     
     public Task? Task { get; set; }
+
+    public string GetValueType()
+    {
+        if (ValueInt.HasValue) return "int";
+        if (ValueDouble.HasValue) return "double";
+        if (ValueString != null) return "string";
+        if (ValueBool.HasValue) return "bool";
+        return "unknown";
+    }
 }

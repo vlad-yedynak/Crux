@@ -18,4 +18,10 @@ public class TaskResponse : Response
     
     [JsonPropertyName("isCompleted")]
     public bool? IsCompleted { get; set; }
+    
+    [JsonPropertyName("expectedDataType")]
+    public List<string>? ExpectedDataType { get; set; }
+    
+    [JsonPropertyName("expectedDataCount")]
+    public int? ExpectedDataCount { get; set; }
 }
