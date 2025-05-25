@@ -288,6 +288,14 @@
                 </button>
                 <p class="help-text">Click to edit the educational content for this card.</p>
             </div>
+            
+            <!-- Add Edit Tasks button for Sandbox cards -->
+            <div *ngIf="cardBeingEdited?.type === 'Sandbox'" class="edit-sandbox-tasks">
+                <button class="edit-tasks-btn" (click)="editSandboxCardTasks(cardBeingEdited!)">
+                    Edit Tasks
+                </button>
+                <p class="help-text">Click to edit the tasks for this sandbox card.</p>
+            </div>
         </div>
         
         <div class="popup-footer">
@@ -464,7 +472,7 @@
             
             <div *ngIf="!isLoadingTasks">
                 <div class="action-buttons">
-                    <button class="primary-btn">+ Add New Task</button>
+                    <button class="primary-btn" (click)="openAddTaskPopup()">Add New Task</button>
                 </div>
                 
                 <div *ngIf="tasks.length === 0" class="no-items-message">
@@ -475,27 +483,129 @@
                     <div *ngFor="let task of tasks; let i = index" class="item-card">
                         <div class="item-info">
                             <h3>{{ task.name }}</h3>
-                            <p>{{ task.description }}</p>
-                            <div class="item-details">
+                            <p>{{ task.description }}</p>                            <div class="item-details">
                                 <span class="detail-badge">Points: {{ task.points }}</span>
-                                <span class="detail-badge" *ngIf="task.isCompleted !== null && task.isCompleted !== undefined">
-                                    Status: {{ task.isCompleted ? 'Completed' : 'Not Completed' }}
-                                </span>
-                                <span class="detail-badge" *ngIf="task.expectedDataType">
-                                    Type: {{ task.expectedDataType }}
-                                </span>
-                                <span class="detail-badge" *ngIf="task.expectedDataCount">
-                                    Count: {{ task.expectedDataCount }}
+                                <span class="detail-badge" *ngIf="task.expectedData && task.expectedData.length > 0">
+                                    Expected Data: {{ task.expectedData.length }} item(s)
                                 </span>
                             </div>
                         </div>
                         <div class="item-actions">
-                            <button class="edit-btn" >Edit</button>
-                            <button class="delete-btn" >Delete</button>
+                            <button class="edit-btn" (click)="openEditTaskPopup(task)">Edit</button>
+                            <button class="delete-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Task Popup -->
+<div *ngIf="isEditTaskPopupVisible" class="edit-task-overlay" (click)="closeEditTaskPopup($event)">
+    <div class="edit-task-popup-content">
+        <div class="popup-header">
+            <h2 class="popup-title">{{ taskPopupTitle }}</h2>
+            <button class="close-popup-btn" (click)="closeEditTaskPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="form-group">
+                <label for="taskName">Task Name</label>
+                <input type="text" id="taskName" class="form-control" 
+                       placeholder="Enter task name" 
+                       [(ngModel)]="newTask.name">
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Description</label>
+                <textarea id="taskDescription" class="form-control" 
+                          rows="3" placeholder="Enter task description" 
+                          [(ngModel)]="newTask.description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskPoints">Points</label>
+                <input type="number" id="taskPoints" class="form-control" 
+                       min="1" placeholder="Enter points value" 
+                       [(ngModel)]="newTask.points">
+            </div>            <div class="expected-data-section">
+                <div class="section-header">
+                    <h3>Expected Data</h3>
+                    <button type="button" class="add-btn" (click)="addExpectedData()">+ Add Data</button>
+                </div>
+                
+                <div class="expected-data-list">
+                    <!-- Repeat for each expected data item -->
+                    <div *ngFor="let data of newTask.expectedData; let i = index" class="expected-data-item">
+                        <div class="item-header">
+                            <h4>Expected Data #{{i+1}}</h4>
+                            <button type="button" class="remove-btn" (click)="removeExpectedData(i)">Remove</button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group type-selector">
+                                <label>Data Type</label>
+                                <select class="form-control" [ngModel]="getExpectedDataType(data)" 
+                                        (ngModelChange)="updateExpectedDataType(i, $event)">
+                                    <option value="string">String</option>
+                                    <option value="int">Integer</option>
+                                    <option value="double">Double</option>
+                                    <option value="bool">Boolean</option>
+                                </select>
+                            </div>
+                            <div class="form-group value-input">
+                                <label>Sample Value</label>
+                                <input *ngIf="getExpectedDataType(data) === 'string'" 
+                                       type="text" 
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Enter sample string value">
+                                <input *ngIf="getExpectedDataType(data) === 'int'" 
+                                       type="number" 
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Enter sample integer value">
+                                <input *ngIf="getExpectedDataType(data) === 'double'" 
+                                       type="number" 
+                                       step="0.01"
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Enter sample double value">
+                                <select *ngIf="getExpectedDataType(data) === 'bool'" 
+                                        class="form-control" 
+                                        [ngModel]="getExpectedDataValue(data)" 
+                                        (ngModelChange)="updateExpectedDataValue(i, $event)">
+                                    <option value="true">True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div *ngIf="!newTask.expectedData || newTask.expectedData.length === 0" class="no-items-message">
+                        No expected data defined. Click "+ Add Data" to define what data should be expected for this task.
+                    </div>
+                    
+                    <div *ngIf="newTask.expectedData && newTask.expectedData.length > 0" class="data-count-info">
+                        <p><strong>Expected Data Count:</strong> {{ newTask.expectedData.length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditTaskPopup($event)">Cancel</button>
+            <button class="save-btn" (click)="saveTask()">{{ taskPopupSubmitText || 'Save Task' }}</button>
         </div>
     </div>
 </div>

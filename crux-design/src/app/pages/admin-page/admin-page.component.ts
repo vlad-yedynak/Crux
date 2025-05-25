@@ -63,19 +63,17 @@ interface TaskExpectedData {
   valueString?: string;
 }
 
-// Add Task interface
+// Add Task interface - updated to match server structure
 interface Task {
   id?: number;
   name: string;
   description: string;
   points: number;
   isCompleted?: boolean | null;
-  expectedDataType?: string[] | null;
-  expectedDataCount?: number | null;
+  expectedData?: TaskExpectedData[];  // Array of expected data with actual values
   success?: boolean;
   error?: string | null;
   sandboxCardId?: number;
-  expectedData?: TaskExpectedData[];
 }
 
 @Component({
@@ -164,12 +162,11 @@ export class AdminPageComponent implements OnInit {
   isEditTaskPopupVisible = false;
   isLoadingTasks = false;
   tasks: Task[] = [];
-  currentTask: Task | null = null;
-  newTask: Partial<Task> = {
+  currentTask: Task | null = null;  newTask: Partial<Task> = {
     name: '',
     description: '',
     points: 0,
-    expectedData: []
+    expectedData: [] // Array of expected data with actual values
   };
   taskPopupTitle = '';
   taskPopupSubmitText = '';
@@ -1187,6 +1184,45 @@ export class AdminPageComponent implements OnInit {
     this.editTestCard(card);
   }
   
+  // Add method to navigate to tasks editing for sandbox cards
+  editSandboxCardTasks(card: Card): void {
+    this.isEditCardPopupVisible = false;
+    this.currentEditingCard = card;
+    this.isViewTasksPopupVisible = true;
+    document.body.style.overflow = 'hidden';
+    this.isLoadingTasks = true;
+    this.tasks = [];
+    
+    const token = localStorage.getItem('auth-token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    this.http.get<any>(`http://localhost:8080/card/get-card/${card.id}`, { headers })
+      .subscribe({
+        next: (response) => {
+          console.log('Sandbox card data loaded:', response);
+          
+          if (response && response.success && response.body && response.body.tasks) {
+            this.tasks = response.body.tasks;
+            console.log('Tasks loaded:', this.tasks);
+          } else {
+            console.log('No tasks found or tasks not in expected format');
+            this.tasks = [];
+          }
+          
+          this.isLoadingTasks = false;
+          this.cdr.detectChanges(); // Force UI update
+        },
+        error: (error) => {
+          console.error('Error fetching sandbox card data:', error);
+          this.isLoadingTasks = false;
+          this.cdr.detectChanges(); // Force UI update
+        }
+      });
+  }
+  
   deleteCard(card: Card): void {
     if (confirm(`Are you sure you want to delete the card "${card.title}"? This action cannot be undone.`)) {
       console.log('Deleting card:', card);
@@ -1459,8 +1495,8 @@ export class AdminPageComponent implements OnInit {
       });
     }
   }
-  
-  // Add this method to fix the compilation errors
+
+  // Add method to close the tasks view popup
   closeViewTasksPopup(event: MouseEvent): void {
     if (
       (event.target as HTMLElement).classList.contains('view-tasks-overlay') ||
@@ -1468,7 +1504,276 @@ export class AdminPageComponent implements OnInit {
     ) {
       this.isViewTasksPopupVisible = false;
       this.currentEditingCard = null;
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'auto'; // Re-enable scrolling
     }
+  }  // Add method to open the popup for adding a new task
+  openAddTaskPopup(): void {
+    console.log('Opening add task popup');
+    
+    this.taskPopupTitle = 'Add New Task';
+    this.taskPopupSubmitText = 'Create Task';
+      // Reset the form with empty values
+    this.newTask = {
+      name: '',
+      description: '',
+      points: 0,
+      expectedData: []
+    };
+    
+    console.log('Reset newTask for new task:', this.newTask);
+    
+    this.currentTask = null;
+    this.isEditTaskPopupVisible = true;
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    
+    // Force change detection to ensure UI updates
+    this.cdr.detectChanges();
+  }    // Update method to open the popup for editing an existing task
+  openEditTaskPopup(task: Task): void {
+    console.log('Opening edit task popup for task:', task);
+    
+    this.taskPopupTitle = 'Edit Task';
+    this.taskPopupSubmitText = 'Save Changes';
+      // Populate the form with existing task data
+    this.newTask = {
+      name: task.name || '',
+      description: task.description || '',
+      points: task.points || 0,
+      expectedData: task.expectedData || [],
+      sandboxCardId: task.sandboxCardId,
+      id: task.id
+    };
+    
+    console.log('Populated newTask with data:', this.newTask);
+    
+    this.currentTask = task;
+    this.isEditTaskPopupVisible = true;
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    
+    // Force change detection to ensure UI updates
+    this.cdr.detectChanges();
+  }    // Add method to close the task popup
+  closeEditTaskPopup(event: MouseEvent): void {
+    // Only close if clicking the overlay or close button or cancel button
+    if (
+      (event.target as HTMLElement).classList.contains('edit-task-overlay') ||
+      (event.target as HTMLElement).classList.contains('close-popup-btn') ||
+      (event.target as HTMLElement).classList.contains('cancel-btn')
+    ) {
+      this.isEditTaskPopupVisible = false;
+      this.currentTask = null;
+        // Reset the form data when closing
+      this.newTask = {
+        name: '',
+        description: '',
+        points: 0,
+        expectedData: []
+      };
+      
+      document.body.style.overflow = 'auto'; // Re-enable scrolling
+    }
+  }
+  // Add method to save tasks
+  saveTask(): void {
+    if (!this.isTaskFormValid() || !this.currentEditingCard) return;
+    
+    const token = localStorage.getItem('auth-token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+      // Determine if we're updating an existing task or creating a new one
+    const isUpdating = this.currentTask !== null && this.currentTask.id !== undefined;
+    
+    // Format task data according to the API's expected structure
+    const taskData = {
+      // Include the task ID only if updating an existing task
+      ...(isUpdating ? { id: this.currentTask!.id } : {}),
+      name: this.newTask.name,
+      description: this.newTask.description,
+      points: this.newTask.points,
+      sandboxCardId: this.currentEditingCard.id,
+      expectedData: this.newTask.expectedData || []
+    };
+    
+    console.log(`${isUpdating ? 'Updating' : 'Creating'} task:`, JSON.stringify(taskData, null, 2));
+    
+    // Choose the appropriate endpoint and HTTP method based on whether we're updating or creating
+    const endpoint = isUpdating 
+      ? 'http://localhost:8080/task/update-task'
+      : 'http://localhost:8080/task/create-task';
+    
+    const request = isUpdating
+      ? this.http.put(endpoint, taskData, { headers })
+      : this.http.post(endpoint, taskData, { headers });
+    
+    // Send the request
+    request.subscribe({
+      next: (response: any) => {
+        console.log(`Task ${isUpdating ? 'updated' : 'created'}:`, response);
+        
+        // Close the edit popup
+        this.isEditTaskPopupVisible = false;
+        document.body.style.overflow = 'auto';
+        this.currentTask = null;
+        
+        // Refresh the tasks list
+        this.refreshTasks();
+      },
+      error: (error) => {
+        console.error(`Error ${isUpdating ? 'updating' : 'creating'} task:`, error);
+        alert(`Failed to ${isUpdating ? 'update' : 'create'} task. Please try again.`);
+      }
+    });
+  }
+  
+  // Add method to delete tasks
+  deleteTask(task: Task, index: number): void {
+    if (confirm(`Are you sure you want to delete the task "${task.name}"? This action cannot be undone.`)) {
+      const token = localStorage.getItem('auth-token');
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+      
+      this.http.delete(`http://localhost:8080/task/delete-task/${task.id}`, { headers })
+        .subscribe({
+          next: (response: any) => {
+            console.log('Task deleted:', response);
+            // Remove from the local array
+            this.tasks.splice(index, 1);
+          },
+          error: (error) => {
+            console.error('Error deleting task:', error);
+            alert('Failed to delete task. Please try again.');
+          }
+        });
+    }
+  }
+  
+  // Add method to refresh tasks
+  refreshTasks(): void {
+    if (!this.currentEditingCard) return;
+    
+    this.isLoadingTasks = true;
+    const token = localStorage.getItem('auth-token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    this.http.get<any>(`http://localhost:8080/card/get-card/${this.currentEditingCard.id}`, { headers })
+      .subscribe({
+        next: (response) => {
+          console.log('Refreshed sandbox card data loaded:', response);
+          
+          if (response && response.success && response.body && response.body.tasks) {
+            this.tasks = response.body.tasks;
+          } else {
+            this.tasks = [];
+          }
+          
+          this.isLoadingTasks = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error refreshing tasks:', error);
+          this.isLoadingTasks = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+  
+  // Add method to validate task form
+  isTaskFormValid(): boolean {
+    return Boolean(
+      this.newTask.name && 
+      this.newTask.name.trim() && 
+      this.newTask.description && 
+      this.newTask.description.trim() &&
+      this.newTask.points !== undefined && 
+      this.newTask.points >= 0
+    );
+  }
+  // Add method to add expected data to task
+  addExpectedData(): void {
+    if (!this.newTask.expectedData) {
+      this.newTask.expectedData = [];
+    }
+    
+    // Add a new default data object with string type
+    this.newTask.expectedData.push({ valueString: '' });
+    
+    this.cdr.detectChanges();
+  }
+    // Add method to remove expected data from task
+  removeExpectedData(index: number): void {
+    if (this.newTask.expectedData && index >= 0 && index < this.newTask.expectedData.length) {
+      this.newTask.expectedData.splice(index, 1);
+      this.cdr.detectChanges();
+    }
+  }
+    // Add method to update expected data type and value at index
+  updateExpectedDataType(index: number, type: string): void {
+    if (this.newTask.expectedData && index >= 0 && index < this.newTask.expectedData.length) {
+      const currentData = this.newTask.expectedData[index];
+      
+      // Create new data object based on type
+      switch (type) {
+        case 'int':
+          this.newTask.expectedData[index] = { valueInt: currentData.valueInt || 0 };
+          break;
+        case 'double':
+          this.newTask.expectedData[index] = { valueDouble: currentData.valueDouble || 0.0 };
+          break;
+        case 'bool':
+          this.newTask.expectedData[index] = { valueBool: currentData.valueBool || false };
+          break;
+        case 'string':
+        default:
+          this.newTask.expectedData[index] = { valueString: currentData.valueString || '' };
+          break;
+      }
+      
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Add method to update expected data value at index
+  updateExpectedDataValue(index: number, value: any): void {
+    if (this.newTask.expectedData && index >= 0 && index < this.newTask.expectedData.length) {
+      const currentData = this.newTask.expectedData[index];
+      
+      // Update the appropriate value based on the data type
+      if (currentData.hasOwnProperty('valueInt')) {
+        currentData.valueInt = parseInt(value) || 0;
+      } else if (currentData.hasOwnProperty('valueDouble')) {
+        currentData.valueDouble = parseFloat(value) || 0.0;
+      } else if (currentData.hasOwnProperty('valueBool')) {
+        currentData.valueBool = value === 'true' || value === true;
+      } else if (currentData.hasOwnProperty('valueString')) {
+        currentData.valueString = value || '';
+      }
+      
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Add helper method to get data type from expected data object
+  getExpectedDataType(data: TaskExpectedData): string {
+    if (data.hasOwnProperty('valueInt')) return 'int';
+    if (data.hasOwnProperty('valueDouble')) return 'double';
+    if (data.hasOwnProperty('valueBool')) return 'bool';
+    if (data.hasOwnProperty('valueString')) return 'string';
+    return 'string'; // default
+  }
+
+  // Add helper method to get data value from expected data object
+  getExpectedDataValue(data: TaskExpectedData): any {
+    if (data.hasOwnProperty('valueInt')) return data.valueInt;
+    if (data.hasOwnProperty('valueDouble')) return data.valueDouble;
+    if (data.hasOwnProperty('valueBool')) return data.valueBool;
+    if (data.hasOwnProperty('valueString')) return data.valueString;
+    return '';
   }
 }
