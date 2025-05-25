@@ -1528,23 +1528,49 @@ export class AdminPageComponent implements OnInit {
     
     // Force change detection to ensure UI updates
     this.cdr.detectChanges();
-  }    // Update method to open the popup for editing an existing task
+  }
+  
+  // Update method to open the popup for editing an existing task
   openEditTaskPopup(task: Task): void {
     console.log('Opening edit task popup for task:', task);
     
     this.taskPopupTitle = 'Edit Task';
     this.taskPopupSubmitText = 'Save Changes';
-      // Populate the form with existing task data
+    
+    // For editing, preserve data types but clear values for new input
+    const preservedDataTypes: TaskExpectedData[] = [];
+    if (task.expectedData && task.expectedData.length > 0) {
+      task.expectedData.forEach(data => {
+        // Determine the data type from the existing data
+        let dataType = '';
+        if (data.hasOwnProperty('valueInt')) {
+          dataType = 'int';
+        } else if (data.hasOwnProperty('valueDouble')) {
+          dataType = 'double';
+        } else if (data.hasOwnProperty('valueString')) {
+          dataType = 'string';
+        } else if (data.hasOwnProperty('valueBool')) {
+          dataType = 'bool';
+        }
+        
+        // Create new data object with type but empty value
+        if (dataType) {
+          preservedDataTypes.push(this.createEmptyDataObject(dataType));
+        }
+      });
+    }
+    
+    // Populate the form with existing task data but empty expectedData values
     this.newTask = {
       name: task.name || '',
       description: task.description || '',
       points: task.points || 0,
-      expectedData: task.expectedData || [],
+      expectedData: preservedDataTypes,
       sandboxCardId: task.sandboxCardId,
       id: task.id
     };
     
-    console.log('Populated newTask with data:', this.newTask);
+    console.log('Populated newTask with preserved data types but empty values:', this.newTask);
     
     this.currentTask = task;
     this.isEditTaskPopupVisible = true;
@@ -1552,7 +1578,7 @@ export class AdminPageComponent implements OnInit {
     
     // Force change detection to ensure UI updates
     this.cdr.detectChanges();
-  }    // Add method to close the task popup
+  }// Add method to close the task popup
   closeEditTaskPopup(event: MouseEvent): void {
     // Only close if clicking the overlay or close button or cancel button
     if (
@@ -1767,7 +1793,6 @@ export class AdminPageComponent implements OnInit {
     if (data.hasOwnProperty('valueString')) return 'string';
     return 'string'; // default
   }
-
   // Add helper method to get data value from expected data object
   getExpectedDataValue(data: TaskExpectedData): any {
     if (data.hasOwnProperty('valueInt')) return data.valueInt;
@@ -1775,5 +1800,20 @@ export class AdminPageComponent implements OnInit {
     if (data.hasOwnProperty('valueBool')) return data.valueBool;
     if (data.hasOwnProperty('valueString')) return data.valueString;
     return '';
+  }
+
+  // Add helper method to create empty data object based on type
+  createEmptyDataObject(dataType: string): TaskExpectedData {
+    switch (dataType) {
+      case 'int':
+        return { valueInt: 0 };
+      case 'double':
+        return { valueDouble: 0.0 };
+      case 'bool':
+        return { valueBool: false };
+      case 'string':
+      default:
+        return { valueString: '' };
+    }
   }
 }
