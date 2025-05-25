@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class PersonalizationService(ApplicationDbContext dbContext, IUserFeedService userFeedService) : IPersonalizationService
+public class PersonalizationService(ApplicationDbContext dbContext, IGeminiApiService geminiApiService, IResourceSearchService searchService) : IPersonalizationService
 {
     public PersonalizationResponse UpdateLessonTime(int userId, PersonalizationRequest request)
     {
@@ -264,12 +264,12 @@ public class PersonalizationService(ApplicationDbContext dbContext, IUserFeedSer
         };
     }
 
-    public ICollection<UserFeedResponse> GetUserFeed(int userId)
+    public ICollection<UserFeedResponse> GetRecommendedResources(int userId)
     {
         return [];
     }
 
-    public async Task<ICollection<UserFeedResponse>> GetUserFeedAsync(int userId)
+    public async Task<ICollection<UserFeedResponse>> GetRecommendedResourcesAsync(int userId)
     {
         var user =  await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
@@ -285,7 +285,23 @@ public class PersonalizationService(ApplicationDbContext dbContext, IUserFeedSer
         
         var lessonTopic = GetLessonDetailedTopic(lesson);
         
-        return await userFeedService.GetUserFeedResourcesAsync(lessonTopic);
+        var resources = await searchService.SearchResourcesAsync(lessonTopic);
+        var feed = new List<UserFeedResponse>();
+        
+        foreach (var resource in resources)
+        {
+            if (resource.Success)
+            {
+                var enhanced = await geminiApiService.EnhanceSearchResultAsync(resource);
+                feed.Add(enhanced);
+            }
+            else
+            {
+                feed.Add(resource);
+            }
+        }
+        
+        return feed;
     }
 
     private async Task<Lesson?> GetMostRelevantLessonAsync(User user)

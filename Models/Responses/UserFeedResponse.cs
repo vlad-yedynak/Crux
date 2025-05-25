@@ -7,4 +7,6 @@ public class UserFeedResponse : Response
     public string? Url { get; set; }
     
     public string? Thumbnail { get; set; }
+    
+    public string? Message { get; set; }
 }

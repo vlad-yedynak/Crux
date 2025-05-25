@@ -8,8 +8,7 @@ namespace Crux.Controllers;
 [Route("personalization")]
 public class PersonalizationController(
     IAuthenticationService authenticationService,
-    IPersonalizationService personalizationService,
-    IUserFeedService userFeedService) : ControllerBase
+    IPersonalizationService personalizationService) : ControllerBase
 {
     [HttpPost("update-lesson-time")]
     public async Task<ActionResult<Response>> UpdateLessonTimeAsync([FromBody] PersonalizationRequest request)
@@ -132,7 +131,7 @@ public class PersonalizationController(
                 };
             }
             
-            var feed = await personalizationService.GetUserFeedAsync(userId.Value);
+            var feed = await personalizationService.GetRecommendedResourcesAsync(userId.Value);
 
             return new ControllerResponse<ICollection<UserFeedResponse>>
             {

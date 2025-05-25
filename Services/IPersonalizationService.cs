@@ -14,6 +14,6 @@ public interface IPersonalizationService
     PersonalizationResponse ResetAll(int userId);
     Task<PersonalizationResponse> ResetAllAsync(int userId);
     
-    ICollection<UserFeedResponse> GetUserFeed(int userId);
-    Task<ICollection<UserFeedResponse>> GetUserFeedAsync(int userId);
+    ICollection<UserFeedResponse> GetRecommendedResources(int userId);
+    Task<ICollection<UserFeedResponse>> GetRecommendedResourcesAsync(int userId);
 }

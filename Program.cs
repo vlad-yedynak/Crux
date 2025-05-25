@@ -19,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(
     Environment.GetEnvironmentVariable("AWS_ACCESS_KEY"),
-    Environment.GetEnvironmentVariable("AWS_SECRET_KET"),
+    Environment.GetEnvironmentVariable("AWS_SECRET_KEY"),
     Amazon.RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"))
 ));
 
@@ -37,8 +37,9 @@ builder.Services.AddScoped<IEducationalDataService, EducationalDataService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
-builder.Services.AddScoped<IUserFeedService, UserFeedService>();
+builder.Services.AddScoped<IGeminiApiService, GeminiApiService>();
 builder.Services.AddScoped<IS3StorageService, S3StorageService>();
+builder.Services.AddScoped<IResourceSearchService, ResourceSearchService>();
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(c =>
