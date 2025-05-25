@@ -30,17 +30,26 @@ public class S3StorageService(IAmazonS3 s3Client) : IS3StorageService
         return $"https://{_bucketName}.s3.amazonaws.com/{key}";
     }
     
-    public async Task DeleteFileAsync(string fileUrl)
+    public async Task DeleteFileAsync(string filePathOrUrl)
     {
-        var key = GetS3KeyFromUrl(fileUrl);
-        if (string.IsNullOrEmpty(key)) return;
-
+        string key;
+        
+        if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out var uri) && 
+            (uri.Host.Contains("s3.amazonaws.com") || uri.Host.EndsWith(".s3.amazonaws.com")))
+        {
+            key = uri.AbsolutePath.TrimStart('/');
+        }
+        else
+        {
+            key = filePathOrUrl.TrimStart('/');
+        }
+    
         var deleteRequest = new DeleteObjectRequest
         {
             BucketName = _bucketName,
             Key = key
         };
-
+    
         await s3Client.DeleteObjectAsync(deleteRequest);
     }
     

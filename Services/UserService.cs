@@ -7,7 +7,8 @@ namespace Crux.Services;
 
 public class UserService(
     ApplicationDbContext dbContext,
-    IWebHostEnvironment webHostEnvironment) : IUserService
+    IWebHostEnvironment webHostEnvironment,
+    IS3StorageService s3StorageService) : IUserService
 {
     public UserResponse GetUserInfo(int userId)
     {
@@ -233,12 +234,7 @@ public class UserService(
             };
         }
 
-        var uploadUrl = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "avatars", user.Id.ToString());
-
-        if (!Directory.Exists(uploadUrl))
-        {
-            Directory.CreateDirectory(uploadUrl);
-        }
+        var s3FolderPath = $"uploads/avatars/{id}";
 
         try
         {  
@@ -268,14 +264,18 @@ public class UserService(
                     else if (contentType.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) extension = ".webp";
                     else extension = ".img";
                 }
+                
+                if (!string.IsNullOrEmpty(user.Avatar) && 
+                    !user.Avatar.Contains("defaultAvatar") &&
+                    Uri.TryCreate(user.Avatar, UriKind.Absolute, out var oldAvatarUri))
+                {
+                    await s3StorageService.DeleteFileAsync(user.Avatar);
+                }
 
                 var fileName = $"{Guid.NewGuid()}{extension}";
-                var filePath = Path.Combine(uploadUrl, fileName);
-                await File.WriteAllBytesAsync(filePath, imageResponse);
+                var s3Url = await s3StorageService.UploadFileAsync(imageResponse, s3FolderPath, fileName);
                 
-                var serverUrl = $"/uploads/avatars/{user.Id}/{fileName}";
-                
-                user.Avatar = serverUrl;
+                user.Avatar = s3Url;
                 await dbContext.SaveChangesAsync();
                 
                 return new UserResponse
@@ -286,7 +286,7 @@ public class UserService(
                     Email = user.Email,
                     ScorePoints = GetUserScorePoints(user.ScorePoints),
                     UserRole = user.Role.ToString(),
-                    AvatarUrl = serverUrl
+                    AvatarUrl = s3Url
                 };
             }
             else
