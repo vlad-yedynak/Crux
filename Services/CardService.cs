@@ -408,7 +408,7 @@ public class CardService(
         {
             if (card.CardType == CardType.Educational)
             {
-                educationalDataService.DeleteEducationalCardFiles(id);
+                await educationalDataService.DeleteEducationalCardFilesAsync(id);
             }
             
             dbContext.Cards.Remove(card);

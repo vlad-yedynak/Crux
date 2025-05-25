@@ -14,5 +14,5 @@ public interface IEducationalDataService
     EducationalDataResponse UpdateEducationalData(EducationalCardDataRequest dataRequest);
     Task<EducationalDataResponse> UpdateEducationalDataAsync(EducationalCardDataRequest dataRequest);
 
-    bool DeleteEducationalCardFiles(int cardId);
+    Task<bool> DeleteEducationalCardFilesAsync(int cardId);
 }

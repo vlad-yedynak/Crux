@@ -6,7 +6,9 @@ using Crux.Models.Cards;
 
 namespace Crux.Services;
 
-public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment) : IEducationalDataService
+public class EducationalDataService(ApplicationDbContext dbContext,
+    IWebHostEnvironment webHostEnvironment,
+    IS3StorageService s3StorageService) : IEducationalDataService
 {
     public EducationalDataResponse AddEducationalData(EducationalCardDataRequest educationalCardDataRequest)
     {
@@ -90,12 +92,7 @@ public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvi
         if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Count != 0)
         {
             var cardImages = new List<CardImage>();
-            var uploadUrl = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", educationalCard.Id.ToString());
-
-            if (!Directory.Exists(uploadUrl))
-            {
-                Directory.CreateDirectory(uploadUrl);
-            }
+            var s3FolderPath = $"uploads/images/educational-cards/{educationalCard.Id}";
 
             foreach (var image in educationalCardDataRequest.Images)
             {
@@ -137,15 +134,13 @@ public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvi
                             else extension = ".img";
                         }
 
-                        var fileName = $"{Guid.NewGuid()}.{extension}";
-                        var filePath = Path.Combine(uploadUrl, fileName);
-                        await File.WriteAllBytesAsync(filePath, imageResponse);
+                        var fileName = $"{Guid.NewGuid()}{extension}";
+                        var s3Url = await s3StorageService.UploadFileAsync(imageResponse ,s3FolderPath, fileName);
                         
-                        var serverUrl = $"/uploads/images/educational-cards/{educationalCard.Id}/{fileName}";
                         
                         cardImages.Add(new CardImage
                         {
-                            Url = serverUrl,
+                            Url = s3Url,
                             Caption = image.Caption,
                             AltText = image.AltText,
                             EducationalCardId = educationalCard.Id
@@ -175,12 +170,7 @@ public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvi
         if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Count != 0)
         {
             var cardAttachment = new List<CardAttachment>();
-            var uploadUrl = Path.Combine(webHostEnvironment.WebRootPath,"uploads", "attachments", "educational-cards", educationalCard.Id.ToString());
-
-            if (!Directory.Exists(uploadUrl))
-            {
-                Directory.CreateDirectory(uploadUrl);
-            }
+            var s3FolderPath = $"uploads/attachments/educational-cards/{educationalCard.Id}";
 
             foreach (var attachment in educationalCardDataRequest.Attachments)
             {
@@ -215,14 +205,11 @@ public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvi
                         }
                         
                         var serverFileName = $"{Guid.NewGuid()}{extension}";
-                        var filePath = Path.Combine(uploadUrl, serverFileName);
-                        await File.WriteAllBytesAsync(filePath, fileBytes);
-                        
-                        var serverUrl = $"/uploads/attachments/educational-cards/{educationalCard.Id}/{serverFileName}";
+                        var s3Url = await s3StorageService.UploadFileAsync(fileBytes, s3FolderPath, serverFileName);
                         
                         cardAttachment.Add(new CardAttachment
                         {
-                            Url = serverUrl,
+                            Url = s3Url,
                             Description = attachment.Description,
                             EducationalCardId = educationalCard.Id
                         });
@@ -260,36 +247,22 @@ public class EducationalDataService(ApplicationDbContext dbContext, IWebHostEnvi
         };
     }
     
-    public bool DeleteEducationalCardFiles(int cardId)
+    public async Task<bool> DeleteEducationalCardFilesAsync(int cardId)
     {
-        var imagesDirectory = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "images", "educational-cards", cardId.ToString());
-        var attachmentsDirectory = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "attachments", "educational-cards", cardId.ToString());
-        
-        if (Directory.Exists(imagesDirectory))
+        var imagesFolder = $"uploads/images/educational-cards/{cardId}";
+        var attachmentsFolder = $"uploads/attachments/educational-cards/{cardId}";
+    
+        try
         {
-            try
-            {
-                Directory.Delete(imagesDirectory, true);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting educational card images: {ex.Message}");
-            }
+            await s3StorageService.DeleteFolderAsync(imagesFolder);
+            await s3StorageService.DeleteFolderAsync(attachmentsFolder);
+            return true;
         }
-        
-        if (Directory.Exists(attachmentsDirectory))
+        catch (Exception ex)
         {
-            try
-            {
-                Directory.Delete(attachmentsDirectory, true);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deleting educational card attachments: {ex.Message}");
-            }
+            Console.WriteLine($"Error deleting S3 files for educational card {cardId}: {ex.Message}");
+            return false;
         }
-        
-        return true;
     }
 
     public EducationalDataResponse UpdateEducationalData(EducationalCardDataRequest dataRequest)

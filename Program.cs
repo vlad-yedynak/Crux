@@ -5,6 +5,7 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Amazon.S3;
 
 Env.Load();
 
@@ -15,6 +16,12 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(
+    Environment.GetEnvironmentVariable("AWS_ACCESS_KEY"),
+    Environment.GetEnvironmentVariable("AWS_SECRET_KET"),
+    Amazon.RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"))
+));
 
 builder.Services.AddSession();
 builder.Services.AddHttpClient();
@@ -31,6 +38,7 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 builder.Services.AddScoped<IUserFeedService, UserFeedService>();
+builder.Services.AddScoped<IS3StorageService, S3StorageService>();
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(c =>
