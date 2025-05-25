@@ -128,6 +128,17 @@
                     <option value="Sandbox">Sandbox</option>
                 </select>
             </div>
+            
+            <!-- Add sandbox type selection when Sandbox is selected -->
+            <div class="form-group" *ngIf="newCard.type === 'Sandbox'">
+                <label for="sandBoxCardType">Sandbox Type</label>
+                <select id="sandBoxCardType" [(ngModel)]="newCard.sandBoxCardType" class="form-control">
+                    <option value="Primitives">Primitives</option>
+                    <option value="Bezier">Bezier</option>
+                    <option value="FractalSystem">Fractal System</option>
+                    <option value="ColorSystem">Color System</option>
+                </select>
+            </div>
         </div>
         
         <div class="popup-footer">
@@ -413,3 +424,79 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Lesson Popup -->
+<div *ngIf="isEditLessonPopupVisible" class="edit-lesson-popup-overlay" (click)="closeEditLessonPopup($event)">
+    <div class="edit-lesson-popup-content">
+        <div class="popup-header">
+            <h2>Edit Lesson</h2>
+            <button class="close-popup-btn" (click)="closeEditLessonPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="form-group">
+                <label for="editLessonName">Lesson Name</label>
+                <input type="text" id="editLessonName" [(ngModel)]="editedLessonName" 
+                       placeholder="Enter lesson name" class="form-control">
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditLessonPopup($event)">Cancel</button>
+            <button class="save-btn" [disabled]="!editedLessonName.trim()" 
+                    (click)="saveEditedLesson()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Tasks Popup -->
+<div *ngIf="isViewTasksPopupVisible" class="view-tasks-overlay" (click)="closeViewTasksPopup($event)">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h2>Tasks for {{ currentEditingCard?.title }}</h2>
+            <button class="close-popup-btn" (click)="closeViewTasksPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div *ngIf="isLoadingTasks" class="loading-message">
+                Loading tasks...
+            </div>
+            
+            <div *ngIf="!isLoadingTasks">
+                <div class="action-buttons">
+                    <button class="primary-btn">+ Add New Task</button>
+                </div>
+                
+                <div *ngIf="tasks.length === 0" class="no-items-message">
+                    No tasks found. Click "Add New Task" to create one.
+                </div>
+                
+                <div *ngIf="tasks.length > 0" class="items-list">
+                    <div *ngFor="let task of tasks; let i = index" class="item-card">
+                        <div class="item-info">
+                            <h3>{{ task.name }}</h3>
+                            <p>{{ task.description }}</p>
+                            <div class="item-details">
+                                <span class="detail-badge">Points: {{ task.points }}</span>
+                                <span class="detail-badge" *ngIf="task.isCompleted !== null && task.isCompleted !== undefined">
+                                    Status: {{ task.isCompleted ? 'Completed' : 'Not Completed' }}
+                                </span>
+                                <span class="detail-badge" *ngIf="task.expectedDataType">
+                                    Type: {{ task.expectedDataType }}
+                                </span>
+                                <span class="detail-badge" *ngIf="task.expectedDataCount">
+                                    Count: {{ task.expectedDataCount }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" >Edit</button>
+                            <button class="delete-btn" >Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

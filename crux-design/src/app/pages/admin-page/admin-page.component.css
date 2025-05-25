@@ -110,12 +110,18 @@
 }
 
 .edit-btn {
-    background-color: #4285f4;
+    background-color: #007bff;
     color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
 }
 
 .edit-btn:hover {
-    background-color: #3367d6;
+    background-color: #0056b3;
 }
 
 .view-cards-btn {
@@ -170,6 +176,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
     animation: popup-fade-in 0.2s ease-out;
 }
 
@@ -784,7 +791,7 @@ select.form-control {
     backdrop-filter: blur(2px);
 }
 
-.edit-lesson-popup {
+.edit-lesson-popup-content {
     background-color: white;
     border-radius: 10px;
     width: 90%;
@@ -1320,4 +1327,229 @@ select.form-control {
     font-style: italic;
     margin-top: 5px;
     text-align: center;
+}
+
+/* Add styling for the sandbox tasks button to match the other edit buttons */
+.edit-sandbox-tasks {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.edit-tasks-btn {
+    background-color: #ff6b35;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    transition: background-color 0.2s;
+}
+
+.edit-tasks-btn:hover {
+    background-color: #e55a29;
+}
+
+/* Task Management Styles */
+.view-tasks-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background-color: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: popup-fade-in 0.2s ease-out;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.items-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.item-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.item-info h3 {
+    margin: 0 0 8px 0;
+    color: #343a40;
+    font-size: 1.1em;
+}
+
+.item-info p {
+    margin: 0 0 10px 0;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.item-details {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.detail-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.item-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.expected-data-list {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    background: #f8f9fa;
+    margin-bottom: 15px;
+}
+
+.expected-data-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.expected-data-item:last-child {
+    margin-bottom: 0;
+}
+
+.expected-data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.expected-data-header span {
+    font-weight: 600;
+    color: #495057;
+}
+
+.expected-data-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.field-group label {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+/* Button Styles - Consistent with existing design */
+.primary-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.primary-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.secondary-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background-color: #545b62;
+}
+
+.secondary-btn.small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.action-buttons {
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.no-items-message {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
 }

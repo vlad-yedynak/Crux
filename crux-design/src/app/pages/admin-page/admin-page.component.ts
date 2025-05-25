@@ -13,6 +13,7 @@ interface Card {
   lessonId: number;
   type: string;
   content: string;
+  sandBoxCardType?: string; // Update property name
 }
 
 // Update the TestAnswer interface to make isCorrect required (not optional)
@@ -54,6 +55,29 @@ interface LessonsResponse {
   error: string;
 }
 
+// Add interface for expected data structure
+interface TaskExpectedData {
+  valueInt?: number;
+  valueDouble?: number;
+  valueBool?: boolean;
+  valueString?: string;
+}
+
+// Add Task interface
+interface Task {
+  id?: number;
+  name: string;
+  description: string;
+  points: number;
+  isCompleted?: boolean | null;
+  expectedDataType?: string[] | null;
+  expectedDataCount?: number | null;
+  success?: boolean;
+  error?: string | null;
+  sandboxCardId?: number;
+  expectedData?: TaskExpectedData[];
+}
+
 @Component({
   selector: 'app-admin-page',
   standalone: true,
@@ -88,6 +112,7 @@ export class AdminPageComponent implements OnInit {
     description: '',
     type: 'Educational',
     content: ''
+    // Remove sandBoxCardType from initial definition - let it be undefined initially
   };
   
   // Properties for test card editing
@@ -133,6 +158,21 @@ export class AdminPageComponent implements OnInit {
   // Add these properties to store original image data
   originalImageUrls: {[index: number]: string} = {};
   originalAttachmentUrls: {[index: number]: string} = {};
+  
+  // Add properties for task management
+  isViewTasksPopupVisible = false;
+  isEditTaskPopupVisible = false;
+  isLoadingTasks = false;
+  tasks: Task[] = [];
+  currentTask: Task | null = null;
+  newTask: Partial<Task> = {
+    name: '',
+    description: '',
+    points: 0,
+    expectedData: []
+  };
+  taskPopupTitle = '';
+  taskPopupSubmitText = '';
   
   constructor(
     private http: HttpClient,
@@ -330,6 +370,12 @@ export class AdminPageComponent implements OnInit {
 
     if (this.isViewEducationalContentPopupVisible) {
       this.isViewEducationalContentPopupVisible = false;
+      this.currentEditingCard = null;
+      document.body.style.overflow = 'auto';
+    }
+    
+    if (this.isViewTasksPopupVisible) {
+      this.isViewTasksPopupVisible = false;
       this.currentEditingCard = null;
       document.body.style.overflow = 'auto';
     }
@@ -565,7 +611,7 @@ export class AdminPageComponent implements OnInit {
   saveEducationalContent(): void {
     if (!this.currentEditingCard) return;
     
-    // Clean up images - use original URL if new URL is empty, remove server prefix
+    // Clean up images - use original URL if new URL is empty
     const filteredImages = this.educationalImages
       .map((img, index) => {
         let url = '';
@@ -573,10 +619,11 @@ export class AdminPageComponent implements OnInit {
         // If new URL is provided, use it
         if (img.url && img.url.trim()) {
           url = img.url.trim();
+          // Don't modify the URL - send exactly what the user entered
         } 
-        // Otherwise use original URL without the server prefix
+        // Otherwise use original URL - keep the original format from the server
         else if (this.originalImageUrls[index]) {
-          url = this.originalImageUrls[index].replace('http://localhost:8080', '');
+          url = this.originalImageUrls[index];
         }
         
         return {
@@ -587,7 +634,7 @@ export class AdminPageComponent implements OnInit {
       })
     .filter(img => img.url !== ''); // Only keep images with a URL
     
-    // Clean up attachments - use original URL if new URL is empty, remove server prefix
+    // Clean up attachments - use original URL if new URL is empty
     const filteredAttachments = this.educationalAttachments
       .map((att, index) => {
         let url = '';
@@ -595,10 +642,11 @@ export class AdminPageComponent implements OnInit {
         // If new URL is provided, use it
         if (att.url && att.url.trim()) {
           url = att.url.trim();
+          // Don't modify the URL - send exactly what the user entered
         } 
-        // Otherwise use original URL without the server prefix
+        // Otherwise use original URL - keep the original format from the server
         else if (this.originalAttachmentUrls[index]) {
-          url = this.originalAttachmentUrls[index].replace('http://localhost:8080', '');
+          url = this.originalAttachmentUrls[index];
         }
         
         return {
@@ -1190,7 +1238,7 @@ export class AdminPageComponent implements OnInit {
       this.selectedLesson = null;
     }
     
-    // Reset before opening to ensure clean state
+    // Reset form completely
     this.resetNewCardForm();
     
     // Set flag to show popup
@@ -1201,7 +1249,8 @@ export class AdminPageComponent implements OnInit {
     
     console.log('Card popup state:', {
       isCardPopupVisible: this.isAddCardPopupVisible,
-      currentLesson: this.currentLessonForCard?.title
+      currentLesson: this.currentLessonForCard?.title,
+      sandBoxCardType: this.newCard.sandBoxCardType
     });
     
     // Prevent scrolling on the body when popup is open
@@ -1227,7 +1276,8 @@ export class AdminPageComponent implements OnInit {
       title: '',
       description: '',
       type: 'Educational',
-      content: ''
+      content: '',
+      sandBoxCardType: 'Primitives' // Update property name and set default
     };
   }
   
@@ -1250,14 +1300,23 @@ export class AdminPageComponent implements OnInit {
       'Content-Type': 'application/json'
     });
     
-    // Update the payload to match the expected API format
-    const cardData = {
+    // Update the payload to include sandBoxCardType for sandbox cards
+    const cardData: any = {
       title: this.newCard.title!.trim(),
       description: this.newCard.description!.trim(),
-      cardType: this.newCard.type,  // Changed from 'type' to 'cardType'
+      cardType: this.newCard.type,
       lessonId: this.currentLessonForCard.id
-      // Removed 'content' field as it's not needed in the request
     };
+    
+    // Add sandBoxCardType if it's a sandbox card - make sure to get the current value
+    if (this.newCard.type === 'Sandbox') {
+      // Ensure sandBoxCardType is set to a default if undefined
+      cardData.sandBoxCardType = this.newCard.sandBoxCardType || 'Primitives';
+      console.log('Creating sandbox card with type:', cardData.sandBoxCardType);
+      console.log('Current newCard object:', JSON.stringify(this.newCard, null, 2));
+    }
+    
+    console.log('Final card data being sent:', cardData);
     
     this.http.post('http://localhost:8080/card/create-card', 
       cardData, 
@@ -1268,6 +1327,9 @@ export class AdminPageComponent implements OnInit {
         
         // Close the add card popup
         this.isAddCardPopupVisible = false;
+        
+        // Reset the form completely after successful creation
+        this.resetNewCardForm();
         
         // Refresh lessons data
         this.fetchLessons().then(() => {
@@ -1395,6 +1457,18 @@ export class AdminPageComponent implements OnInit {
           delete this.originalAttachmentUrls[keyNum];
         }
       });
+    }
+  }
+  
+  // Add this method to fix the compilation errors
+  closeViewTasksPopup(event: MouseEvent): void {
+    if (
+      (event.target as HTMLElement).classList.contains('view-tasks-overlay') ||
+      (event.target as HTMLElement).classList.contains('close-popup-btn')
+    ) {
+      this.isViewTasksPopupVisible = false;
+      this.currentEditingCard = null;
+      document.body.style.overflow = 'auto';
     }
   }
 }
