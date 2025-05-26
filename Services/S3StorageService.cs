@@ -24,8 +24,6 @@ public class S3StorageService(IAmazonS3 s3Client) : IS3StorageService
 
         var transferUtility = new TransferUtility(s3Client);
         await transferUtility.UploadAsync(uploadRequest);
-        
-        Console.WriteLine($"Upload finished :https://{_bucketName}.s3.amazonaws.com/{key}");
 
         return $"https://{_bucketName}.s3.amazonaws.com/{key}";
     }
@@ -75,12 +73,12 @@ public class S3StorageService(IAmazonS3 s3Client) : IS3StorageService
 
     public Task<string> GetAvatarPlaceholder()
     {
-        throw new NotImplementedException();
+        return Task.FromResult($"https://{_bucketName}.s3.amazonaws.com/placeholders/defaultAvatar.png");
     }
 
     public Task<string> GetFeedPlaceholder()
     {
-        throw new NotImplementedException();
+        return Task.FromResult($"https://{_bucketName}.s3.amazonaws.com/placeholders/feed-placeholder.png");
     }
 
     private string GetS3KeyFromUrl(string url)

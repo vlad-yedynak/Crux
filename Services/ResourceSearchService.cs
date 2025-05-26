@@ -73,6 +73,5 @@ public class ResourceSearchService (HttpClient httpClient, IS3StorageService s3S
             Thumbnail = item.PageMap?.CseThumbnail?.FirstOrDefault()?.Src ?? s3StorageService.GetFeedPlaceholder().Result,
         }).ToList() ?? new List<SearchResult>();
         
-        // TODO: Provide default thumbnail if Src is null
     }
 }

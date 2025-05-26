@@ -11,9 +11,9 @@ namespace Crux.Services;
 
 public class AuthenticationService(
     ApplicationDbContext dbContext,
-    S3StorageService s3StorageService,
     IPasswordHasher<User> passwordHasher,
-    IDistributedCache distributedCache) : IAuthenticationService
+    IDistributedCache distributedCache,
+    IS3StorageService s3StorageService) : IAuthenticationService
 {
     public AuthenticationResponse SignUp(UserRequest request)
     {
