@@ -82,8 +82,8 @@ export interface CardApiResponse {
 export class LessonsService {
 
   private lessonsSubject = new BehaviorSubject<Lesson[] | null>(null);
-  private baseUrl = 'http://localhost:8080/lesson'; 
-  private cardBaseUrl = 'http://localhost:8080/card';
+  private baseUrl = 'http://crux-api-1:8080/lesson'; 
+  private cardBaseUrl = 'http://crux-api-1:8080/card';
   private readonly LESSONS_STORAGE_KEY = 'app-lessons-data';
   private readonly AUTH_TOKEN_KEY = 'auth-token';
   private readonly CARD_DETAIL_STORAGE_KEY_PREFIX = 'app-card-detail-'; // New key for individual card caching
