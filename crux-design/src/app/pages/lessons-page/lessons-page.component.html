@@ -6,14 +6,8 @@
         <p>Loading lessons...</p>
     </div>
     
-    <!-- Error state -->
-    <div *ngIf="!isLoading && hasError" class="error-state">
-        <p>{{ errorMessage }}</p>
-        <button (click)="fetchLessons()" class="retry-button">Retry</button>
-    </div>
-    
     <!-- View All Mode -->
-    <div *ngIf="!isLoading && !hasError && isViewAllMode" class="view-all-mode">
+    <div *ngIf="!isLoading && isViewAllMode" class="view-all-mode">
         <div class="view-all-header">
             <h2 class="category-title">{{ getSelectedLesson()?.title }}</h2>
             <button class="control-btn back-btn" (click)="closeViewAll()">Back to All Lessons</button>
@@ -31,7 +25,7 @@
     </div>
     
     <!-- Normal view (all categories) -->
-    <div *ngIf="!isLoading && !hasError && !isViewAllMode">
+    <div *ngIf="!isLoading && !isViewAllMode">
         <div *ngFor="let lesson of lessons" class="category-container" [attr.data-category]="lesson.id">
             <div class="category-header">
                 <h2 class="category-title">{{ lesson.title }}</h2>
@@ -70,7 +64,7 @@
             <button class="close-popup-btn" (click)="closePopup($event)">&times;</button>
             <div class="popup-content-area">
                 <div class="popup-left-content">
-                    <div *ngIf="safeCardContent" [innerHTML]="safeCardContent" class="educational-content"></div>
+                    <div *ngIf="safeCardContent" [innerHTML]="safeCardContent" class="educational-content content-wrapper"></div>
                     <div *ngIf="!safeCardContent" class="content-fallback">
                         <p>No content available for this lesson.</p>
                     </div>
@@ -79,6 +73,25 @@
                     <h2>{{ selectedCard.title }}</h2>
                     <p>{{ selectedCard.description }}</p>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Auth Message Popup -->
+    <div *ngIf="showAuthMessage" class="auth-message-overlay">
+        <div class="auth-message">
+            <div class="auth-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h2>Authentication Required</h2>
+            <p>You need to be logged in to view lesson content.</p>
+            <p>Redirecting to login page in {{redirectCountdown}} seconds...</p>
+            <div class="auth-buttons">
+                <button class="login-now-btn" (click)="router.navigate(['/auth'])">Login Now</button>
+                <button class="close-btn" (click)="closeAuthMessage()">Cancel</button>
             </div>
         </div>
     </div>

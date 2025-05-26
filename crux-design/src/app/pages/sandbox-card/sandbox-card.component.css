@@ -1,47 +1,81 @@
-.sandbox-layout-container {
-    display: flex;
-    height: 100%;
-    width: 100%;
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-primary-light);
 }
 
-.coordinate-system-container {
-    display: flex;
-    margin: 2rem;
-    padding: 0;
-    box-sizing: border-box;
+.sandbox-layout-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 50px); /* 50px - висота header, підлаштуйте якщо інша */
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .canvas-section {
-    flex: 2;
-    background-color: var(--color-secondary-light);
-    border: 1px solid var(--color-accent);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+  flex: 2 1 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+#canvasContainer {
+  flex: 1 1 0;
+  background-color: var(--color-secondary-light);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
 #coordinateCanvas {
-    width: 100%;
-    height: 100%;
-    display: block;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .overlay-section {
-    flex: 1; 
-    padding: 20px;
-    border-bottom-left-radius: 12px;
-    border-top-left-radius: 12px;
-    border-left: 1px solid var(--color-secondary-dark);
-    box-sizing: border-box;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    right: 10px;
-    z-index: 10;
-    background-color: var(--color-secondary-light);
-    display: flex; /* Make overlay-section a flex container */
-    flex-direction: column; /* Stack children vertically */
-    overflow: hidden; /* Prevent content from overflowing overlay */
+  flex: 1 1 0;
+  min-width: 320px;
+  max-width: 480px;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-secondary-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+  border-bottom-left-radius: 12px;
+  border-top-left-radius: 12px;
+  border-left: 1px solid var(--color-secondary-dark);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  min-height: 0;
+}
+
+/* --- Fix scrollable lists --- */
+.drawn-shapes-list ul,
+.task-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 0;
+  max-height: none;
 }
 
 .shape-selector {
@@ -886,5 +920,70 @@
   100% {
     opacity: 1;
   }
+}
+
+/* Boolean select field styling */
+select.task-input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--color-secondary-dark);
+  border-radius: 4px;
+  background-color: white;
+  color: var(--color-secondary-dark);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3e%3cpath fill='%23EB5E28' d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select.task-input-field:hover {
+  border-color: var(--color-accent);
+}
+
+select.task-input-field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
+}
+
+/* Style the boolean options */
+select.task-input-field option {
+  padding: 10px;
+  background-color: white;
+  color: var(--color-secondary-dark);
+}
+
+select.task-input-field option:first-child {
+  font-style: italic;
+  color: #999;
+}
+
+/* For true/false specific styling */
+.point-inputs .point-label:has(+ .coordinates select.task-input-field) {
+  font-weight: 600;
+  color: var(--color-secondary-dark);
+}
+
+/* Add styles for the input fields */
+.task-input-field {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-secondary-dark);
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.task-input-field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
 }
 

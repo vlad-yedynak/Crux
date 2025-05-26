@@ -1,38 +1,14 @@
-import { Component, OnInit, Inject, PLATFORM_ID, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CanvasService, Point, ShapeData, validateSquarePoints, validateTrianglePoints, validateRectanglePoints, validateCircleData, validatePolygonPoints } from './services/canvas.service'; 
-import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { trigger, state, style, animate, transition } from '@angular/animations'; // Import animation modules
+import { trigger, state, style, animate, transition } from '@angular/animations';
 import { TimeTrackerService } from '../../services/time-tracker.service';
-import { AuthServiceService, User } from '../../auth/services/auth-service.service';
-
-export interface Task {
-  id: number;
-  name: string;
-  description: string;
-  points: number;
-  isCompleted: boolean;
-}
-
-export interface Card {
-  id: number;
-  title: string;
-  description: string;
-  content: string | null;
-  tasks: Task[];
-  sandboxType: string;
-  lessonId: number;
-  type: string;
-}
-
-export interface CardResponse {
-  body: Card;
-  success: boolean;
-  error: string | null;
-}
+import { AuthServiceService, User } from '../../services/auth-service.service';
+import { LessonsService, Card, Task } from '../../services/lessons.service'; // Import Card and Task
+import { CookiesService } from '../../services/cookies.service';
 @Component({
   selector: 'app-sandbox-card',
   imports: [
@@ -66,18 +42,16 @@ export interface CardResponse {
     ])
   ]
 })
-export class SandboxCardComponent implements OnInit, AfterViewInit {
-  card: Card | null = null;
+export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
+  card: Card | null = null; // Uses Card from LessonsService
   private canvasInitialized = false;
   activePanel: 'shapes' | 'tasks' = 'shapes'; 
 
   @ViewChild('myCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasContainer') containerRef!: ElementRef<HTMLElement>;
 
-  selectedTask: Task | null = null;
-  taskAnswerInt: string = '';
-  taskAnswerDouble: string = '';
-  taskAnswerString: string = '';
+  selectedTask: Task | null = null; 
+  taskAnswers: any[] = [];
 
   selectedShapeType: string = 'square'; 
   drawnShapes: ShapeData[] = [];
@@ -99,13 +73,24 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   showResultsPopup = false;
   taskResultCorrect = false;
 
+  // Add variables for auth check
+  isAuthenticated: boolean = false;
+  showAuthMessage: boolean = false;
+  redirectCountdown: number = 3;
+  
+  // Add a reference to the redirect timer
+  private redirectTimer: any = null;
+
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private authService: AuthServiceService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    public canvasService: CanvasService, // Notice: no @Inject here
-    private timeTrackerService: TimeTrackerService // Remove @Inject here
+    public canvasService: CanvasService, 
+    private timeTrackerService: TimeTrackerService,
+    private lessonsService: LessonsService,
+    public router: Router,
+    private cookiesService: CookiesService,
   ) { }
 
   private isBrowser(): boolean {
@@ -113,18 +98,15 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // Only run browser-specific code when in browser environment
     if (this.isBrowser()) {
       const cardId = localStorage.getItem('selectedCardId');
       if (cardId) {
         const cardIdNum = parseInt(cardId, 10);
         this.fetchCardDetails(+cardId);
-
-        // Add null check before calling startTracking
-        if (this.timeTrackerService) {
-          this.timeTrackerService.startTracking(cardIdNum);
-        } else {
-          console.error('TimeTrackerService is undefined in ngOnInit');
+        // Start time tracking
+        const lessonId = localStorage.getItem('selectedLessonId');
+        if (lessonId) {
+          this.timeTrackerService.startTracking(cardIdNum, parseInt(lessonId, 10));
         }
       }
 
@@ -139,16 +121,17 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    // Add null check before calling stopTracking
-    if (this.timeTrackerService) {
-      this.timeTrackerService.stopTracking();
-    } else {
-      console.error('TimeTrackerService is undefined in ngOnDestroy');
+    // Stop time tracking
+    this.timeTrackerService.stopTracking();
+    
+    // Clear selected card and lesson from localStorage
+    if (this.isBrowser()) {
+      localStorage.removeItem('selectedCardId');
+      localStorage.removeItem('selectedLessonId');
     }
   }
 
   ngAfterViewInit(): void {
-    // Only run canvas setup in browser environment
     if (this.isBrowser()) {
       setTimeout(() => this.setupCanvasIfReady(), 100);
     }
@@ -156,7 +139,6 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:resize')
   onResize(): void {
-    // Skip if not in browser or canvas isn't initialized
     if (!this.isBrowser() || !this.canvasInitialized) return;
     
     this.updateCanvasSize();
@@ -168,7 +150,6 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   private updateCanvasSize(): void {
-    // Skip if not in browser
     if (!this.isBrowser()) return;
     
     if (
@@ -191,7 +172,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
     if (!this.isBrowser()) return;
     
     if (
-      this.card?.sandboxType === 'CoordinateSystem' &&
+      this.card?.sandboxType === 'Primitives' &&
       !this.canvasInitialized &&
       this.canvasRef && this.canvasRef.nativeElement &&
       this.containerRef && this.containerRef.nativeElement
@@ -212,76 +193,133 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  
   fetchCardDetails(cardId: number): void {
-    // Skip if not in browser
     if (!this.isBrowser()) return;
     
-    const token = localStorage.getItem('auth-token');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
-    this.http.get<CardResponse>(
-      `http://localhost:8080/card/get-card/${cardId}`,
-      { headers }
-    ).subscribe({
-      next: (response) => {
-        console.log('Card details:', response.body);
-        this.card = response.body;
-        setTimeout(() => this.setupCanvasIfReady(), 100);
+    this.lessonsService.getCardById(cardId).subscribe({
+      next: (cardData) => { 
+        if (cardData) {
+          console.log('Card details received in SandboxCardComponent:', cardData);
+          this.card = cardData;
+          
+          if (cardData.lessonId) {
+            localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
+            // Removed time tracking code
+          }
+          
+          setTimeout(() => this.setupCanvasIfReady(), 100);
+        } else {
+          console.error(`SandboxCardComponent: Failed to fetch card details for ID ${cardId} from service.`);
+        }
       },
       error: (err) => {
-        console.error('Failed to fetch card details:', err);
+        console.error(`SandboxCardComponent: Error fetching card details for ID ${cardId}:`, err);
       }
     });
   }
 
   selectTask(task: Task): void {
     this.selectedTask = task;
-    this.taskAnswerInt = '';
-    this.taskAnswerDouble = '';
-    this.taskAnswerString = '';
+    if(task.expectedDataCount && task.expectedDataType){
+      this.taskAnswers = new Array(task.expectedDataCount).fill(undefined);
+    }else{
+      this.taskAnswers = [];
+    }
   }
 
   deselectTask(): void {
     this.selectedTask = null;
+    this.taskAnswers = [];
+  }
+
+  getDataTypeLabel(dataType: string): string {
+    switch (dataType.toLowerCase()) {
+      case 'int': return 'Ціле число (Integer)';
+      case 'double': return 'Дробове число (Double)';
+      case 'string': return 'Текст (String)';
+      case 'bool': return 'Логічне значення (Boolean)';
+      default: return dataType; 
+    }
+  }
+
+  getInputType(dataType: string): string {
+    switch (dataType.toLowerCase()) {
+      case 'int':
+      case 'double':
+        return 'number';
+      case 'string':
+        return 'text';
+      default:
+        return 'text';
+    }
+  }
+
+  getPlaceholder(dataType: string): string {
+     switch (dataType.toLowerCase()) {
+      case 'int': return 'напр. 123';
+      case 'double': return 'напр. 12.34';
+      case 'string': return 'напр. Текстова відповідь';
+      default: return 'Введіть значення';
+    }
   }
 
   submitTaskAnswer(): void {
     if (this.selectedTask) {
-      const token = localStorage.getItem('auth-token');
+      let token: string | null = null;
+      if (isPlatformBrowser(this.platformId)) {
+        token = this.cookiesService.getCookie('auth-token');
+      }
+      console.log(`token:`, token);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       });
 
-      let payload;
-      
-      if (this.selectedTask.id === 9) {
-        payload = {
-          taskId: this.selectedTask.id,
-          inputData: [
-            { valueString: String(this.taskAnswerString).trim() }, 
-            { valueDouble: Number(this.taskAnswerDouble) },        
-            { valueInt: Number(this.taskAnswerInt) }               
-          ]
-        };
-      } else {
-        payload = {
-          taskId: this.selectedTask.id,
-          inputData: [
-            { valueInt: Number(this.taskAnswerInt) },              
-            { valueDouble: Number(this.taskAnswerDouble) },        
-            { valueString: String(this.taskAnswerString).trim() }  
-          ]
-        };
+      const inputDataArray: any[] = [];
+      if(this.selectedTask.expectedDataCount && this.selectedTask.expectedDataType) {
+        for (let i = 0; i < this.selectedTask.expectedDataCount; i++) {
+          const dataType = this.selectedTask.expectedDataType[i];
+          const answer = this.taskAnswers[i];
+          const entry: any = {}; // Changed from [] to {}
+
+          switch (dataType.toLowerCase()) {
+            case 'int':
+              entry.valueInt = (answer === undefined || answer === null || answer === '' || isNaN(Number(answer))) ? null : Number(answer);
+              break;
+            case 'double':
+              entry.valueDouble = (answer === undefined || answer === null || answer === '' || isNaN(Number(answer))) ? null : Number(answer);
+              break;
+            case 'string':
+              entry.valueString = (answer === undefined || answer === null || answer === '') ? null : String(answer).trim();
+              break;
+            case 'bool':
+              if (answer === undefined || answer === null || answer === ''){
+                entry.valueBool = null;
+              }else{
+                entry.valueBool = String(answer).toLowerCase() === 'true';
+              }
+              break;
+            default:
+              console.warn(`Невідомий тип даних: ${dataType}`);
+              break;
+          } 
+  
+
+          if(Object.keys(entry).length > 0){
+            inputDataArray.push(entry)
+          }
+        }
       }
       
+      const payload = {
+        taskId: this.selectedTask.id,
+        inputData: inputDataArray
+      };
       console.log('Submitting task answer with payload:', JSON.stringify(payload, null, 2));
 
       this.http.post<{ body: boolean; success: boolean; error: string | null }>(
-        'http://localhost:8080/testing/validate-task',
+        'http://localhost:8080/test/validate-task',
         payload,
         { headers }
       ).subscribe({
@@ -289,17 +327,14 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
           if (response.success) {
             const isCorrect = response.body;
             
-            // Set popup state
             this.taskResultCorrect = isCorrect;
-            this.showResultsPopup = true;
+            // this.showResultsPopup = true; // Moved after card refresh
             
             if (isCorrect) {
-              // Update the selected task status
               if (this.selectedTask) {
                 this.selectedTask.isCompleted = true;
               }
               
-              // Also update the task in the card's tasks array for when we return to the list
               if (this.card && this.card.tasks) {
                 const taskInList = this.card.tasks.find(t => t.id === this.selectedTask!.id);
                 if (taskInList) {
@@ -321,15 +356,39 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
               });
             }
           } else {
-            // Show error in popup
             this.taskResultCorrect = false;
-            this.showResultsPopup = true;
             console.error(`Validation error: ${response.error}`);
+          }
+
+          if (this.card && this.card.id) {
+            this.lessonsService.forceRefreshCardById(this.card.id).subscribe({
+              next: (refreshedCard) => {
+                if (refreshedCard) {
+                  this.card = refreshedCard;
+                  if (this.selectedTask && this.card && this.card.tasks) {
+                    const updatedSelectedTask = this.card.tasks.find(t => t.id === this.selectedTask!.id);
+                    if (updatedSelectedTask) {
+                      this.selectedTask = updatedSelectedTask;
+                    }
+                  }
+                  console.log('Card data refreshed after task submission.');
+                } else {
+                  console.warn('Failed to refresh card data after task submission.');
+                }
+                this.showResultsPopup = true; 
+              },
+              error: (refreshError) => {
+                console.error('Error refreshing card data after task submission:', refreshError);
+                this.showResultsPopup = true; 
+              }
+            });
+          } else {
+            console.warn('Card ID is not available, cannot refresh card data. Showing popup directly.');
+            this.showResultsPopup = true;
           }
         },
         error: (err) => {
           console.error('Error validating task answer:', err);
-          // Show error in popup
           this.taskResultCorrect = false;
           this.showResultsPopup = true;
         }
@@ -338,9 +397,9 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   // Add method to close the popup
-  closeResultsPopup(): void {
+  closeResultsPopup(forceDeselectTask: boolean = false): void {
     this.showResultsPopup = false;
-    if (this.taskResultCorrect) {
+    if (this.taskResultCorrect || forceDeselectTask) {
       this.deselectTask();
     }
   }
@@ -739,9 +798,6 @@ export class SandboxCardComponent implements OnInit, AfterViewInit {
   }
 
   switchPanel(panel: 'shapes' | 'tasks'): void {
-    if (panel === 'tasks' && this.editingShapeId) {
-      this.onCancelEditShape();
-    }
     this.activePanel = panel;
   }
 

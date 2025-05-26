@@ -10,8 +10,9 @@ import {
   animate,
 } from '@angular/animations';
 import { RouterModule, Router } from '@angular/router';
-import { AuthServiceService, User} from '../../auth/services/auth-service.service';
+import { AuthServiceService, User} from '../../services/auth-service.service';
 import { isPlatformBrowser } from '@angular/common';
+import { CookiesService } from '../../services/cookies.service'; // Import CookiesService
 
 @Component({
   selector: 'app-header',
@@ -70,13 +71,15 @@ export class HeaderComponent implements OnInit{
   selectedLanguage = 'en';
   user: User | null = null;
   isAdmin = false;
+  private readonly AUTH_TOKEN_KEY = 'auth-token'; // Define the key for the auth token
 
   constructor(
     private eRef: ElementRef, 
     private authService: AuthServiceService, 
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object) 
-              {}
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cookiesService: CookiesService // Inject CookiesService
+  ) {}
 
   ngOnInit(): void {
     this.authService.getUser().subscribe(user => {
@@ -85,13 +88,13 @@ export class HeaderComponent implements OnInit{
     });
 
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('auth-token'); 
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY); 
       if (token && !this.authService.isLoggedIn()) { 
-        console.log('Header: Token found, but no user in service. Attempting to fetch user.');
+        // console.log('Header: Token found in cookies, but no user in service. Attempting to fetch user.');
         this.authService.fetchAndSetUser().subscribe({
             next: (fetchedUser) => {
-                if(fetchedUser) console.log('Header: User fetched successfully on init.');
-                else console.log('Header: User fetch on init did not return a user (e.g. bad token).');
+                // if(fetchedUser) console.log('Header: User fetched successfully on init.');
+                // else console.log('Header: User fetch on init did not return a user (e.g. bad token).');
             },
             error: (err) => console.error('Header: Error fetching user on init:', err)
         });

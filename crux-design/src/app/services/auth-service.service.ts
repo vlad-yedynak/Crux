@@ -3,6 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, switchMap, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
+import { CookiesService } from './cookies.service'; // Додано імпорт CookiesService
 
 export interface User {
   id: string;
@@ -25,7 +26,8 @@ export class AuthServiceService {
 
   constructor(
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cookiesService: CookiesService // Додано CookiesService
   ) {
     this.loadUserFromStorage();
   }
@@ -37,41 +39,44 @@ export class AuthServiceService {
   private loadUserFromStorage() {
     if (!this.isBrowser()) return;
 
-    const token = localStorage.getItem(this.AUTH_TOKEN_KEY);
-    const storedUser = localStorage.getItem(this.AUTH_USER_KEY);
+    // Тепер отримуємо дані тільки з cookies
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+    const storedUser = this.cookiesService.getCookie(this.AUTH_USER_KEY);
 
     if (token && storedUser) {
       try {
         const user: User = JSON.parse(storedUser);
         this.userSubject.next(user);
+        // console.log('AuthService: User data loaded from cookies');
       } catch (e) {
         console.error('Error parsing stored user data:', e);
-        localStorage.removeItem(this.AUTH_USER_KEY);
-        this.logout(); 
+        this.cookiesService.deleteCookie(this.AUTH_USER_KEY);
+        this.logout();
       }
-    } else if (token && this.userSubject.value === null) { 
+    } else if (token && this.userSubject.value === null) {
       this.fetchAndSetUser().subscribe({
         next: (user) => {
-          if (user) {
-            console.log('AuthService: User data proactively fetched during loadUserFromStorage.');
-          } else {
-            console.warn('AuthService: Proactive fetch during loadUserFromStorage did not return a user (or token was invalid).');
-          }
+          // if (user) {
+          //   console.log('AuthService: User data proactively fetched during loadUserFromStorage.');
+          // } else {
+          //   console.warn('AuthService: Proactive fetch during loadUserFromStorage did not return a user (or token was invalid).');
+          // }
         },
         error: (err) => {
           console.error('AuthService: Error during proactive user data fetch in loadUserFromStorage:', err);
         }
       });
     } else if (token && this.userSubject.value !== null) {
-      console.log('AuthService: Token found, and user data already present in the service.');
+      // console.log('AuthService: Token found in cookies, and user data already present in the service.');
     } else {
-      console.log('AuthService: No token found in localStorage.');
+      // console.log('AuthService: No token found in cookies.');
     }
   }
 
   public forceRefreshUserData(): Observable<User | null> {
     if (this.isBrowser()) {
-      localStorage.removeItem(this.AUTH_USER_KEY);
+      this.cookiesService.deleteCookie(this.AUTH_USER_KEY); // Видаляємо і з cookies
+      // console.log('AuthService: User data cookie deleted for refresh.');
     }
     return this.fetchAndSetUser();
   }
@@ -81,18 +86,19 @@ export class AuthServiceService {
       switchMap(response => {
         const token = response.body?.token;
         if (token && this.isBrowser()) {
-          localStorage.setItem(this.AUTH_TOKEN_KEY, token);
+          this.cookiesService.setCookie(this.AUTH_TOKEN_KEY, token, 1); // Зберігаємо на 1 днів
+          console.log('AuthService: Token saved to cookies:', token);
           return this.fetchAndSetUser();
         }
         console.error('Signup response did not include a token in body.token.');
         return throwError(() => new Error('Signup failed: No token received.'));
       }),
       tap(user => {
-        if (user) {
-          console.log("Signup and user fetch successful in service.");
-        } else {
-          console.log("Signup successful, but user data could not be fetched or token was missing.");
-        }
+        // if (user) {
+        //   console.log("Signup and user fetch successful in service.");
+        // } else {
+        //   console.log("Signup successful, but user data could not be fetched or token was missing.");
+        // }
       }),
       catchError(err => {
         console.error("Error in createUser chain:", err);
@@ -106,18 +112,19 @@ export class AuthServiceService {
       switchMap(response => {
         const token = response.body?.token;
         if (token && this.isBrowser()) {
-          localStorage.setItem(this.AUTH_TOKEN_KEY, token);
+          this.cookiesService.setCookie(this.AUTH_TOKEN_KEY, token, 1); // Зберігаємо на 1 днів
+          console.log('AuthService: Token saved to cookies:', token);
           return this.fetchAndSetUser();
         }
         console.error('Login response did not include a token in body.token.');
         return throwError(() => new Error('Login failed: No token received.'));
       }),
       tap(user => {
-        if (user) {
-          console.log("Login and user fetch successful in service. User:", user);
-        } else {
-          console.log("Login successful (token received), but user data could not be fetched.");
-        }
+        // if (user) {
+        //   console.log("Login and user fetch successful in service. User:", user);
+        // } else {
+        //   console.log("Login successful (token received), but user data could not be fetched.");
+        // }
       }),
       catchError(err => {
         console.error("Error in loginUser chain:", err);
@@ -132,7 +139,8 @@ export class AuthServiceService {
   fetchAndSetUser(): Observable<User | null> {
     if (!this.isBrowser()) return of(null);
 
-    const token = localStorage.getItem(this.AUTH_TOKEN_KEY);
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+                 
     if (!token) {
       this.userSubject.next(null);
       return of(null);
@@ -149,12 +157,13 @@ export class AuthServiceService {
           if (user) {
             this.userSubject.next(user);
             if (this.isBrowser()) {
-              localStorage.setItem(this.AUTH_USER_KEY, JSON.stringify(user));
+              const userJson = JSON.stringify(user);
+              this.cookiesService.setCookie(this.AUTH_USER_KEY, userJson, 1); // Зберігаємо на 1 днів
+              console.log('AuthService: User data saved to cookies:', user);
             }
-            console.log('User info fetched and stored:', user);
+            // console.log('User info fetched and stored in cookies:', user); // Redundant with the one above
           } else {
-            // This case should ideally not happen if API returns error for bad token
-            console.warn('Fetched user info is null/undefined, logging out.');
+            // console.warn('Fetched user info is null/undefined, logging out.');
             this.logout();
           }
         },
@@ -180,11 +189,12 @@ export class AuthServiceService {
 
   logout() {
     if (this.isBrowser()) {
-      localStorage.removeItem(this.AUTH_TOKEN_KEY);
-      localStorage.removeItem(this.AUTH_USER_KEY);
+      this.cookiesService.deleteCookie(this.AUTH_TOKEN_KEY);
+      this.cookiesService.deleteCookie(this.AUTH_USER_KEY);
+      console.log('AuthService: Auth data cleared from cookies.');
     }
     this.userSubject.next(null);
-    console.log('User logged out, all auth data cleared.');
+    // console.log('User logged out, all auth data cleared from cookies.');
   }
 
   changeFirstName(newFirstName: string) {
@@ -193,7 +203,7 @@ export class AuthServiceService {
       console.log('First name is the same, no update needed.');
       return of(currentUser); 
     }
-    const token = localStorage.getItem(this.AUTH_TOKEN_KEY); 
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     if (!token || !this.isBrowser()) {
       this.logout(); 
       return throwError(() => new Error('User not authenticated or not in browser for changing first name.'));
@@ -220,11 +230,11 @@ export class AuthServiceService {
   changeLastName(newLastName: string) {
     const currentUser = this.userSubject.value;
     if (currentUser && currentUser.lastName === newLastName) {
-      console.log('First name is the same, no update needed.');
+      console.log('Last name is the same, no update needed.');
       return of(currentUser); 
     }
 
-    const token = localStorage.getItem(this.AUTH_TOKEN_KEY); 
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     if (!token || !this.isBrowser()) {
       this.logout(); 
       return throwError(() => new Error('User not authenticated or not in browser for changing last name.'));

@@ -1,6 +1,10 @@
-<div *ngIf="card?.sandboxType === 'CoordinateSystem'" class="sandbox-layout-container">
-    <div #canvasContainer id="canvasContainer" class="canvas-section coordinate-system-container">
+
+<div *ngIf="!showAuthMessage">
+  <div *ngIf="card?.sandboxType === 'Primitives'" class="sandbox-layout-container">
+    <div class="canvas-section">
+      <div #canvasContainer id="canvasContainer">
         <canvas #myCanvas id="coordinateCanvas"></canvas>
+      </div>
     </div>
     <div class="overlay-section">
       <div class="overlay-navigation">
@@ -246,42 +250,39 @@
             <div class="points-section">
               <div class="points-header">Відповідь:</div>
               
-              <div class="point-inputs">
-                <div class="point-header">
-                  <span class="point-label">Ціле число (Integer):</span>
-                </div>
-                <div class="coordinates">
-                  <div class="coordinate" style="width: 100%;">
-                    <input id="taskAnswerInt" type="number" [(ngModel)]="taskAnswerInt" />
+              <div *ngIf="selectedTask.expectedDataType && selectedTask.expectedDataCount && selectedTask.expectedDataType.length >= selectedTask.expectedDataCount; else noExpectedData">
+                <ng-container *ngFor="let dataType of selectedTask.expectedDataType; let idx = index">
+                  <div *ngIf="idx < selectedTask.expectedDataCount" class="point-inputs">
+                    <div class="point-header">
+                      <span class="point-label">{{ getDataTypeLabel(dataType) }}:</span>
+                    </div>
+                    <div class="coordinates">
+                      <div class="coordinate" style="width: 100%;">
+                        <input 
+                          *ngIf="dataType.toLowerCase() !== 'bool'"
+                          [type]="getInputType(dataType)" 
+                          [(ngModel)]="taskAnswers[idx]"
+                          [placeholder]="getPlaceholder(dataType)"
+                          [step]="dataType.toLowerCase() === 'double' ? '0.01' : (dataType.toLowerCase() === 'int' ? '1' : null)"
+                          class="task-input-field" 
+                        />
+                        <select *ngIf="dataType.toLowerCase() === 'bool'" [(ngModel)]="taskAnswers[idx]" class="task-input-field">
+                          <option [ngValue]="undefined">Оберіть...</option>
+                          <option value="true">Правда (True)</option>
+                          <option value="false">Неправда (False)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </ng-container>
               </div>
-              
-              <div class="point-inputs">
-                <div class="point-header">
-                  <span class="point-label">Дробове число (Double):</span>
-                </div>
-                <div class="coordinates">
-                  <div class="coordinate" style="width: 100%;">
-                    <input id="taskAnswerDouble" type="number" step="0.01" [(ngModel)]="taskAnswerDouble" />
-                  </div>
-                </div>
-              </div>
-              
-              <div class="point-inputs">
-                <div class="point-header">
-                  <span class="point-label">Текст (String):</span>
-                </div>
-                <div class="coordinates">
-                  <div class="coordinate" style="width: 100%;">
-                    <input id="taskAnswerString" type="text" [(ngModel)]="taskAnswerString" />
-                  </div>
-                </div>
-              </div>
+              <ng-template #noExpectedData>
+                <p class="no-shapes-message">Інформація про очікувані типи даних для цього завдання відсутня або некоректна.</p>
+              </ng-template>
             </div>
             
             <div class="form-actions">
-              <button class="save-btn" (click)="submitTaskAnswer()">Надіслати відповідь</button>
+              <button class="save-btn" (click)="submitTaskAnswer()" [disabled]="selectedTask.isCompleted">Надіслати відповідь</button>
               <button class="cancel-btn" (click)="deselectTask()">Назад</button>
             </div>
           </div>
@@ -331,8 +332,9 @@
         </div>
       </div>
       <div class="results-actions">
-        <button class="retry-btn" *ngIf="!taskResultCorrect" (click)="closeResultsPopup()">Спробувати ще</button>
-        <button class="return-btn" (click)="closeResultsPopup()">{{ taskResultCorrect ? 'Повернутися до завдань' : 'Закрити' }}</button>
+        <button class="retry-btn" *ngIf="!taskResultCorrect" (click)="closeResultsPopup(false)">Спробувати ще</button>
+        <button class="return-btn" (click)="closeResultsPopup(true)">Повернутися до завдань</button>
       </div>
     </div>
   </div>
+</div>

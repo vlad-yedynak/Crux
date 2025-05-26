@@ -13,7 +13,7 @@
     <!-- Error state -->
     <div *ngIf="!isLoading && hasError" class="error-state">
         <p>{{ errorMessage }}</p>
-        <button (click)="fetchLessons()" class="retry-button">Retry</button>
+        <button (click)="refreshLessons()" class="retry-button">Retry</button>
     </div>
     
     <!-- Lessons List for Management -->
@@ -131,8 +131,8 @@
             
             <!-- Add sandbox type selection when Sandbox is selected -->
             <div class="form-group" *ngIf="newCard.type === 'Sandbox'">
-                <label for="sandBoxCardType">Sandbox Type</label>
-                <select id="sandBoxCardType" [(ngModel)]="newCard.sandBoxCardType" class="form-control">
+                <label for="sandboxType">Sandbox Type</label>
+                <select id="sandboxType" [(ngModel)]="newCard.sandboxType" class="form-control">
                     <option value="Primitives">Primitives</option>
                     <option value="Bezier">Bezier</option>
                     <option value="FractalSystem">Fractal System</option>

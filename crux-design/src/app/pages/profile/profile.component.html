@@ -1,4 +1,21 @@
-<div class="profile-page">
+<div *ngIf="showAuthMessage" class="auth-message-container">
+  <div class="auth-message">
+    <div class="auth-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>
+    <h2>Authentication Required</h2>
+    <p>You need to be logged in to view your profile.</p>
+    <p>Redirecting to login page in {{redirectCountdown}} seconds...</p>
+    <div class="auth-buttons">
+      <button class="login-now-btn" (click)="router.navigate(['/auth'])">Login Now</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!showAuthMessage" class="profile-page">
   <div class="navigation-profile">
     <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav flex-column">
       <li [ngbNavItem]="'info'">
@@ -41,9 +58,9 @@
             <div *ngFor="let lesson of lessons" class="topic-row">
               <div class="topic-name">{{ lesson.title }}</div>
               <div class="topic-bar-container">
-                <div class="topic-bar" [style.width.%]="getTopicPercentage(getLessonScore(lesson.id))"></div>
+                <div class="topic-bar" [style.width.%]="getTopicPercentage(getLessonScore(lesson.id), lesson.totalPoints)"></div>
               </div>
-              <div class="topic-value">{{ getLessonScore(lesson.id) }}</div>
+              <div class="topic-value">{{ getLessonScore(lesson.id) }} / {{ lesson.totalPoints }}</div>
             </div>
 
             <div class="info-row total-points">

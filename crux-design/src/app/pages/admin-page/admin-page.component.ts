@@ -1,32 +1,23 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { SanitizeHtmlPipe } from '../../pipes/sanitize-html.pipe';
+import { CookiesService } from '../../services/cookies.service';
+import { LessonsService, Lesson, Card } from '../../services/lessons.service'; // Import types from LessonsService
+import { Subscription } from 'rxjs';
 
-// Reuse the same interfaces from lessons page
-interface Card {
-  id: number;
-  title: string;
-  description: string;
-  lessonId: number;
-  type: string;
-  content: string;
-  sandBoxCardType?: string; // Update property name
-}
-
-// Update the TestAnswer interface to make isCorrect required (not optional)
+// Keep only the interfaces that aren't in LessonsService
 interface TestAnswer {
   id?: number;
   answerText: string;
   score: number;
-  isCorrect: boolean; // Remove the optional marker (?)
+  isCorrect: boolean;
   success?: boolean;
   error?: string | null;
 }
 
-// Update the TestQuestion interface to match API response
 interface TestQuestion {
   id?: number;
   questionText: string;
@@ -36,17 +27,10 @@ interface TestQuestion {
   error?: string | null;
 }
 
-// Update TestCardData interface to match the API expectations
 interface TestCardData {
-  testCardId: number; // Will change usage but keeping interface for compatibility
+  testCardId: number;
   questionText: string;
   answers: TestAnswer[];
-}
-
-interface Lesson {
-  id: number;
-  title: string;
-  cards: Card[];
 }
 
 interface LessonsResponse {
@@ -55,7 +39,6 @@ interface LessonsResponse {
   error: string;
 }
 
-// Add interface for expected data structure
 interface TaskExpectedData {
   valueInt?: number;
   valueDouble?: number;
@@ -63,14 +46,13 @@ interface TaskExpectedData {
   valueString?: string;
 }
 
-// Add Task interface - updated to match server structure
 interface Task {
   id?: number;
   name: string;
   description: string;
   points: number;
   isCompleted?: boolean | null;
-  expectedData?: TaskExpectedData[];  // Array of expected data with actual values
+  expectedData?: TaskExpectedData[];
   success?: boolean;
   error?: string | null;
   sandboxCardId?: number;
@@ -88,7 +70,10 @@ interface Task {
   templateUrl: './admin-page.component.html',
   styleUrl: './admin-page.component.css'
 })
-export class AdminPageComponent implements OnInit {
+export class AdminPageComponent implements OnInit, OnDestroy {
+  // Define a constant for the auth token key to match other services
+  private readonly AUTH_TOKEN_KEY = 'auth-token';
+  
   lessons: Lesson[] = [];
   isLoading = true;
   hasError = false;
@@ -110,7 +95,7 @@ export class AdminPageComponent implements OnInit {
     description: '',
     type: 'Educational',
     content: ''
-    // Remove sandBoxCardType from initial definition - let it be undefined initially
+    // sandboxType will be set in resetNewCardForm when needed
   };
   
   // Properties for test card editing
@@ -171,53 +156,62 @@ export class AdminPageComponent implements OnInit {
   taskPopupTitle = '';
   taskPopupSubmitText = '';
   
+  // Add subscription property for cleanup
+  private lessonsSubscription: Subscription | null = null;
+  
   constructor(
     private http: HttpClient,
     private router: Router,
-    private cdr: ChangeDetectorRef  // Add ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private cookiesService: CookiesService,
+    private lessonsService: LessonsService // Inject LessonsService
   ) {}
   
   ngOnInit(): void {
-    // Initialize testCardData with empty answers array
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+    if (!token) {
+      console.log('No authentication token found, redirecting to home page');
+      this.router.navigate(['/']);
+      return;
+    }
+
     this.testCardData = {
       testCardId: 0,
       questionText: '',
       answers: [] // Always initialize with an empty array
     };
     
-    this.fetchLessons();
-  }
-  
-  fetchLessons(): Promise<void> {
-    const token = localStorage.getItem('auth-token');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+    // Subscribe to lessons from LessonsService
+    this.lessonsSubscription = this.lessonsService.getLessons().subscribe(lessons => {
+      if (lessons) {
+        this.lessons = lessons;
+        this.isLoading = false;
+        this.hasError = false;
+      }
     });
     
-    return new Promise<void>((resolve, reject) => {
-      this.http.get<LessonsResponse>('http://localhost:8080/lesson/get-lessons', {headers}).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.lessons = response.body;
-            console.log('Admin: Lessons loaded:', this.lessons);
-          } else {
-            this.hasError = true;
-            this.errorMessage = response.error || 'Failed to load lessons';
-          }
-          this.isLoading = false;
-          resolve();
-        },
-        error: (error) => {
-          console.error('Error fetching lessons in admin:', error);
-          this.hasError = true;
-          this.errorMessage = 'Failed to connect to the server';
-          this.isLoading = false;
-          reject(error);
-        }
-      });
+    // Initialize data from the service
+    this.isLoading = true;
+    this.lessonsService.initializeData().subscribe({
+      error: (error) => {
+        console.error('Error initializing lessons data:', error);
+        this.isLoading = false;
+        this.hasError = true;
+        this.errorMessage = 'Failed to load lessons data. Please try again.';
+      }
     });
   }
+  
+  ngOnDestroy(): void {
+    // Clean up subscription when component is destroyed
+    if (this.lessonsSubscription) {
+      this.lessonsSubscription.unsubscribe();
+      this.lessonsSubscription = null;
+    }
+  }
+  
+  // Remove the fetchLessons() method as it's now redundant
+  // And keep the refreshLessons() method that uses LessonsService
   
   openAddLessonForm(): void {
     this.isAddLessonPopupVisible = true;
@@ -265,7 +259,7 @@ export class AdminPageComponent implements OnInit {
   saveEditedLesson(): void {
     if (!this.editedLessonName.trim() || !this.currentEditingLesson) return;
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -288,8 +282,11 @@ export class AdminPageComponent implements OnInit {
         document.body.style.overflow = 'auto';
         this.currentEditingLesson = null;
         
-        // Refresh lessons data
-        this.fetchLessons();
+        // Refresh lessons data using service
+        this.refreshLessons();
+        
+        // Clear card cache when a lesson is updated
+        this.clearCardDetailsCache();
       },
       error: (error) => {
         console.error('Error updating lesson:', error);
@@ -381,7 +378,7 @@ export class AdminPageComponent implements OnInit {
   createLesson(): void {
     if (!this.newLessonName.trim()) return;
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -393,11 +390,13 @@ export class AdminPageComponent implements OnInit {
     ).subscribe({
       next: (response: any) => {
         console.log('Lesson created:', response);
+        // Clear card cache when a lesson is created
+        this.clearCardDetailsCache();
         // Close the popup
         this.isAddLessonPopupVisible = false;
         document.body.style.overflow = 'auto';
-        // Refresh the lessons list
-        this.fetchLessons();
+        // Refresh the lessons list using service
+        this.refreshLessons();
       },
       error: (error) => {
         console.error('Error creating lesson:', error);
@@ -466,7 +465,7 @@ export class AdminPageComponent implements OnInit {
     this.hasExistingContent = false;
     
     // Fetch the card data
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -653,7 +652,7 @@ export class AdminPageComponent implements OnInit {
       })
     .filter(att => att.url !== ''); // Only keep attachments with a URL
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     
     // Debug token
     console.log('Auth token being used:', token ? token.substring(0, 15) + '...' : 'null');
@@ -687,14 +686,16 @@ export class AdminPageComponent implements OnInit {
     ).subscribe({
       next: (response: any) => {
         console.log('Educational content update successful!');
+        // Clear card cache when educational content is updated
+        this.clearCardDetailsCache();
         console.log('Full response:', response);
         
         // Close the content popup
         this.isViewEducationalContentPopupVisible = false;
         document.body.style.overflow = 'auto';
         
-        // Refresh lessons data
-        this.fetchLessons();
+        // Refresh lessons data using service
+        this.refreshLessons();
         this.currentEditingCard = null;
         
         // Reset the original URL maps
@@ -767,7 +768,7 @@ export class AdminPageComponent implements OnInit {
     this.isLoadingQuestions = true;
     this.testQuestions = []; // Clear existing questions
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -883,7 +884,7 @@ export class AdminPageComponent implements OnInit {
   // Method to delete a question
   deleteQuestion(question: TestQuestion, index: number): void {
     if (confirm(`Are you sure you want to delete Question #${index+1}? This action cannot be undone.`)) {
-      const token = localStorage.getItem('auth-token');
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -994,7 +995,7 @@ export class AdminPageComponent implements OnInit {
       answer.isCorrect = answer.score === 1;
     });
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1034,6 +1035,9 @@ export class AdminPageComponent implements OnInit {
     request.subscribe({
       next: (response: any) => {
         console.log(`Question ${isUpdating ? 'updated' : 'created'}:`, response);
+        
+        // Clear card cache when test questions are updated
+        this.clearCardDetailsCache();
         
         // Close the edit popup
         this.isEditTestCardPopupVisible = false;
@@ -1132,7 +1136,7 @@ export class AdminPageComponent implements OnInit {
   saveEditedCard(): void {
     if (!this.isEditCardFormValid() || !this.cardBeingEdited) return;
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1152,13 +1156,14 @@ export class AdminPageComponent implements OnInit {
     ).subscribe({
       next: (response: any) => {
         console.log('Card updated:', response);
-        
+        // Clear card cache when a card is updated
+        this.clearCardDetailsCache();
         // Close the edit popup
         this.isEditCardPopupVisible = false;
         document.body.style.overflow = 'auto';
         
-        // Refresh lessons data
-        this.fetchLessons();
+        // Refresh lessons data using service
+        this.refreshLessons();
         this.cardBeingEdited = null;
       },
       error: (error) => {
@@ -1193,7 +1198,7 @@ export class AdminPageComponent implements OnInit {
     this.isLoadingTasks = true;
     this.tasks = [];
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1227,7 +1232,7 @@ export class AdminPageComponent implements OnInit {
     if (confirm(`Are you sure you want to delete the card "${card.title}"? This action cannot be undone.`)) {
       console.log('Deleting card:', card);
       
-      const token = localStorage.getItem('auth-token');
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -1237,21 +1242,23 @@ export class AdminPageComponent implements OnInit {
         .subscribe({
           next: (response: any) => {
             console.log('Card deleted:', response);
-            // Refresh lessons data to update UI
-            this.fetchLessons();
+            // Clear card cache when a card is deleted
+            this.clearCardDetailsCache();
+            // Refresh lessons data using service
+            this.refreshLessons();
             
             // If we're in the cards popup, close it and reopen with refreshed data
             if (this.isCardsPopupVisible && this.selectedLesson) {
               const lessonId = this.selectedLesson.id;
               this.isCardsPopupVisible = false;
               
-              // Wait for fetchLessons to complete, then reopen the cards popup
-              this.fetchLessons().then(() => {
+              // After a short delay to allow refreshed data to arrive
+              setTimeout(() => {
                 const updatedLesson = this.lessons.find(l => l.id === lessonId);
                 if (updatedLesson) {
                   this.viewCards(updatedLesson);
                 }
-              });
+              }, 300);
             }
           },
           error: (error) => {
@@ -1260,6 +1267,24 @@ export class AdminPageComponent implements OnInit {
           }
         });
     }
+  }
+  
+  // Replace the direct HTTP fetch with LessonsService method
+  refreshLessons(): void {
+    this.isLoading = true;
+    this.hasError = false;
+    
+    this.lessonsService.forceRefreshLessons().subscribe({
+      next: () => {
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error refreshing lessons:', error);
+        this.hasError = true;
+        this.errorMessage = 'Failed to load lessons. Please try again.';
+        this.isLoading = false;
+      }
+    });
   }
   
   addCardToLesson(lesson: Lesson): void {
@@ -1286,7 +1311,7 @@ export class AdminPageComponent implements OnInit {
     console.log('Card popup state:', {
       isCardPopupVisible: this.isAddCardPopupVisible,
       currentLesson: this.currentLessonForCard?.title,
-      sandBoxCardType: this.newCard.sandBoxCardType
+      sandboxType: this.newCard.sandboxType // Fixed property name here
     });
     
     // Prevent scrolling on the body when popup is open
@@ -1313,7 +1338,7 @@ export class AdminPageComponent implements OnInit {
       description: '',
       type: 'Educational',
       content: '',
-      sandBoxCardType: 'Primitives' // Update property name and set default
+      sandboxType: 'Primitives' // Updated property name to match Card interface
     };
   }
   
@@ -1330,13 +1355,13 @@ export class AdminPageComponent implements OnInit {
   createCard(): void {
     if (!this.isCardFormValid() || !this.currentLessonForCard) return;
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
     
-    // Update the payload to include sandBoxCardType for sandbox cards
+    // Update the payload to include sandboxType for sandbox cards
     const cardData: any = {
       title: this.newCard.title!.trim(),
       description: this.newCard.description!.trim(),
@@ -1344,11 +1369,11 @@ export class AdminPageComponent implements OnInit {
       lessonId: this.currentLessonForCard.id
     };
     
-    // Add sandBoxCardType if it's a sandbox card - make sure to get the current value
+    // Add sandboxType if it's a sandbox card - make sure to get the current value
     if (this.newCard.type === 'Sandbox') {
-      // Ensure sandBoxCardType is set to a default if undefined
-      cardData.sandBoxCardType = this.newCard.sandBoxCardType || 'Primitives';
-      console.log('Creating sandbox card with type:', cardData.sandBoxCardType);
+      // Ensure sandboxType is set to a default if undefined
+      cardData.sandboxType = this.newCard.sandboxType || 'Primitives';
+      console.log('Creating sandbox card with type:', cardData.sandboxType);
       console.log('Current newCard object:', JSON.stringify(this.newCard, null, 2));
     }
     
@@ -1360,22 +1385,25 @@ export class AdminPageComponent implements OnInit {
     ).subscribe({
       next: (response: any) => {
         console.log('Card created:', response);
-        
+        // Clear card cache when a card is created
+        this.clearCardDetailsCache();
         // Close the add card popup
         this.isAddCardPopupVisible = false;
         
         // Reset the form completely after successful creation
         this.resetNewCardForm();
         
-        // Refresh lessons data
-        this.fetchLessons().then(() => {
-          // After refreshing lessons, reopen the cards popup for the current lesson
+        // Refresh lessons data using service
+        this.refreshLessons();
+        
+        // After a short delay to allow refreshed data to arrive
+        setTimeout(() => {
           const updatedLesson = this.lessons.find(l => l.id === this.currentLessonForCard!.id);
           if (updatedLesson) {
             this.viewCards(updatedLesson);
           }
           this.currentLessonForCard = null;
-        });
+        }, 300);
       },
       error: (error) => {
         console.error('Error creating card:', error);
@@ -1388,7 +1416,7 @@ export class AdminPageComponent implements OnInit {
     if (confirm(`Are you sure you want to delete "${lesson.title}"? This action cannot be undone.`)) {
       console.log('Deleting lesson:', lesson);
       
-      const token = localStorage.getItem('auth-token');
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -1398,8 +1426,9 @@ export class AdminPageComponent implements OnInit {
         .subscribe({
           next: (response: any) => {
             console.log('Lesson deleted:', response);
-            // Refresh lessons data
-            this.fetchLessons();
+            // Clear card cache when a lesson is deleted
+            this.clearCardDetailsCache();
+            this.refreshLessons();
           },
           error: (error) => {
             console.error('Error deleting lesson:', error);
@@ -1603,7 +1632,7 @@ export class AdminPageComponent implements OnInit {
   saveTask(): void {
     if (!this.isTaskFormValid() || !this.currentEditingCard) return;
     
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1637,7 +1666,8 @@ export class AdminPageComponent implements OnInit {
     request.subscribe({
       next: (response: any) => {
         console.log(`Task ${isUpdating ? 'updated' : 'created'}:`, response);
-        
+        // Clear card cache when tasks are updated
+        this.clearCardDetailsCache();
         // Close the edit popup
         this.isEditTaskPopupVisible = false;
         document.body.style.overflow = 'auto';
@@ -1656,7 +1686,7 @@ export class AdminPageComponent implements OnInit {
   // Add method to delete tasks
   deleteTask(task: Task, index: number): void {
     if (confirm(`Are you sure you want to delete the task "${task.name}"? This action cannot be undone.`)) {
-      const token = localStorage.getItem('auth-token');
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -1666,6 +1696,8 @@ export class AdminPageComponent implements OnInit {
         .subscribe({
           next: (response: any) => {
             console.log('Task deleted:', response);
+            // Clear card cache when a task is deleted
+            this.clearCardDetailsCache();
             // Remove from the local array
             this.tasks.splice(index, 1);
           },
@@ -1682,7 +1714,7 @@ export class AdminPageComponent implements OnInit {
     if (!this.currentEditingCard) return;
     
     this.isLoadingTasks = true;
-    const token = localStorage.getItem('auth-token');
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1814,6 +1846,23 @@ export class AdminPageComponent implements OnInit {
       case 'string':
       default:
         return { valueString: '' };
+    }
+  }
+
+  private clearCardDetailsCache(): void {
+    if (typeof localStorage !== 'undefined') {
+      console.log('Clearing all card detail cache from localStorage');
+      
+      const keys = Object.keys(localStorage);
+      
+      const cardDetailKeys = keys.filter(key => key.startsWith('app-card-detail-'));
+      
+      cardDetailKeys.forEach(key => {
+        localStorage.removeItem(key);
+        console.log(`Removed cached card data: ${key}`);
+      });
+      
+      console.log(`Cleared ${cardDetailKeys.length} cached card entries`);
     }
   }
 }

@@ -1,37 +1,12 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-
-// Data model for card
-interface Answer {
-  answerText: string;
-  error: string | null;
-  id: number;
-  score: number;
-  success: boolean;
-}
-
-interface Question {
-  answers: Answer[];
-  questionText?: string;
-  id?: number;
-}
-
-interface CardBody {
-  questions: Question[];
-}
-
-interface Card {
-  id: number;
-  title: string;
-  description: string;
-  lessonId: number;
-  type: string;
-  content: string;
-  body?: CardBody;
-}
+import { LessonsService, Card, Question, Answer } from '../../services/lessons.service'; // Import all needed interfaces
+import { CookiesService } from '../../services/cookies.service';
+import { AuthServiceService } from '../../services/auth-service.service';
+import { TimeTrackerService } from '../../services/time-tracker.service'; // Import TimeTrackerService
 
 // Answer submission format
 interface AnswerSubmission {
@@ -56,124 +31,188 @@ interface ValidationResponse {
   templateUrl: './test-page.component.html',
   styleUrl: './test-page.component.css'
 })
-export class TestPageComponent implements OnInit {
+export class TestPageComponent implements OnInit, OnDestroy {
   card: Card | null = null;
   isLoading = true;
   hasError = false;
   errorMessage = '';
 
   questions: Question[] = [];
-  
-  // Store user answers in the required format
   userAnswers: AnswerSubmission[] = [];
-  
-  // Add the missing properties
   questionResults: {[questionId: number]: boolean} = {};
-  testSubmitted = false;
+  testSubmitted = false; 
   correctAnswersCount = 0;
 
-  // Add property to track showing results popup
   showResultsPopup = false;
   allQuestionsProcessed = false;
+
+  isAuthenticated: boolean = false;
+  showAuthMessage: boolean = false;
+  redirectCountdown: number = 3;
+  private redirectTimer: any = null;
+
+  selectedAnswerIds: { [questionId: number]: number | null } = {};
 
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
+    public router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private lessonsService: LessonsService,
+    private cookiesService: CookiesService,
+    private authService: AuthServiceService,
+    private timeTrackerService: TimeTrackerService
   ) {}
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      const cardId = localStorage.getItem('selectedCardId');
-      
-      if (cardId) {
-        this.fetchCardDetails(parseInt(cardId, 10));
-      } else {
-        this.hasError = true;
-        this.errorMessage = 'No card information available';
-        this.isLoading = false;
-      }
+      setTimeout(() => {
+        this.isAuthenticated = this.authService.isLoggedIn();
+        
+        if (!this.isAuthenticated) {
+          this.showAuthMessage = true;
+          this.startRedirectCountdown();
+          return; 
+        }
+        this.loadTestData();
+        // Start time tracking
+        const cardId = localStorage.getItem('selectedCardId');
+        const lessonId = localStorage.getItem('selectedLessonId');
+        if (cardId && lessonId) {
+          this.timeTrackerService.startTracking(parseInt(cardId, 10), parseInt(lessonId, 10));
+        }
+      }, 100); 
     } else {
-      // Handle non-browser environment (e.g., SSR)
-      this.hasError = true;
-      this.errorMessage = 'Cannot fetch card details in this environment.';
       this.isLoading = false;
     }
   }
 
-  fetchCardDetails(cardId: number): void {
-    let token = null;
-    if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('auth-token'); 
-    }
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
+  ngOnDestroy(): void {
+    this.clearRedirectTimer();
+    // Stop time tracking
+    this.timeTrackerService.stopTracking();
     
-    this.http.get<{body: any, success: boolean, error: string}>(`http://localhost:8080/card/get-card/${cardId}`, {headers}).subscribe({
-      next: (response) => {
-        console.log('Card details received:', response);
+    // Clear selected card and lesson from localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('selectedCardId');
+      localStorage.removeItem('selectedLessonId');
+    }
+  }
+
+  startRedirectCountdown(): void {
+    this.clearRedirectTimer();
+    
+    this.redirectTimer = setInterval(() => {
+      this.redirectCountdown--;
+      if (this.redirectCountdown <= 0) {
+        this.clearRedirectTimer();
+        this.router.navigate(['/auth']);
+      }
+    }, 1000);
+  }
+  
+  clearRedirectTimer(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+      this.redirectTimer = null;
+      this.redirectCountdown = 3; 
+    }
+  }
+
+  private loadTestData(): void {
+    this.lessonsService.ensureDataLoaded(false).subscribe({
+      next: () => {
+        const cardId = localStorage.getItem('selectedCardId');
         
-        if (response.success && response.body) {
-          this.card = response.body as Card;
+        if (cardId) {
+          this.fetchCardDetails(parseInt(cardId, 10));
+        } else {
+          this.hasError = true;
+          this.errorMessage = 'No card information available';
+          this.isLoading = false;
+        }
+      },
+      error: (err) => {
+        console.error('Error ensuring lessons data is loaded:', err);
+        const cardId = localStorage.getItem('selectedCardId');
+        
+        if (cardId) {
+          this.fetchCardDetails(parseInt(cardId, 10));
+        } else {
+          this.hasError = true;
+          this.errorMessage = 'No card information available';
+          this.isLoading = false;
+        }
+      }
+    });
+  }
+
+  fetchCardDetails(cardId: number): void {
+    this.isLoading = true;
+    this.lessonsService.getCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details received in TestPageComponent:', cardData);
+          this.card = cardData; 
           
-          if (response.body.questions && Array.isArray(response.body.questions)) {
-            this.questions = response.body.questions;
-            console.log('Questions found directly in body:', this.questions);
-          } 
-          else if (response.body.body && response.body.body.questions && Array.isArray(response.body.body.questions)) {
-            this.questions = response.body.body.questions;
-            console.log('Questions found in nested body:', this.questions);
+          
+          if (this.card.questions && Array.isArray(this.card.questions)) {
+            this.questions = this.card.questions.filter(q => q.id != null) as Question[];
+            
+            const newSelectedAnswerIds: { [questionId: number]: number | null } = {};
+            this.questions.forEach(q => {
+              newSelectedAnswerIds[q.id!] = null; 
+            });
+            this.selectedAnswerIds = newSelectedAnswerIds;
+            this.userAnswers = []; 
+            this.testSubmitted = false; // Reset submission state
+          } else {
+            this.questions = [];
+            this.selectedAnswerIds = {};
+            console.log('No questions array found in card.questions or it was null.');
           }
-          if (this.questions.length === 0) {
-            console.log('Could not find questions array in response. Full response structure:', JSON.stringify(response.body));
+
+          if (cardData.lessonId) {
+            localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
+            // Removed time tracking code
           }
         } else {
           this.hasError = true;
-          this.errorMessage = response.error || 'Failed to load card details';
+          this.errorMessage = `Failed to load card details for ID ${cardId}`;
         }
         this.isLoading = false;
       },
       error: (error) => {
-        console.error(`Error fetching details for card ${cardId}:`, error);
+        console.error(`TestPageComponent: Error fetching details for card ${cardId}:`, error);
         this.hasError = true;
-        this.errorMessage = 'Failed to connect to the server';
+        this.errorMessage = 'Failed to connect to the server to get card details.';
         this.isLoading = false;
       }
     });
   }
 
-  // Add method to handle answer selection
   selectAnswer(questionId: number | undefined, answerId: number | undefined): void {
-    // Handle potential undefined values
     if (questionId === undefined || answerId === undefined) {
       console.error('Question ID or Answer ID is undefined');
       return;
     }
     
-    // Check if an answer for this question already exists
+    this.selectedAnswerIds[questionId] = answerId;
+
     const existingIndex = this.userAnswers.findIndex(a => a.questionId === questionId);
-    
     if (existingIndex !== -1) {
-      // Update existing answer
       this.userAnswers[existingIndex].answerId = answerId;
     } else {
-      // Add new answer
       this.userAnswers.push({ questionId, answerId });
     }
-    
-    console.log('Current answers:', this.userAnswers);
   }
   
-  // Add the missing methods
   hasAllAnswers(): boolean {
-    if (!this.questions || this.questions.length === 0) return false;
-    
-    // Check if we have an answer for each question that has an ID
-    return this.questions.every(q => q.id !== undefined && 
-      this.userAnswers.some(a => a.questionId === q.id));
+    if (!this.questions || this.questions.length === 0) {
+      return false;
+    }return this.questions.every(q => 
+      q.id !== undefined && this.userAnswers.some(ua => ua.questionId === q.id)
+    );
   }
   
   submitTest(): void {
@@ -182,62 +221,117 @@ export class TestPageComponent implements OnInit {
       return;
     }
     
-    this.testSubmitted = true;
+    this.testSubmitted = true; 
     
-    // Reset values for a new submission
     this.showResultsPopup = false;
     this.allQuestionsProcessed = false;
     this.correctAnswersCount = 0;
+    this.questionResults = {}; // Clear previous results
     
-    let token = null;
+    let tokenString: string | null = null;
     if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('auth-token');
+      tokenString = this.cookiesService.getCookie('auth-token'); 
     }
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
     
-    // Track how many questions have been processed
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (tokenString) {
+      headers = headers.set('Authorization', `Bearer ${tokenString}`);
+    } else {
+      console.warn('Auth token not found for submitTest.');
+    }
+    
     let processedCount = 0;
+    if (this.userAnswers.length === 0 && this.questions.length > 0) {
+        this.allQuestionsProcessed = true;
+        this.showResultsPopup = true;
+        return;
+    }
+    if (this.userAnswers.length === 0 && this.questions.length === 0) {
+        this.allQuestionsProcessed = true;
+        this.showResultsPopup = true;
+        return;
+    }
     
-    // Validate each answer
     this.userAnswers.forEach(answer => {
       this.http.post<ValidationResponse>('http://localhost:8080/test/validate-question', answer, {headers})
         .subscribe({
           next: (result) => {
             if (result.success) {
-              // Store the validation result (true/false)
               this.questionResults[answer.questionId] = result.body;
-              
               if (result.body) {
                 this.correctAnswersCount++;
               }
-              
-              console.log(`Answer for question ${answer.questionId} is ${result.body ? 'correct' : 'incorrect'}`);
             } else {
-              console.error(`Validation failed for question ${answer.questionId}: ${result.error}`);
-              // Set as incorrect if validation fails
               this.questionResults[answer.questionId] = false;
+              console.error(`Validation failed for question ${answer.questionId}: ${result.error}`);
             }
-            
-            // Check if all questions have been processed
             processedCount++;
             if (processedCount === this.userAnswers.length) {
-              this.allQuestionsProcessed = true;
-              this.showResultsPopup = true;
+              // All questions processed, now refresh data
+              this.authService.forceRefreshUserData().subscribe({
+                next: (user) => console.log('User data refreshed after test submission.', user),
+                error: (err) => console.error('Error refreshing user data after test:', err)
+              });
+
+              if (this.card && this.card.id) {
+                this.lessonsService.forceRefreshCardById(this.card.id).subscribe({
+                  next: (refreshedCard) => {
+                    if (refreshedCard) {
+                      this.card = refreshedCard; 
+                      console.log('Card data refreshed after test submission.');
+                    } else {
+                      console.warn('Failed to refresh card data after test submission.');
+                    }
+                    this.allQuestionsProcessed = true;
+                    this.showResultsPopup = true;
+                  },
+                  error: (refreshError) => {
+                    console.error('Error refreshing card data after test submission:', refreshError);
+                    this.allQuestionsProcessed = true;
+                    this.showResultsPopup = true; 
+                  }
+                });
+              } else {
+                console.warn('Card ID not available, cannot refresh card data. Showing popup directly.');
+                this.allQuestionsProcessed = true;
+                this.showResultsPopup = true;
+              }
             }
           },
           error: (error) => {
             console.error(`Error validating answer for question ${answer.questionId}:`, error);
-            // Set as incorrect if validation fails
             this.questionResults[answer.questionId] = false;
-            
-            // Still count this as processed
             processedCount++;
             if (processedCount === this.userAnswers.length) {
-              this.allQuestionsProcessed = true;
-              this.showResultsPopup = true;
+              // Also refresh data in case of error for the last question
+              this.authService.forceRefreshUserData().subscribe({
+                next: (user) => console.log('User data refreshed after test submission (with errors).', user),
+                error: (err) => console.error('Error refreshing user data after test (with errors):', err)
+              });
+
+              if (this.card && this.card.id) {
+                this.lessonsService.forceRefreshCardById(this.card.id).subscribe({
+                  next: (refreshedCard) => {
+                     if (refreshedCard) {
+                      this.card = refreshedCard;
+                      console.log('Card data refreshed after test submission (with errors).');
+                    } else {
+                       console.warn('Failed to refresh card data after test submission (with errors).');
+                    }
+                    this.allQuestionsProcessed = true;
+                    this.showResultsPopup = true;
+                  },
+                  error: (refreshError) => {
+                    console.error('Error refreshing card data after test submission (with errors):', refreshError);
+                    this.allQuestionsProcessed = true;
+                    this.showResultsPopup = true;
+                  }
+                });
+              } else {
+                 console.warn('Card ID not available, cannot refresh card data. Showing popup directly (with errors).');
+                this.allQuestionsProcessed = true;
+                this.showResultsPopup = true;
+              }
             }
           }
         });
@@ -250,9 +344,31 @@ export class TestPageComponent implements OnInit {
     this.questionResults = {};
     this.correctAnswersCount = 0;
     this.showResultsPopup = false;
+    
+    const newSelectedAnswerIds: { [questionId: number]: number | null } = {};
+    this.questions.forEach(q => {
+      if (q.id != null) {
+        newSelectedAnswerIds[q.id] = null;
+      }
+    });
+    this.selectedAnswerIds = newSelectedAnswerIds;
+    
+    const cardId = localStorage.getItem('selectedCardId');
+    if (cardId) {
+      this.fetchCardDetails(parseInt(cardId, 10));
+    }
   }
   
   returnToLessons(): void {
+    // Stop time tracking before navigating away
+    this.timeTrackerService.stopTracking();
+    
+    // Clear selected card and lesson from localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('selectedCardId');
+      localStorage.removeItem('selectedLessonId');
+    }
+    
     this.router.navigate(['/lessons']);
   }
   

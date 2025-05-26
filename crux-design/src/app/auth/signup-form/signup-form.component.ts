@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { first } from 'rxjs';
-import { AuthServiceService, User } from '../services/auth-service.service';
+import { AuthServiceService, User } from '../../services/auth-service.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -56,7 +56,7 @@ export class SignupFormComponent {
       this.service.createUser(this.signupForm.value).subscribe({
         next:(user: User | null)=>{
           if (user) {
-            console.log("Signup successful, user data fetched by service:", user);
+            //console.log("Signup successful, user data fetched by service:", user);
             this.router.navigate(['/profile']);
           } else {
             console.error("Signup completed but failed to fetch user details.");

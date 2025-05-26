@@ -4,7 +4,7 @@ import { LoginFormComponent } from '../login-form/login-form.component';
 import { SignupFormComponent } from '../signup-form/signup-form.component';
 import { trigger, state, style, transition, animate, keyframes  } from '@angular/animations';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { AuthServiceService } from '../services/auth-service.service';
+import { AuthServiceService } from '../../services/auth-service.service';
 
 @Component({
   selector: 'app-auth-page',

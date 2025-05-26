@@ -369,42 +369,37 @@
     overflow-y: auto;
     background-color: white;
     border-radius: 8px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
-/* Educational content styles */
+/* Fix for object content display */
+.content-wrapper {
+    width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Style HTML elements in content */
 .educational-content {
     font-size: 16px;
     line-height: 1.6;
     color: var(--color-secondary-dark);
 }
 
-.educational-content h1, 
-.educational-content h2, 
-.educational-content h3 {
-    color: var(--color-primary-dark);
-    margin-top: 1em;
-    margin-bottom: 0.5em;
+.educational-content strong,
+.educational-content b {
+    font-weight: bold;
 }
 
-.educational-content img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    margin: 1em 0;
-}
-
-.educational-content pre, 
-.educational-content code {
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    padding: 0.5em;
-    font-family: monospace;
-    overflow-x: auto;
+.educational-content li {
+    display: list-item;
+    margin-left: 20px;
 }
 
 .educational-content ul, 
 .educational-content ol {
-    padding-left: 2em;
+    padding-left: 20px;
     margin: 1em 0;
 }
 
@@ -753,4 +748,96 @@
         font-size: 12px;
         padding: 4px 8px;
     }
+}
+
+/* Auth Message Styles */
+.auth-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.auth-message {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.auth-icon {
+  margin-bottom: 20px;
+  color: var(--color-secondary-dark);
+}
+
+.auth-message h2 {
+  color: var(--color-primary-dark);
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.auth-message p {
+  color: var(--color-secondary-dark);
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.auth-message .auth-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.login-now-btn, .close-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-now-btn {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.login-now-btn:hover {
+  background-color: var(--color-secondary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary-dark);
+}
+
+.close-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,30 +1,13 @@
-import { Component, OnInit, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-
-// Data models for API response
-interface Card {
-  id: number;
-  title: string;
-  description: string;
-  lessonId: number;
-  type: string;
-  content: string;
-}
-
-interface Lesson {
-  id: number;
-  title: string;
-  cards: Card[];
-}
-
-interface LessonsResponse {
-  body: Lesson[];
-  success: boolean;
-  error: string;
-}
+import { LessonsService, Lesson, Card } from '../../services/lessons.service';
+import { CookiesService } from '../../services/cookies.service';
+import { Subscription } from 'rxjs';
+import { AuthServiceService } from '../../services/auth-service.service';
+import { TimeTrackerService } from '../../services/time-tracker.service'; // Import TimeTrackerService
 
 @Component({
   selector: 'app-lessons-page',
@@ -36,11 +19,9 @@ interface LessonsResponse {
   templateUrl: './lessons-page.component.html',
   styleUrl: './lessons-page.component.css'
 })
-export class LessonsPageComponent implements OnInit {
+export class LessonsPageComponent implements OnInit, OnDestroy {
   lessons: Lesson[] = [];
   isLoading = true;
-  hasError = false;
-  errorMessage = '';
   
   selectedCard: Card | null = null;
   isPopupVisible = false;
@@ -48,89 +29,134 @@ export class LessonsPageComponent implements OnInit {
 
   isViewAllMode = false;
   selectedLessonId: number | null = null;
-  isAnimating = false; 
+  isAnimating = false;
+  
+  private lessonsSubscription: Subscription | null = null;
+
+  isAuthenticated: boolean = false;
+  showAuthMessage: boolean = false;
+  redirectCountdown: number = 3;
+
+  private redirectTimer: any = null;
 
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
-    private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
+    public router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private lessonsService: LessonsService,
+    private cookiesService: CookiesService,
+    private authService: AuthServiceService,
+    private timeTrackerService: TimeTrackerService // Add TimeTrackerService
   ) {}
+
   ngOnInit(): void {
-    this.fetchLessons();
-    if (isPlatformBrowser(this.platformId)) {
-      console.log(localStorage.getItem('auth-token'));
-    }
-  }
-
-
-  
-  fetchLessons(): void {
-    this.http.get<LessonsResponse>('http://localhost:8080/lesson/get-lessons').subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.lessons = response.body;
-          
-          const typeOrder: { [key: string]: number } = {
-            'Educational': 1,
-            'Test': 2,
-            'Sandbox': 3
-          };
-          
-          this.lessons.forEach(lesson => {
-            lesson.cards.sort((a, b) => {
-              const orderA = typeOrder[a.type] || 999;
-              const orderB = typeOrder[b.type] || 999;
-              return orderA - orderB;
-            });
-          });
-          
-          console.log('Lessons loaded and cards sorted:', this.lessons);
-        } else {
-          this.hasError = true;
-          this.errorMessage = response.error || 'Failed to load lessons';
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error fetching lessons:', error);
-        this.hasError = true;
-        this.errorMessage = 'Failed to connect to the server';
-        this.isLoading = false;
+    this.lessonsSubscription = this.lessonsService.getLessons().subscribe(lessons => {
+      if (lessons && lessons.length > 0) {
+        console.log('Lessons state updated:', lessons.length, 'lessons available');
+        this.processLessonsData(lessons);
       }
     });
+    
+    // Ensure data is initialized on first load
+    this.lessonsService.initializeData().subscribe();
   }
 
-  /**
-   * Open popup for educational cards and fetch detailed card information
-   */
+  ngOnDestroy(): void {
+    if (this.lessonsSubscription) {
+      this.lessonsSubscription.unsubscribe();
+      this.lessonsSubscription = null;
+    }
+    
+    // Clear any running timers when component is destroyed
+    this.clearRedirectTimer();
+  }
+  
+  processLessonsData(lessonsInfo: any[]): void {
+    try {
+      this.lessons = lessonsInfo as Lesson[];
+      
+      const typeOrder: { [key: string]: number } = {
+        'Educational': 1,
+        'Test': 2,
+        'Sandbox': 3
+      };
+      
+      this.lessons.forEach(lesson => {
+        if (lesson.cards && Array.isArray(lesson.cards)) {
+          lesson.cards.sort((a, b) => {
+            const orderA = typeOrder[a.type] || 999;
+            const orderB = typeOrder[b.type] || 999;
+            return orderA - orderB;
+          });
+        } else {
+          lesson.cards = []; 
+        }
+      });
+      
+      console.log('Lessons loaded and cards sorted:', this.lessons);
+      this.isLoading = false;
+    } catch (error) {
+      console.error('Error processing lessons data:', error);
+      this.isLoading = false;
+    }
+  }
+
   openCardDetails(card: Card): void {
     if (this.isAnimating) return;
-    this.fetchCardDetails(card.id);
-    console.log('Card loaded:', card);
+    
+    console.log('Card selected for details/navigation:', card); 
     if (card.type === 'Educational') {
-      this.selectedCard = card;
       
-      if (card.content) {
-        this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(card.content);
-      } else {
-        this.safeCardContent = null;
+      this.isAuthenticated = this.authService.isLoggedIn();
+      
+      if (!this.isAuthenticated) {
+        this.showAuthMessage = true;
+        this.startRedirectCountdown();
+        return; 
       }
       
+      this.fetchCardDetails(card.id);
       this.isPopupVisible = true;
       document.body.style.overflow = 'hidden';
+      
+      // Start time tracking for educational card
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('selectedCardId', card.id.toString());
+        localStorage.setItem('selectedLessonId', card.lessonId.toString());
+        this.timeTrackerService.startTracking(card.id, card.lessonId);
+      }
     }
     else if (card.type === 'Test') {
-      this.selectedCard = card;
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem('selectedCardId', card.id.toString());
+      this.isAuthenticated = this.authService.isLoggedIn();
+      
+      if (!this.isAuthenticated) {
+        this.showAuthMessage = true;
+        this.startRedirectCountdown();
+        return; 
       }
-      this.router.navigate(['lessons/test']);
-      document.body.style.overflow = 'hidden';
-    } else if (card.type === 'Sandbox') {
-      this.selectedCard = card;
+      
+      // Save card and lesson IDs for the test page
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem('selectedCardId', card.id.toString());
+        localStorage.setItem('selectedLessonId', card.lessonId.toString());
+      }
+      
+      this.router.navigate(['lessons/test']);
+      document.body.style.overflow = 'hidden'; 
+    } else if (card.type === 'Sandbox') {
+      this.isAuthenticated = this.authService.isLoggedIn();
+      
+      if (!this.isAuthenticated) {
+        this.showAuthMessage = true;
+        this.startRedirectCountdown();
+        return; 
+      }
+      
+      // Save card and lesson IDs for the sandbox page
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('selectedCardId', card.id.toString());
+        localStorage.setItem('selectedLessonId', card.lessonId.toString());
       }
 
       const element = document.documentElement;
@@ -142,40 +168,71 @@ export class LessonsPageComponent implements OnInit {
       document.body.style.overflow = 'hidden';
     }
   }
+  
+  startRedirectCountdown(): void {
+    this.clearRedirectTimer();
+    
+    this.redirectTimer = setInterval(() => {
+      this.redirectCountdown--;
+      if (this.redirectCountdown <= 0) {
+        this.clearRedirectTimer();
+        this.router.navigate(['/auth']);
+      }
+    }, 1000);
+  }
+  
+  clearRedirectTimer(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+      this.redirectTimer = null;
+      this.redirectCountdown = 3; 
+    }
+  }
+
+  closeAuthMessage(): void {
+    this.clearRedirectTimer();
+    this.showAuthMessage = false;
+  }
 
   fetchCardDetails(cardId: number): void {
-    let token = null;
-    if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('auth-token'); 
-    }
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-    
-    this.http.get<{body: Card, success: boolean, error: string}>(`http://localhost:8080/card/get-card/${cardId}`, {headers}).subscribe({
-      next: (response) => {
-        console.log('Card details received:', response);
-        
-        if (response.success && response.body) {
-          this.selectedCard = response.body;
+    this.lessonsService.getCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details received in LessonsPageComponent:', cardData);
+          this.selectedCard = cardData;
           
           if (this.selectedCard.content) {
-            this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(this.selectedCard.content);
+            
+            let contentValue: string = '';
+            if (typeof this.selectedCard.content === 'object' && this.selectedCard.content !== null && 'content' in this.selectedCard.content) {
+              contentValue = (this.selectedCard.content as { content?: string }).content || '';
+            } else {
+              contentValue = this.selectedCard.content as string;
+            }
+            
+            this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(contentValue);
           } else {
             this.safeCardContent = null;
+            console.warn(`LessonsPageComponent: Card ${cardId} has no content.`);
           }
+        } else {
+          console.error(`LessonsPageComponent: Failed to fetch details for card ${cardId} from service.`);
+          this.closePopup(new MouseEvent('click'));
         }
       },
       error: (error) => {
-        console.error(`Error fetching details for card ${cardId}:`, error);
+        console.error(`LessonsPageComponent: Error fetching details for card ${cardId}:`, error);
+        this.closePopup(new MouseEvent('click'));
+        
+        // If authentication error, show auth message
+        if (error.status === 401 || error.status === 403) {
+          this.showAuthMessage = true;
+          this.startRedirectCountdown();
+        }
       }
     });
   }
 
-  /**
-   * Returns the CSS class for styling cards based on their type
-   */
   getCardTypeClass(cardType: string): string {
     switch(cardType) {
       case 'Test':
@@ -188,39 +245,54 @@ export class LessonsPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Close the popup window
-   */
   closePopup(event: MouseEvent): void {
-    // Only close if clicking the overlay or close button
     if (
       (event.target as HTMLElement).classList.contains('card-popup-overlay') ||
       (event.target as HTMLElement).classList.contains('close-popup-btn')
     ) {
+      // Stop time tracking when closing educational card popup
+      if (this.isPopupVisible && this.selectedCard?.type === 'Educational') {
+        this.timeTrackerService.stopTracking();
+        
+        // Clear selected card and lesson from localStorage
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.removeItem('selectedCardId');
+          localStorage.removeItem('selectedLessonId');
+        }
+      }
+      
       this.isPopupVisible = false;
       this.selectedCard = null;
       this.safeCardContent = null;
-      // Re-enable scrolling on the body
       document.body.style.overflow = 'auto';
     }
+
+    this.clearRedirectTimer();
   }
 
-  /**
-   * Close popup when escape key is pressed
-   */
   @HostListener('document:keydown.escape')
   onEscapePress(): void {
     if (this.isPopupVisible) {
+      // Stop time tracking when closing educational card popup with escape key
+      if (this.selectedCard?.type === 'Educational') {
+        this.timeTrackerService.stopTracking();
+        
+        // Clear selected card and lesson from localStorage
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.removeItem('selectedCardId');
+          localStorage.removeItem('selectedLessonId');
+        }
+      }
+      
       this.isPopupVisible = false;
       this.selectedCard = null;
       this.safeCardContent = null;
       document.body.style.overflow = 'auto';
     }
+
+    this.clearRedirectTimer();
   }
 
-  /**
-   * Scroll the lesson container horizontally
-   */
   scrollLessons(event: MouseEvent, direction: 'left' | 'right'): void {
     if (this.isAnimating) return; 
     const button = event.currentTarget as HTMLButtonElement;
@@ -248,9 +320,6 @@ export class LessonsPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Toggle View All mode for a specific lesson
-   */
   toggleViewAllMode(lessonId: number): void {
     if (this.isAnimating) {
       return;
@@ -339,13 +408,7 @@ export class LessonsPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Exit View All mode
-   */
   closeViewAll(): void {
-    if (this.isAnimating && this.isViewAllMode) {
-    }
-
     if (this.isViewAllMode) { 
         this.isViewAllMode = false;
         this.selectedLessonId = null;
@@ -353,9 +416,6 @@ export class LessonsPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Get the currently selected lesson data
-   */
   getSelectedLesson(): Lesson | undefined {
     if (this.selectedLessonId === null) return undefined;
     return this.lessons.find(lesson => lesson.id === this.selectedLessonId);
