@@ -86,165 +86,173 @@ public class EducationalDataService(ApplicationDbContext dbContext,
         
         educationalCard.Content = educationalCardDataRequest.Content;
         
+        var oldImageUrls = educationalCard.Images.Select(i => i.Url).ToList();
+        var oldAttachmentUrls = educationalCard.Attachments.Select(a => a.Url).ToList();
+        
         educationalCard.Images.Clear();
         educationalCard.Attachments.Clear();
 
-        if (educationalCardDataRequest.Images != null && educationalCardDataRequest.Images.Count != 0)
+       try
         {
-            var cardImages = new List<CardImage>();
-            var s3FolderPath = $"uploads/images/educational-cards/{educationalCard.Id}";
-
-            foreach (var image in educationalCardDataRequest.Images)
+            if (educationalCardDataRequest.Images?.Count > 0)
             {
-                if (string.IsNullOrWhiteSpace(image.Url) || !Uri.TryCreate(image.Url, UriKind.Absolute, out var uri))
-                {
-                    return new EducationalDataResponse
-                    {
-                        Success = false,
-                        Error = "Invalid Image"
-                    };
-                }
+                var cardImages = new List<CardImage>();
+                var s3FolderPath = $"uploads/images/educational-cards/{educationalCard.Id}";
                 
-                try
+                foreach (var image in educationalCardDataRequest.Images)
                 {
-                    var client = new HttpClient();
-                    var response = await client.GetAsync(image.Url);
-                    
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var imageResponse = await response.Content.ReadAsByteArrayAsync();
-                        var contentType = response.Content.Headers.ContentType?.MediaType;
-
-                        if (contentType == null)
-                        {
-                            return new EducationalDataResponse
-                            {
-                                Success = false,
-                                Error = "Invalid Image"
-                            };
-                        }
-                        
-                        var extension = Path.GetExtension(uri.AbsolutePath);
-                        if (string.IsNullOrEmpty(extension) || extension.Length > 5)
-                        {
-                            if (contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)) extension = ".jpg";
-                            else if (contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)) extension = ".png";
-                            else if (contentType.Equals("image/gif", StringComparison.OrdinalIgnoreCase)) extension = ".gif";
-                            else if (contentType.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) extension = ".webp";
-                            else extension = ".img";
-                        }
-
-                        var fileName = $"{Guid.NewGuid()}{extension}";
-                        var s3Url = await s3StorageService.UploadFileAsync(imageResponse ,s3FolderPath, fileName);
-                        
-                        
-                        cardImages.Add(new CardImage
-                        {
-                            Url = s3Url,
-                            Caption = image.Caption,
-                            AltText = image.AltText,
-                            EducationalCardId = educationalCard.Id
-                        });
-                    }
-                    else
+                    if (string.IsNullOrWhiteSpace(image.Url) || !Uri.TryCreate(image.Url, UriKind.Absolute, out _))
                     {
                         return new EducationalDataResponse
                         {
                             Success = false,
-                            Error = "Failed to receive image"
-                        };   
+                            Error = "Invalid Image URL"
+                        };
                     }
                 }
-                catch (Exception)
+            
+                using var client = new HttpClient();
+            
+                foreach (var image in educationalCardDataRequest.Images)
                 {
-                    return new EducationalDataResponse
+                    Uri uri = new Uri(image.Url);
+                    var response = await client.GetAsync(uri);
+                
+                    if (!response.IsSuccessStatusCode)
                     {
-                        Success = false,
-                        Error = "Failed to save image"
-                    };
-                }
-            }
-            educationalCard.Images.AddRange(cardImages);
-        }
-        
-        if (educationalCardDataRequest.Attachments != null && educationalCardDataRequest.Attachments.Count != 0)
-        {
-            var cardAttachment = new List<CardAttachment>();
-            var s3FolderPath = $"uploads/attachments/educational-cards/{educationalCard.Id}";
+                        return new EducationalDataResponse
+                        {
+                            Success = false,
+                            Error = $"Failed to download image: {response.StatusCode}"
+                        };
+                    }
+                
+                    var imageResponse = await response.Content.ReadAsByteArrayAsync();
+                    var contentType = response.Content.Headers.ContentType?.MediaType;
 
-            foreach (var attachment in educationalCardDataRequest.Attachments)
+                    if (contentType == null)
+                    {
+                        return new EducationalDataResponse
+                        {
+                            Success = false,
+                            Error = "Invalid Image Content Type"
+                        };
+                    }
+                
+                    var extension = Path.GetExtension(uri.AbsolutePath);
+                    if (string.IsNullOrEmpty(extension) || extension.Length > 5)
+                    {
+                        extension = contentType switch
+                        {
+                            var ct when ct.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) => ".jpg",
+                            var ct when ct.Equals("image/png", StringComparison.OrdinalIgnoreCase) => ".png",
+                            var ct when ct.Equals("image/gif", StringComparison.OrdinalIgnoreCase) => ".gif",
+                            var ct when ct.Equals("image/webp", StringComparison.OrdinalIgnoreCase) => ".webp",
+                            _ => ".img"
+                        };
+                    }
+
+                    var fileName = $"{Guid.NewGuid()}{extension}";
+                    var s3Url = await s3StorageService.UploadFileAsync(imageResponse, s3FolderPath, fileName);
+                
+                    cardImages.Add(new CardImage
+                    {
+                        Url = s3Url,
+                        Caption = image.Caption,
+                        AltText = image.AltText,
+                        EducationalCardId = educationalCard.Id
+                    });
+                }
+            
+                educationalCard.Images.AddRange(cardImages);
+            }
+        
+            if (educationalCardDataRequest.Attachments?.Count > 0)
             {
-                if (string.IsNullOrWhiteSpace(attachment.Url) || !Uri.TryCreate(attachment.Url, UriKind.Absolute, out var uri))
+                var cardAttachments = new List<CardAttachment>();
+                var s3FolderPath = $"uploads/attachments/educational-cards/{educationalCard.Id}";
+            
+                foreach (var attachment in educationalCardDataRequest.Attachments)
                 {
-                    return new EducationalDataResponse
-                    {
-                        Success = false,
-                        Error = "Invalid attachment"
-                    };
-                }
-
-                try
-                {
-                    var client = new HttpClient();
-                    var response = await client.GetAsync(attachment.Url);
-                    
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var fileBytes = await response.Content.ReadAsByteArrayAsync();
-                        var originalFileName = Path.GetFileName(attachment.Url);
-
-                        if (string.IsNullOrEmpty(originalFileName))
-                        {
-                            originalFileName = "attachment";
-                        }
-                        
-                        var extension = Path.GetExtension(originalFileName);
-                        if (string.IsNullOrEmpty(extension))
-                        {
-                            extension = ".dat";
-                        }
-                        
-                        var serverFileName = $"{Guid.NewGuid()}{extension}";
-                        var s3Url = await s3StorageService.UploadFileAsync(fileBytes, s3FolderPath, serverFileName);
-                        
-                        cardAttachment.Add(new CardAttachment
-                        {
-                            Url = s3Url,
-                            Description = attachment.Description,
-                            EducationalCardId = educationalCard.Id
-                        });
-                    }
-                    else
+                    if (string.IsNullOrWhiteSpace(attachment.Url) || !Uri.TryCreate(attachment.Url, UriKind.Absolute, out _))
                     {
                         return new EducationalDataResponse
                         {
                             Success = false,
-                            Error = "Failed to receive file"
-                        };   
+                            Error = "Invalid attachment URL"
+                        };
                     }
                 }
-                catch (Exception)
-                {
-                    return new EducationalDataResponse
-                    {
-                        Success = false,
-                        Error = "Failed to save file"
-                    };
-                }
-            }
-            educationalCard.Attachments.AddRange(cardAttachment);
-        }
-        
-        await dbContext.SaveChangesAsync();
 
-        return new EducationalDataResponse
-        {
-            Success = true,
-            CardId = educationalCard.Id,
-            Content = educationalCard.Content,
-            Images = educationalCard.Images.ToList(),
-            Attachments = educationalCard.Attachments.ToList()
-        };
+                using var client = new HttpClient();
+            
+                foreach (var attachment in educationalCardDataRequest.Attachments)
+                {
+                    Uri uri = new Uri(attachment.Url);
+                    var response = await client.GetAsync(uri);
+                
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return new EducationalDataResponse
+                        {
+                            Success = false,
+                            Error = $"Failed to download attachment: {response.StatusCode}"
+                        };
+                    }
+                
+                    var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                    var originalFileName = Path.GetFileName(uri.AbsolutePath) ?? "attachment";
+                    var extension = Path.GetExtension(originalFileName);
+                
+                    if (string.IsNullOrEmpty(extension))
+                    {
+                        extension = ".dat";
+                    }
+                
+                    var serverFileName = $"{Guid.NewGuid()}{extension}";
+                    var s3Url = await s3StorageService.UploadFileAsync(fileBytes, s3FolderPath, serverFileName);
+                
+                    cardAttachments.Add(new CardAttachment
+                    {
+                        Url = s3Url,
+                        Description = attachment.Description,
+                        EducationalCardId = educationalCard.Id
+                    });
+                }
+            
+                educationalCard.Attachments.AddRange(cardAttachments);
+            }
+            foreach (var url in oldImageUrls)
+            {
+                await s3StorageService.DeleteFileAsync(url);
+            }
+        
+            foreach (var url in oldAttachmentUrls)
+            {
+                await s3StorageService.DeleteFileAsync(url);
+            }
+        
+            await dbContext.SaveChangesAsync();
+
+            return new EducationalDataResponse
+            {
+                Success = true,
+                CardId = educationalCard.Id,
+                Content = educationalCard.Content,
+                Images = educationalCard.Images.ToList(),
+                Attachments = educationalCard.Attachments.ToList()
+            };
+        }
+       catch (Exception ex)
+       {
+           Console.WriteLine($"Error processing educational card data: {ex.Message}");
+           return new EducationalDataResponse
+           {
+               Success = false,
+               Error = "Failed to process educational card data"
+           };
+       }
+       
     }
     
     public async Task<bool> DeleteEducationalCardFilesAsync(int cardId)
