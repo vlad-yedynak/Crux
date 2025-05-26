@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { CookiesService } from './cookies.service';
+import { environment } from '../environments/environment';
 
 export interface Answer {
   id: number;
@@ -82,8 +83,8 @@ export interface CardApiResponse {
 export class LessonsService {
 
   private lessonsSubject = new BehaviorSubject<Lesson[] | null>(null);
-  private baseUrl = 'http://localhost:8080/lesson'; 
-  private cardBaseUrl = 'http://localhost:8080/card';
+  private baseUrl = `${environment.apiBaseUrl}/lesson`; 
+  private cardBaseUrl = `${environment.apiBaseUrl}/card`;
   private readonly LESSONS_STORAGE_KEY = 'app-lessons-data';
   private readonly AUTH_TOKEN_KEY = 'auth-token';
   private readonly CARD_DETAIL_STORAGE_KEY_PREFIX = 'app-card-detail-'; // New key for individual card caching

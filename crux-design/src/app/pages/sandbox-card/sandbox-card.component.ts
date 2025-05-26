@@ -9,6 +9,8 @@ import { TimeTrackerService } from '../../services/time-tracker.service';
 import { AuthServiceService, User } from '../../services/auth-service.service';
 import { LessonsService, Card, Task } from '../../services/lessons.service'; // Import Card and Task
 import { CookiesService } from '../../services/cookies.service';
+import { ConfigService } from '../../services/config.service'; // Added import
+
 @Component({
   selector: 'app-sandbox-card',
   imports: [
@@ -91,6 +93,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
     private lessonsService: LessonsService,
     public router: Router,
     private cookiesService: CookiesService,
+    private configService: ConfigService // Injected ConfigService
   ) { }
 
   private isBrowser(): boolean {
@@ -319,7 +322,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('Submitting task answer with payload:', JSON.stringify(payload, null, 2));
 
       this.http.post<{ body: boolean; success: boolean; error: string | null }>(
-        'http://localhost:8080/test/validate-task',
+        this.configService.getEndpoint('/test/validate-task'), // Replaced hardcoded URL
         payload,
         { headers }
       ).subscribe({

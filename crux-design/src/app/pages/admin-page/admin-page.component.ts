@@ -5,6 +5,7 @@ import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http'
 import { FormsModule } from '@angular/forms';
 import { SanitizeHtmlPipe } from '../../pipes/sanitize-html.pipe';
 import { CookiesService } from '../../services/cookies.service';
+import { ConfigService } from '../../services/config.service';
 import { LessonsService, Lesson, Card } from '../../services/lessons.service'; // Import types from LessonsService
 import { Subscription } from 'rxjs';
 
@@ -164,6 +165,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private cookiesService: CookiesService,
+    private configService: ConfigService,
     private lessonsService: LessonsService // Inject LessonsService
   ) {}
   
@@ -270,7 +272,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       title: this.editedLessonName.trim()
     };
     
-    this.http.put('http://localhost:8080/lesson/update-lesson', 
+    this.http.put(`${this.configService.apiUrl}/lesson/update-lesson`, 
       lessonData,
       { headers }
     ).subscribe({
@@ -384,7 +386,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       'Content-Type': 'application/json'
     });
     
-    this.http.post('http://localhost:8080/lesson/create-lesson',
+    this.http.post(`${this.configService.apiUrl}/lesson/create-lesson`,
       JSON.stringify( this.newLessonName ),
       { headers }
     ).subscribe({
@@ -471,7 +473,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<any>(`http://localhost:8080/card/get-card/${card.id}`, { headers })
+    this.http.get<any>(`${this.configService.apiUrl}/card/get-card/${card.id}`, { headers })
       .subscribe({
         next: (response) => {
           console.log('Educational card data loaded:', response);
@@ -497,7 +499,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                         let originalUrl = img.url || '';
                         if (originalUrl && !originalUrl.startsWith('http')) {
                           // Add server prefix for correct preview
-                          this.originalImageUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                          this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
                         } else {
                           this.originalImageUrls[index] = originalUrl;
                         }
@@ -518,7 +520,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                         let originalUrl = att.url || '';
                         if (originalUrl && !originalUrl.startsWith('http')) {
                           // Add server prefix for correct preview
-                          this.originalAttachmentUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                          this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
                         } else {
                           this.originalAttachmentUrls[index] = originalUrl;
                         }
@@ -548,7 +550,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                       let originalUrl = img.url || '';
                       if (originalUrl && !originalUrl.startsWith('http')) {
                         // Add server prefix for correct preview
-                        this.originalImageUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
                       } else {
                         this.originalImageUrls[index] = originalUrl;
                       }
@@ -568,7 +570,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                       let originalUrl = att.url || '';
                       if (originalUrl && !originalUrl.startsWith('http')) {
                         // Add server prefix for correct preview
-                        this.originalAttachmentUrls[index] = `http://localhost:8080${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
                       } else {
                         this.originalAttachmentUrls[index] = originalUrl;
                       }
@@ -680,7 +682,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     };
     
     // Send the request
-    this.http.post('http://localhost:8080/card/add-educational-data', 
+    this.http.post(`${this.configService.apiUrl}/card/add-educational-data`, 
       educationalData,
       httpOptions
     ).subscribe({
@@ -708,7 +710,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         console.error('Error status text:', error.statusText);
         
         // Log request details that failed
-        console.error('Failed request URL:', 'http://localhost:8080/card/add-educational-data');
+        console.error('Failed request URL:', `${this.configService.apiUrl}/card/add-educational-data`);
         console.error('Failed request payload:', educationalData);
         
         // Try to extract error details
@@ -774,7 +776,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<any>(`http://localhost:8080/card/get-card/${card.id}`, { headers })
+    this.http.get<any>(`${this.configService.apiUrl}/card/get-card/${card.id}`, { headers })
       .subscribe({
         next: (response) => {
           console.log('Raw test card data loaded:', response);
@@ -890,7 +892,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         'Content-Type': 'application/json'
       });
       
-      this.http.delete(`http://localhost:8080/question/delete-question/${question.id}`, { headers })
+      this.http.delete(`${this.configService.apiUrl}/question/delete-question/${question.id}`, { headers })
         .subscribe({
           next: (response: any) => {
             console.log('Question deleted:', response);
@@ -1024,8 +1026,8 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     
     // Choose the appropriate endpoint and HTTP method based on whether we're updating or creating
     const endpoint = isUpdating 
-      ? 'http://localhost:8080/question/update-question'
-      : 'http://localhost:8080/question/create-question';
+      ? `${this.configService.apiUrl}/question/update-question`
+      : `${this.configService.apiUrl}/question/create-question`;
     
     const request = isUpdating
       ? this.http.put(endpoint, questionData, { headers })
@@ -1047,7 +1049,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         this.isLoadingQuestions = true;
         
         // Fetch the updated card data with questions
-        this.http.get<any>(`http://localhost:8080/card/get-card/${this.currentEditingCard!.id}`, { headers })
+        this.http.get<any>(`${this.configService.apiUrl}/card/get-card/${this.currentEditingCard!.id}`, { headers })
           .subscribe({
             next: (cardResponse) => {
               if (cardResponse && cardResponse.success) {
@@ -1150,7 +1152,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       lessonId: this.cardBeingEdited.lessonId  // Add lessonId to the request
     };
     
-    this.http.put('http://localhost:8080/card/update-card', 
+    this.http.put(`${this.configService.apiUrl}/card/update-card`, 
       cardData, 
       { headers }
     ).subscribe({
@@ -1204,7 +1206,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<any>(`http://localhost:8080/card/get-card/${card.id}`, { headers })
+    this.http.get<any>(`${this.configService.apiUrl}/card/get-card/${card.id}`, { headers })
       .subscribe({
         next: (response) => {
           console.log('Sandbox card data loaded:', response);
@@ -1238,7 +1240,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         'Content-Type': 'application/json'
       });
       
-      this.http.delete(`http://localhost:8080/card/delete-card/${card.id}`, { headers })
+      this.http.delete(`${this.configService.apiUrl}/card/delete-card/${card.id}`, { headers })
         .subscribe({
           next: (response: any) => {
             console.log('Card deleted:', response);
@@ -1379,7 +1381,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     
     console.log('Final card data being sent:', cardData);
     
-    this.http.post('http://localhost:8080/card/create-card', 
+    this.http.post(`${this.configService.apiUrl}/card/create-card`, 
       cardData, 
       { headers }
     ).subscribe({
@@ -1422,7 +1424,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         'Content-Type': 'application/json'
       });
       
-      this.http.delete(`http://localhost:8080/lesson/delete-lesson/${lesson.id}`, { headers })
+      this.http.delete(`${this.configService.apiUrl}/lesson/delete-lesson/${lesson.id}`, { headers })
         .subscribe({
           next: (response: any) => {
             console.log('Lesson deleted:', response);
@@ -1655,8 +1657,8 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     
     // Choose the appropriate endpoint and HTTP method based on whether we're updating or creating
     const endpoint = isUpdating 
-      ? 'http://localhost:8080/task/update-task'
-      : 'http://localhost:8080/task/create-task';
+      ? `${this.configService.apiUrl}/task/update-task`
+      : `${this.configService.apiUrl}/task/create-task`;
     
     const request = isUpdating
       ? this.http.put(endpoint, taskData, { headers })
@@ -1692,7 +1694,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         'Content-Type': 'application/json'
       });
       
-      this.http.delete(`http://localhost:8080/task/delete-task/${task.id}`, { headers })
+      this.http.delete(`${this.configService.apiUrl}/task/delete-task/${task.id}`, { headers })
         .subscribe({
           next: (response: any) => {
             console.log('Task deleted:', response);
@@ -1720,7 +1722,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       'Content-Type': 'application/json'
     });
     
-    this.http.get<any>(`http://localhost:8080/card/get-card/${this.currentEditingCard.id}`, { headers })
+    this.http.get<any>(`${this.configService.apiUrl}/card/get-card/${this.currentEditingCard.id}`, { headers })
       .subscribe({
         next: (response) => {
           console.log('Refreshed sandbox card data loaded:', response);

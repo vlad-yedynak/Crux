@@ -7,6 +7,7 @@ import { LessonsService, Card, Question, Answer } from '../../services/lessons.s
 import { CookiesService } from '../../services/cookies.service';
 import { AuthServiceService } from '../../services/auth-service.service';
 import { TimeTrackerService } from '../../services/time-tracker.service'; // Import TimeTrackerService
+import { ConfigService } from '../../services/config.service'; // Added import
 
 // Answer submission format
 interface AnswerSubmission {
@@ -61,7 +62,8 @@ export class TestPageComponent implements OnInit, OnDestroy {
     private lessonsService: LessonsService,
     private cookiesService: CookiesService,
     private authService: AuthServiceService,
-    private timeTrackerService: TimeTrackerService
+    private timeTrackerService: TimeTrackerService,
+    private configService: ConfigService // Injected ConfigService
   ) {}
 
   ngOnInit(): void {
@@ -253,7 +255,7 @@ export class TestPageComponent implements OnInit, OnDestroy {
     }
     
     this.userAnswers.forEach(answer => {
-      this.http.post<ValidationResponse>('http://localhost:8080/test/validate-question', answer, {headers})
+      this.http.post<ValidationResponse>(this.configService.getEndpoint('/test/validate-question'), answer, {headers})
         .subscribe({
           next: (result) => {
             if (result.success) {

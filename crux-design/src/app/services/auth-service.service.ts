@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, switchMap, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { CookiesService } from './cookies.service'; // Додано імпорт CookiesService
+import { ConfigService } from './config.service'; // Added import
 
 export interface User {
   id: string;
@@ -20,14 +21,15 @@ export interface User {
 })
 export class AuthServiceService {
   private userSubject = new BehaviorSubject<User | null>(null);
-  private baseUrl = 'http://localhost:8080/user';
+  // private baseUrl = 'http://localhost:8080/user'; // Removed hardcoded baseUrl
   private readonly AUTH_TOKEN_KEY = 'auth-token';
   private readonly AUTH_USER_KEY = 'auth-user';
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private cookiesService: CookiesService // Додано CookiesService
+    private cookiesService: CookiesService, // Додано CookiesService
+    private configService: ConfigService // Injected ConfigService
   ) {
     this.loadUserFromStorage();
   }
@@ -82,7 +84,7 @@ export class AuthServiceService {
   }
 
   createUser(formData: any): Observable<User | null> {
-    return this.http.post<{ body: { token: string } }>(this.baseUrl + '/sign-up', formData).pipe(
+    return this.http.post<{ body: { token: string } }>(this.configService.getEndpoint('/user/sign-up'), formData).pipe(
       switchMap(response => {
         const token = response.body?.token;
         if (token && this.isBrowser()) {
@@ -108,7 +110,7 @@ export class AuthServiceService {
   }
 
   loginUser(formData: any): Observable<User | null> {
-    return this.http.post<{ body: { token: string } }>(this.baseUrl + '/sign-in', formData).pipe(
+    return this.http.post<{ body: { token: string } }>(this.configService.getEndpoint('/user/sign-in'), formData).pipe(
       switchMap(response => {
         const token = response.body?.token;
         if (token && this.isBrowser()) {
@@ -150,7 +152,7 @@ export class AuthServiceService {
       'Authorization': `Bearer ${token}`
     });
 
-    return this.http.get<{ body: User }>(this.baseUrl + '/info', { headers }).pipe(
+    return this.http.get<{ body: User }>(this.configService.getEndpoint('/user/info'), { headers }).pipe(
       map(res => res.body), 
       tap({
         next: (user) => {
@@ -213,7 +215,7 @@ export class AuthServiceService {
       'Content-Type': 'application/json'
     });
   
-    return this.http.put(this.baseUrl + '/change-first-name', JSON.stringify(newFirstName), { headers }).pipe(
+    return this.http.put(this.configService.getEndpoint('/user/change-first-name'), JSON.stringify(newFirstName), { headers }).pipe(
       switchMap(() => {
         return this.forceRefreshUserData();
       }),
@@ -244,7 +246,7 @@ export class AuthServiceService {
       'Content-Type': 'application/json'
     });
   
-    return this.http.put(this.baseUrl + '/change-last-name', JSON.stringify(newLastName), { headers }).pipe(
+    return this.http.put(this.configService.getEndpoint('/user/change-last-name'), JSON.stringify(newLastName), { headers }).pipe(
       switchMap(() => {
         return this.forceRefreshUserData();
       }),
