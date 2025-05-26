@@ -4,7 +4,7 @@ using Crux.Models.DTOs;
 
 namespace Crux.Services;
 
-public class ResourceSearchService (HttpClient httpClient) : IResourceSearchService
+public class ResourceSearchService (HttpClient httpClient, IS3StorageService s3StorageService) : IResourceSearchService
 {
     public async Task<List<UserFeedResponse>> SearchResourcesAsync(string topic, int count = 3)
     {
@@ -56,6 +56,7 @@ public class ResourceSearchService (HttpClient httpClient) : IResourceSearchServ
     private async Task<List<SearchResult>> SearchWithGoogleCustomSearchAsync(string topic, int count, string apiKey, string searchEngineId)
     {
         var encodedTopic = Uri.EscapeDataString(topic);
+        Console.WriteLine($"Searching for {encodedTopic}");
         var url = $"https://www.googleapis.com/customsearch/v1" +
                   $"?key={apiKey}" +
                   $"&cx={searchEngineId}" +
@@ -69,7 +70,7 @@ public class ResourceSearchService (HttpClient httpClient) : IResourceSearchServ
         {
             Title = item.Title ?? "No title",
             Link = item.Link ?? string.Empty,
-            Thumbnail = item.PageMap?.CseThumbnail?.FirstOrDefault()?.Src
+            Thumbnail = item.PageMap?.CseThumbnail?.FirstOrDefault()?.Src ?? s3StorageService.GetFeedPlaceholder().Result,
         }).ToList() ?? new List<SearchResult>();
         
         // TODO: Provide default thumbnail if Src is null

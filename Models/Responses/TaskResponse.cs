@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Crux.Models.Entities;
 
 namespace Crux.Models.Responses;
 
@@ -24,4 +25,7 @@ public class TaskResponse : Response
     
     [JsonPropertyName("expectedDataCount")]
     public int? ExpectedDataCount { get; set; }
+    
+    [JsonPropertyName("expectedData")]
+    public ICollection<TaskDataResponse>? ExpectedData { get; set; }
 }

@@ -1,5 +1,6 @@
 using Crux.Data;
 using Crux.Models.Entities;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,22 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
     {
         var isCompleted = dbContext.UserTaskProgresses.Any(progress => progress.UserId == userId
                                                                        && progress.TaskId == task.Id);
-
+        var showExpectedData = dbContext.Users.Any(u => u.Id == userId && u.Role == UserRole.Admin);
+        
+        List<TaskDataResponse>? expectedData = null;
+        if (showExpectedData)
+        {
+            expectedData = [];
+            foreach (var data in task.ExpectedData)
+            {
+                expectedData.Add(new TaskDataResponse
+                {
+                    Id = data.Id,
+                    Value = data.Value
+                });
+            }
+        }
+            
         return new TaskResponse
         {
             Success = true,
@@ -65,7 +81,8 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
             Name = task.Name,
             Description = task.Description,
             Points = task.Points,
-            IsCompleted = isCompleted
+            IsCompleted = isCompleted,
+            ExpectedData = expectedData
         };
     }
     
@@ -73,9 +90,24 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
     {
         var isCompleted = await dbContext.UserTaskProgresses.AnyAsync(progress => progress.UserId == userId
                                                                        && progress.TaskId == task.Id);
+        var showExpectedData = await dbContext.Users.AnyAsync(u => u.Id == userId && u.Role == UserRole.Admin);
 
         var expectedDataTypes = task.ExpectedData.Select(d => d.GetValueType()).ToList();
         var expectedDataCount = expectedDataTypes.Count;
+        
+        List<TaskDataResponse>? expectedData = null;
+        if (showExpectedData)
+        {
+            expectedData = [];
+            foreach (var data in task.ExpectedData)
+            {
+                expectedData.Add(new TaskDataResponse
+                {
+                    Id = data.Id,
+                    Value = data.Value
+                });
+            }
+        }
 
         return new TaskResponse
         {
@@ -86,7 +118,8 @@ public class TaskService(ApplicationDbContext dbContext) : ITaskService
             Points = task.Points,
             IsCompleted = isCompleted,
             ExpectedDataType = expectedDataTypes,
-            ExpectedDataCount = expectedDataCount
+            ExpectedDataCount = expectedDataCount,
+            ExpectedData = expectedData
         };
     }
 

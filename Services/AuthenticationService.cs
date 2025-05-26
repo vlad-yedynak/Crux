@@ -11,9 +11,9 @@ namespace Crux.Services;
 
 public class AuthenticationService(
     ApplicationDbContext dbContext,
+    S3StorageService s3StorageService,
     IPasswordHasher<User> passwordHasher,
-    IDistributedCache distributedCache,
-    IConfiguration configuration) : IAuthenticationService
+    IDistributedCache distributedCache) : IAuthenticationService
 {
     public AuthenticationResponse SignUp(UserRequest request)
     {
@@ -42,7 +42,7 @@ public class AuthenticationService(
             Email = request.Email,
             Password = request.Password,
             Role = UserRole.User,
-            Avatar = configuration["AppSettings:DefaultAvatarPath"]!
+            Avatar = s3StorageService.GetAvatarPlaceholder().Result
         };
 
         if (dbContext.Users.Any(u => u.Email == user.Email))
@@ -81,7 +81,8 @@ public class AuthenticationService(
                 Error = "Last name is required"
             };
         }
-        
+
+        var placeholder = await s3StorageService.GetAvatarPlaceholder();
         var user = new User
         {
             FirstName = request.FirstName,
@@ -89,7 +90,7 @@ public class AuthenticationService(
             Email = request.Email,
             Password = request.Password,
             Role = UserRole.User,
-            Avatar = configuration["AppSettings:DefaultAvatarPath"]!
+            Avatar = placeholder
         };
 
         if (await dbContext.Users.AnyAsync(u => u.Email == user.Email))

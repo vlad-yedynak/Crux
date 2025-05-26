@@ -72,7 +72,17 @@ public class S3StorageService(IAmazonS3 s3Client) : IS3StorageService
 
         await s3Client.DeleteObjectsAsync(deleteRequest);
     }
-    
+
+    public Task<string> GetAvatarPlaceholder()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> GetFeedPlaceholder()
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetS3KeyFromUrl(string url)
     {
         if (string.IsNullOrEmpty(url)) return null;

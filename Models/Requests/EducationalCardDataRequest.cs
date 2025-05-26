@@ -20,5 +20,3 @@ public class EducationalCardDataRequest
     [JsonPropertyName("attachments")]
     public List<CardAttachmentRequest>? Attachments { get; set; }
 }
-
-// TODO: update corresponding controller routes and service methods to match the new request signature 
