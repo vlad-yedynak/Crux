@@ -7,7 +7,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:crux-design": "node dist/crux-design/server/server.mjs"
+    "serve:ssr:crux-design": "node dist/crux-design/server/server.mjs",
+    "docker:build": "docker build -t crux-design .",
+    "docker:run": "docker run -p 4200:80 crux-design",
+    "docker:compose": "docker-compose up",
+    "docker:compose:build": "docker-compose up --build"
   },
   "private": true,
   "dependencies": {
