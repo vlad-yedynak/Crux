@@ -438,90 +438,159 @@
     margin-bottom: 20px;
 }
 
-/* Images and Attachments sections styling for right content */
-.images-section,
-.attachments-section {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--color-secondary-light);
+/* Add animation for popup entrance */
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-.images-section h3,
-.attachments-section h3 {
-    color: var(--color-primary-dark);
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 12px;
+/* Make educational cards visually distinct */
+.lesson-card[data-type="Educational"] {
+    cursor: pointer;
 }
 
-.images-container {
+.lesson-card[data-type="Educational"]:hover::after {
+    content: "Click to view";
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: var(--color-accent);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Card type styling */
+.educational-card,
+.test-card,
+.sandbox-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Maintain left borders only in normal state, not hover */
+.educational-card {
+  border-left: 4px solid var(--color-accent);
+}
+
+.test-card {
+  border-left: 4px solid green;
+}
+
+.sandbox-card {
+  border-left: 4px solid blue;
+}
+
+/* Remove these specific hover styles to prevent border preservation */
+.educational-card:hover,
+.test-card:hover,
+.sandbox-card:hover {
+  cursor: pointer;
+}
+
+/* Style for the view button */
+.view-button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.view-button:hover {
+  background-color: #0069d9;
+}
+
+/* Test card button specific styling */
+.test-card .view-button {
+  background-color: #28a745;
+}
+
+.test-card .view-button:hover {
+  background-color: #218838;
+}
+
+/* Sandbox card button specific styling */
+.sandbox-card .view-button {
+  background-color: #17a2b8;
+}
+
+.sandbox-card .view-button:hover {
+  background-color: #138496;
+}
+
+/* Controls always visible on the right */
+.scroll-controls {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.image-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.educational-image {
-    max-width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px; 
+    flex-shrink: 0; 
     height: auto;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 8px;
+    position: static;
+    top: unset;
+    margin-left: auto; 
 }
 
-.image-caption {
-    font-size: 14px;
-    color: var(--color-secondary-dark);
-    font-style: italic;
-    margin: 0;
+/* View All mode styles */
+.view-all-mode {
+    width: 100%;
+    padding: 20px 0;
 }
 
-.attachments-container {
+.view-all-header {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.attachment-item {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 30px;
 }
 
-.attachment-link {
+.view-all-cards {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: var(--color-secondary-dark);
-    padding: 8px 12px;
-    border: 1px solid var(--color-secondary-light);
-    border-radius: 6px;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-direction: row; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 20px; 
     width: 100%;
 }
 
-.attachment-link:hover {
-    background-color: var(--color-primary-light);
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+/* Back button styling */
+.back-btn {
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
 }
 
-.attachment-icon {
-    font-size: 16px;
-    flex-shrink: 0;
+.back-btn:hover {
+    background-color: var(--color-accent);
 }
 
-.attachment-description {
-    font-size: 14px;
-    flex-grow: 1;
-}
 
-/* ...existing code... */
+.view-all-mode .lesson-card {
+    min-width: 325px; 
+    width: 325px;     
+    height: 215px;   
+    max-width: unset;
+    flex: 0 0 auto;   
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+}
 
 /* Animation: Cards in scroller sliding out */
 .card-scroller-slide-out-left {
@@ -814,3 +883,91 @@
     transform: translateY(0);
   }
 }
+
+/*Кирилова фігня яка переноситься вручну 
+/* Images and Attachments sections styling for right content */
+.images-section,
+.attachments-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-secondary-light);
+}
+
+.images-section h3,
+.attachments-section h3 {
+    color: var(--color-primary-dark);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.images-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.image-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.educational-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+}
+
+.image-caption {
+    font-size: 14px;
+    color: var(--color-secondary-dark);
+    font-style: italic;
+    margin: 0;
+}
+
+/* Controls always visible on the right */
+
+.attachments-container {
+    display: flex;
+    
+    flex-direction: column;
+    gap: 8px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+}
+
+.attachment-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--color-secondary-dark);
+    padding: 8px 12px;
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 6px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    width: 100%;
+}
+
+.attachment-link:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.attachment-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.attachment-description {
+    font-size: 14px;
+    flex-grow: 1;
+}
+
