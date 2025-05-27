@@ -17,4 +17,6 @@ public class Task
     public int SandboxCardId { get; set; }
     
     public SandboxCard? SandboxCard { get; set; }
+    
+    public ICollection<UserTaskProgress> UserCompletedTasks { get; set; } = new List<UserTaskProgress>();
 }

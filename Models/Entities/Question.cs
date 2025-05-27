@@ -13,4 +13,6 @@ public class Question
     public required string QuestionText { get; set; }
     
     public ICollection<Answer> Answers { get; set; } = new List<Answer>();
+    
+    public ICollection<UserQuestionProgress> UserCompletedQuestions { get; set; } = new List<UserQuestionProgress>();
 }

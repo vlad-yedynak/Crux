@@ -287,10 +287,18 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity.HasKey(e => new { e.UserId, e.TaskId });
             
             entity
-                .HasOne<User>()
-                .WithMany(e => e.CompletedTasks)
+                .HasOne(e => e.User)
+                .WithMany(u => u.CompletedTasks)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            entity
+                .HasOne(e => e.Task)
+                .WithMany(t => t.UserCompletedTasks)
+                .HasForeignKey(e => e.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.ToTable("UserTaskProgresses");
         });
         
         modelBuilder.Entity<UserQuestionProgress>(entity =>
@@ -298,9 +306,15 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity.HasKey(e => new { e.UserId, e.QuestionId });
             
             entity
-                .HasOne<User>()
-                .WithMany(e => e.CompletedQuestions)
+                .HasOne(e => e.User)
+                .WithMany(u => u.CompletedQuestions)
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity
+                .HasOne(e => e.Question)
+                .WithMany(q => q.UserCompletedQuestions)
+                .HasForeignKey(e => e.QuestionId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
@@ -311,12 +325,14 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity
                 .HasOne(e => e.User)
                 .WithMany(u => u.ScorePoints)
-                .HasForeignKey(e => e.UserId);
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity
                 .HasOne(e => e.Lesson)
                 .WithMany(l => l.UserScorePoints)
-                .HasForeignKey(e => e.LessonId);
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.ScorePoint).IsRequired();
         });
@@ -328,12 +344,14 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             entity
                 .HasOne(e => e.User)
                 .WithMany(u => u.LessonTrackers)
-                .HasForeignKey(e => e.UserId);
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity
                 .HasOne(e => e.Lesson)
                 .WithMany(l => l.LessonTrackers)
-                .HasForeignKey(e => e.LessonId);
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.TrackedTime).IsRequired();
         });

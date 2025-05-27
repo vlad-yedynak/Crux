@@ -57,17 +57,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseRouting();
-app.UseStaticFiles();
-
 var clientString = Environment.GetEnvironmentVariable("CLIENT_URL");
 if (string.IsNullOrEmpty(clientString))
 {
     throw new Exception("CLIENT URL not found");
 }
 
-app.UseCors(option => option.WithOrigins(clientString)
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseStaticFiles();
+
+app.UseCors(option => option
+    .WithOrigins(clientString)
     .AllowAnyMethod()
     .AllowAnyHeader());
 app.MapControllers();
