@@ -131,12 +131,24 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     description: ''
   };
   
-  // Add properties for educational content
+  // Add properties for educational content with file support
   isViewEducationalContentPopupVisible = false;
   isLoadingEducationalContent = false;
   educationalContent: string = '';
-  educationalImages: { url: string; caption: string; altText: string }[] = [];
-  educationalAttachments: { url: string; description: string }[] = [];
+  educationalImages: { 
+    data?: string; // Base64 data
+    contentType?: string; 
+    fileName?: string; 
+    caption: string; 
+    altText: string;
+    previewUrl?: string; // For displaying preview
+  }[] = [];
+  educationalAttachments: { 
+    data?: string; // Base64 data
+    contentType?: string; 
+    fileName?: string; 
+    description: string;
+  }[] = [];
   hasExistingContent = false;
   
   // Add these properties to store original image data
@@ -491,45 +503,75 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                     const parsedContent = JSON.parse(cardData.content);
                     this.educationalContent = parsedContent.content || '';
                     
-                    // Check for images and attachments
+                    // Handle images - check for new base64 structure or legacy URL structure
                     if (parsedContent.images && Array.isArray(parsedContent.images)) {
-                      // Create images with blank URLs but store original URLs separately
                       this.educationalImages = parsedContent.images.map((img: any, index: number) => {
-                        // Store original URL in our map with server prefix if needed
-                        let originalUrl = img.url || '';
-                        if (originalUrl && !originalUrl.startsWith('http')) {
-                          // Add server prefix for correct preview
-                          this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        // Check if this is new base64 structure
+                        if (img.data && img.contentType && img.fileName) {
+                          // New base64 structure
+                          return {
+                            data: img.data,
+                            contentType: img.contentType,
+                            fileName: img.fileName,
+                            caption: img.caption || '',
+                            altText: img.altText || '',
+                            previewUrl: `data:${img.contentType};base64,${img.data}`
+                          };
+                        } else if (img.url) {
+                          // Legacy URL structure - store original URL for fallback
+                          let originalUrl = img.url;
+                          if (originalUrl && !originalUrl.startsWith('http')) {
+                            this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                          } else {
+                            this.originalImageUrls[index] = originalUrl;
+                          }
+                          
+                          return {
+                            caption: img.caption || '',
+                            altText: img.altText || '',
+                            previewUrl: this.originalImageUrls[index]
+                          };
                         } else {
-                          this.originalImageUrls[index] = originalUrl;
+                          // Empty image entry
+                          return {
+                            caption: img.caption || '',
+                            altText: img.altText || ''
+                          };
                         }
-                        
-                        // Return image object with blank URL field
-                        return {
-                          url: '', // Blank URL for input field
-                          caption: img.caption || '',
-                          altText: img.altText || ''
-                        };
                       });
                     }
                     
+                    // Handle attachments - check for new base64 structure or legacy URL structure
                     if (parsedContent.attachments && Array.isArray(parsedContent.attachments)) {
-                      // Create attachments with blank URLs but store original URLs separately
                       this.educationalAttachments = parsedContent.attachments.map((att: any, index: number) => {
-                        // Store original URL in our map with server prefix if needed
-                        let originalUrl = att.url || '';
-                        if (originalUrl && !originalUrl.startsWith('http')) {
-                          // Add server prefix for correct preview
-                          this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        // Check if this is new base64 structure
+                        if (att.data && att.contentType && att.fileName) {
+                          // New base64 structure
+                          return {
+                            data: att.data,
+                            contentType: att.contentType,
+                            fileName: att.fileName,
+                            description: att.description || ''
+                          };
+                        } else if (att.url) {
+                          // Legacy URL structure - store original URL for fallback
+                          let originalUrl = att.url;
+                          if (originalUrl && !originalUrl.startsWith('http')) {
+                            this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                          } else {
+                            this.originalAttachmentUrls[index] = originalUrl;
+                          }
+                          
+                          return {
+                            description: att.description || '',
+                            previewUrl: this.originalAttachmentUrls[index]
+                          };
                         } else {
-                          this.originalAttachmentUrls[index] = originalUrl;
+                          // Empty attachment entry
+                          return {
+                            description: att.description || ''
+                          };
                         }
-                        
-                        // Return attachment object with blank URL field
-                        return {
-                          url: '', // Blank URL for input field
-                          description: att.description || ''
-                        };
                       });
                     }
                   } catch {
@@ -542,43 +584,75 @@ export class AdminPageComponent implements OnInit, OnDestroy {
                   this.educationalContent = cardData.content.content || 
                                        (cardData.content.toString ? cardData.content.toString() : '');
                   
-                  // Check for images and attachments
+                  // Handle images - check for new base64 structure or legacy URL structure
                   if (cardData.content.images && Array.isArray(cardData.content.images)) {
-                    // Create images with blank URLs but store original URLs separately
                     this.educationalImages = cardData.content.images.map((img: any, index: number) => {
-                      // Store original URL in our map with server prefix if needed
-                      let originalUrl = img.url || '';
-                      if (originalUrl && !originalUrl.startsWith('http')) {
-                        // Add server prefix for correct preview
-                        this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                      // Check if this is new base64 structure
+                      if (img.data && img.contentType && img.fileName) {
+                        // New base64 structure
+                        return {
+                          data: img.data,
+                          contentType: img.contentType,
+                          fileName: img.fileName,
+                          caption: img.caption || '',
+                          altText: img.altText || '',
+                          previewUrl: `data:${img.contentType};base64,${img.data}`
+                        };
+                      } else if (img.url) {
+                        // Legacy URL structure - store original URL for fallback
+                        let originalUrl = img.url;
+                        if (originalUrl && !originalUrl.startsWith('http')) {
+                          this.originalImageUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        } else {
+                          this.originalImageUrls[index] = originalUrl;
+                        }
+                        
+                        return {
+                          caption: img.caption || '',
+                          altText: img.altText || '',
+                          previewUrl: this.originalImageUrls[index]
+                        };
                       } else {
-                        this.originalImageUrls[index] = originalUrl;
+                        // Empty image entry
+                        return {
+                          caption: img.caption || '',
+                          altText: img.altText || ''
+                        };
                       }
-                      
-                      return {
-                        url: '', // Blank URL for input field
-                        caption: img.caption || '',
-                        altText: img.altText || ''
-                      };
                     });
                   }
                   
+                  // Handle attachments - check for new base64 structure or legacy URL structure
                   if (cardData.content.attachments && Array.isArray(cardData.content.attachments)) {
-                    // Create attachments with blank URLs but store original URLs separately
                     this.educationalAttachments = cardData.content.attachments.map((att: any, index: number) => {
-                      // Store original URL in our map with server prefix if needed
-                      let originalUrl = att.url || '';
-                      if (originalUrl && !originalUrl.startsWith('http')) {
-                        // Add server prefix for correct preview
-                        this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                      // Check if this is new base64 structure
+                      if (att.data && att.contentType && att.fileName) {
+                        // New base64 structure
+                        return {
+                          data: att.data,
+                          contentType: att.contentType,
+                          fileName: att.fileName,
+                          description: att.description || ''
+                        };
+                      } else if (att.url) {
+                        // Legacy URL structure - store original URL for fallback
+                        let originalUrl = att.url;
+                        if (originalUrl && !originalUrl.startsWith('http')) {
+                          this.originalAttachmentUrls[index] = `${this.configService.apiUrl}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
+                        } else {
+                          this.originalAttachmentUrls[index] = originalUrl;
+                        }
+                        
+                        return {
+                          description: att.description || '',
+                          previewUrl: this.originalAttachmentUrls[index]
+                        };
                       } else {
-                        this.originalAttachmentUrls[index] = originalUrl;
+                        // Empty attachment entry
+                        return {
+                          description: att.description || ''
+                        };
                       }
-                      
-                      return {
-                        url: '', // Blank URL for input field
-                        description: att.description || ''
-                      };
                     });
                   }
                 }
@@ -609,50 +683,52 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   saveEducationalContent(): void {
     if (!this.currentEditingCard) return;
     
-    // Clean up images - use original URL if new URL is empty
-    const filteredImages = this.educationalImages
-      .map((img, index) => {
-        let url = '';
-        
-        // If new URL is provided, use it
-        if (img.url && img.url.trim()) {
-          url = img.url.trim();
-          // Don't modify the URL - send exactly what the user entered
-        } 
-        // Otherwise use original URL - keep the original format from the server
-        else if (this.originalImageUrls[index]) {
-          url = this.originalImageUrls[index];
-        }
-        
-        return {
-          url: url,
-          caption: img.caption || '',
-          altText: img.altText || ''
-        };
-      })
-    .filter(img => img.url !== ''); // Only keep images with a URL
+    // Validate content before saving
+    if (!this.isEducationalContentValid()) {
+      alert('Please ensure all required fields are filled and all files are selected.');
+      return;
+    }
     
-    // Clean up attachments - use original URL if new URL is empty
-    const filteredAttachments = this.educationalAttachments
-      .map((att, index) => {
-        let url = '';
+    // Process images - send base64 data if available, otherwise skip
+    const filteredImages = this.educationalImages
+      .filter(img => img.data || this.originalImageUrls[this.educationalImages.indexOf(img)])
+      .map((img, originalIndex) => {
+        const index = this.educationalImages.indexOf(img);
         
-        // If new URL is provided, use it
-        if (att.url && att.url.trim()) {
-          url = att.url.trim();
-          // Don't modify the URL - send exactly what the user entered
-        } 
-        // Otherwise use original URL - keep the original format from the server
-        else if (this.originalAttachmentUrls[index]) {
-          url = this.originalAttachmentUrls[index];
+        // If we have new base64 data, use it
+        if (img.data) {
+          return {
+            data: img.data,
+            contentType: img.contentType || 'image/jpeg',
+            fileName: img.fileName || `image_${index + 1}.jpg`,
+            caption: img.caption || '',
+            altText: img.altText || ''
+          };
         }
-        
-        return {
-          url: url,
-          description: att.description || ''
-        };
+        // If we have original URL but no new data, keep the existing image (skip in update)
+        return null;
       })
-    .filter(att => att.url !== ''); // Only keep attachments with a URL
+      .filter(img => img !== null); // Remove null entries
+    
+    // Process attachments - send base64 data if available, otherwise skip
+    const filteredAttachments = this.educationalAttachments
+      .filter(att => att.data || this.originalAttachmentUrls[this.educationalAttachments.indexOf(att)])
+      .map((att, originalIndex) => {
+        const index = this.educationalAttachments.indexOf(att);
+        
+        // If we have new base64 data, use it
+        if (att.data) {
+          return {
+            data: att.data,
+            contentType: att.contentType || 'application/octet-stream',
+            fileName: att.fileName || `attachment_${index + 1}`,
+            description: att.description || ''
+          };
+        }
+        // If we have original URL but no new data, keep the existing attachment (skip in update)
+        return null;
+      })
+      .filter(att => att !== null); // Remove null entries
     
     const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     
@@ -1482,7 +1558,6 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   // Add these methods for images and attachments
   addImage(): void {
     const newImage = {
-      url: '',
       caption: '',
       altText: ''
     };
@@ -1506,7 +1581,6 @@ export class AdminPageComponent implements OnInit, OnDestroy {
 
   addAttachment(): void {
     const newAttachment = {
-      url: '',
       description: ''
     };
     this.educationalAttachments.push(newAttachment);
@@ -1866,5 +1940,161 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       
       console.log(`Cleared ${cardDetailKeys.length} cached card entries`);
     }
+  }
+
+  // File handling methods
+  onImageFileSelected(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file.');
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`File size must be less than 10MB. Current file size: ${this.formatFileSize(file.size)}`);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Data = reader.result as string;
+        // Remove the data:image/xxx;base64, prefix
+        const base64String = base64Data.split(',')[1];
+        
+        // Update the image object
+        this.educationalImages[index] = {
+          ...this.educationalImages[index],
+          data: base64String,
+          contentType: file.type,
+          fileName: file.name,
+          previewUrl: base64Data // Keep full data URL for preview
+        };
+        
+        console.log(`Image ${index} loaded:`, {
+          fileName: file.name,
+          contentType: file.type,
+          size: this.formatFileSize(file.size),
+          dataLength: base64String.length
+        });
+      };
+      
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Error reading file. Please try again.');
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onAttachmentFileSelected(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      // Validate file type
+      if (!this.isValidAttachmentType(file)) {
+        alert('Please select a valid file type (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, CSV, ZIP).');
+        return;
+      }
+      
+      // Validate file size (max 25MB)
+      const maxSize = 25 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`File size must be less than 25MB. Current file size: ${this.formatFileSize(file.size)}`);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Data = reader.result as string;
+        // Remove the data:xxx;base64, prefix
+        const base64String = base64Data.split(',')[1];
+        
+        // Update the attachment object
+        this.educationalAttachments[index] = {
+          ...this.educationalAttachments[index],
+          data: base64String,
+          contentType: file.type,
+          fileName: file.name
+        };
+        
+        console.log(`Attachment ${index} loaded:`, {
+          fileName: file.name,
+          contentType: file.type,
+          size: this.formatFileSize(file.size),
+          dataLength: base64String.length
+        });
+      };
+      
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Error reading file. Please try again.');
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Validation method for educational content
+  isEducationalContentValid(): boolean {
+    // Check if content is not empty
+    if (!this.educationalContent || this.educationalContent.trim() === '') {
+      return false;
+    }
+    
+    // Check if all images have either data or existing URLs
+    for (let i = 0; i < this.educationalImages.length; i++) {
+      const img = this.educationalImages[i];
+      if (!img.data && !this.originalImageUrls[i]) {
+        console.warn(`Image ${i + 1} has no file selected`);
+        return false;
+      }
+    }
+    
+    // Check if all attachments have either data or existing URLs
+    for (let i = 0; i < this.educationalAttachments.length; i++) {
+      const att = this.educationalAttachments[i];
+      if (!att.data && !this.originalAttachmentUrls[i]) {
+        console.warn(`Attachment ${i + 1} has no file selected`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  // Method to get file size in human readable format
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Method to validate file type for attachments
+  private isValidAttachmentType(file: File): boolean {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'text/csv',
+      'application/zip',
+      'application/x-zip-compressed'
+    ];
+    
+    return allowedTypes.includes(file.type);
   }
 }

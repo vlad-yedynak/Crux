@@ -355,8 +355,13 @@
                             </div>
                             
                             <div class="form-row">
-                                <label for="image-url-{{ i }}">URL зображення</label>
-                                <input type="text" id="image-url-{{ i }}" [(ngModel)]="image.url" placeholder="Введіть URL зображення" class="form-control">
+                                <label for="image-file-{{ i }}">Виберіть файл зображення</label>
+                                <input type="file" 
+                                       id="image-file-{{ i }}" 
+                                       (change)="onImageFileSelected($event, i)" 
+                                       accept="image/*" 
+                                       class="form-control file-input">
+                                <small class="file-info">Підтримувані формати: JPG, PNG, GIF, WebP</small>
                             </div>
                             
                             <div class="form-row">
@@ -368,12 +373,17 @@
                                 <label for="image-alt-{{ i }}">Альтернативний текст</label>
                                 <input type="text" id="image-alt-{{ i }}" [(ngModel)]="image.altText" placeholder="Введіть альтернативний текст для доступності" class="form-control">
                             </div>
-                            
-                            <!-- Update the image preview section to use original URLs when available -->
-                            <div *ngIf="image.url || originalImageUrls[i]" class="image-preview">
-                                <img [src]="image.url || originalImageUrls[i]" [alt]="image.altText || 'Попередній перегляд'" style="max-width: 100%; max-height: 150px;">
-                                <div *ngIf="originalImageUrls[i] && !image.url" class="original-image-note">
-                                    (Використовується оригінальне зображення - введіть новий URL для зміни)
+                            <!-- Показати поточну інформацію про файл або попередній перегляд -->
+                            <div *ngIf="image.fileName || originalImageUrls[i]" class="file-preview">
+                                <div class="file-info-display">
+                                    <strong>Поточний файл:</strong> {{ image.fileName || 'Оригінальне зображення' }}
+                                    <span *ngIf="image.contentType" class="file-type">({{ image.contentType }})</span>
+                                </div>
+                                <div *ngIf="image.previewUrl || originalImageUrls[i]" class="image-preview">
+                                    <img [src]="image.previewUrl || originalImageUrls[i]" [alt]="image.altText || 'Попередній перегляд'" style="max-width: 100%; max-height: 150px;">
+                                </div>
+                                <div *ngIf="originalImageUrls[i] && !image.fileName" class="original-image-note">
+                                    (Використовується оригінальне зображення - виберіть новий файл для зміни)
                                 </div>
                             </div>
                         </div>
@@ -396,13 +406,28 @@
                             </div>
                             
                             <div class="form-row">
-                                <label for="attachment-url-{{ i }}">URL файлу</label>
-                                <input type="text" id="attachment-url-{{ i }}" [(ngModel)]="attachment.url" placeholder="Введіть URL файлу" class="form-control">
+                                <label for="attachment-file-{{ i }}">Виберіть файл</label>
+                                <input type="file" 
+                                       id="attachment-file-{{ i }}" 
+                                       (change)="onAttachmentFileSelected($event, i)" 
+                                       class="form-control file-input">
+                                <small class="file-info">Підтримувані формати: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT тощо</small>
+                            </div>
                             </div>
                             
                             <div class="form-row">
                                 <label for="attachment-desc-{{ i }}">Опис</label>
                                 <input type="text" id="attachment-desc-{{ i }}" [(ngModel)]="attachment.description" placeholder="Введіть опис файлу" class="form-control">
+                            </div>
+                            <!-- Показати поточну інформацію про файл -->
+                            <div *ngIf="attachment.fileName || originalAttachmentUrls[i]" class="file-preview">
+                                <div class="file-info-display">
+                                    <strong>Поточний файл:</strong> {{ attachment.fileName || 'Оригінальний файл' }}
+                                    <span *ngIf="attachment.contentType" class="file-type">({{ attachment.contentType }})</span>
+                                </div>
+                                <div *ngIf="originalAttachmentUrls[i] && !attachment.fileName" class="original-file-note">
+                                    (Використовується оригінальний файл - виберіть новий файл для зміни)
+                                </div>
                             </div>
                         </div>
                     </div>
