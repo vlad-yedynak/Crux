@@ -147,6 +147,11 @@ export class HeaderComponent implements OnInit{
     this.router.navigate(['/auth']);
   }
 
+  getUserAvatar(): string {
+    // Return the user's avatar if available, otherwise return the default avatar
+    return this.user?.avatar || 'profile_placeholder.jpg';
+  }
+
   @HostListener('document:click', ['$event'])
   clickOutside(event: Event) {
     const clickedElement = event.target as Element;

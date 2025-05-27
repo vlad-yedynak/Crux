@@ -49,7 +49,7 @@
 
     <ng-container *ngIf="user; else showLogin">
       <div class="user-info" [class.open]="isUserDropdownOpen" (click)="toggleDropdownUser()">
-        <img src="profile_placeholder.jpg" alt="Avatar" class="avatar" />
+        <img [src]="getUserAvatar()" alt="Avatar" class="avatar" title="Натисніть для управління профілем" />
         <span>{{ user.firstName }} {{ user.lastName }}</span> 
         <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M7 10l5 5 5-5H7z" fill="currentColor" />

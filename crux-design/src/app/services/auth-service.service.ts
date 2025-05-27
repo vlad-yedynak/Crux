@@ -13,7 +13,7 @@ export interface User {
   email: string;
   scorePoints?: { [lessonId: string]: number };
   userRole: string;
-  avatarUrl?: string;
+  avatar?: string; // URL to the user's avatar image
 }
 
 interface AuthResponse {
@@ -294,6 +294,37 @@ export class AuthServiceService {
       }),
       catchError(err => {
         console.error('Error updating last name or refreshing user data:', err);
+        if (err.status === 401 || err.status === 403) {
+            this.logout();
+        }
+        return throwError(() => err);
+      })
+    );
+  }
+
+  updateAvatar(imageData: string, contentType: string) {
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+    if (!token || !this.isBrowser()) {
+      this.logout(); 
+      return throwError(() => new Error('User not authenticated or not in browser for updating avatar.'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    const requestBody = {
+      data: imageData,
+      contentType: contentType
+    };
+  
+    return this.http.put(this.configService.getEndpoint('/user/update-avatar'), requestBody, { headers }).pipe(
+      switchMap(() => {
+        return this.forceRefreshUserData();
+      }),
+      catchError(err => {
+        console.error('Error updating avatar or refreshing user data:', err);
         if (err.status === 401 || err.status === 403) {
             this.logout();
         }
