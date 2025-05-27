@@ -10,6 +10,8 @@ public interface IGeminiApiService
     
     Task<List<string>> GenerateSearchSuggestionsAsync(string topic);
     
+    Task<string> TranslateTextAsync(string text, string language);
+    
     Task<string> AnalyzeSentimentAsync(string text);
     
     Task<string> ExtractKeyPointsAsync(string content);

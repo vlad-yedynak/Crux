@@ -284,8 +284,9 @@ public class PersonalizationService(ApplicationDbContext dbContext, IGeminiApiSe
         }
         
         var lessonTopic = GetLessonDetailedTopic(lesson);
-        
-        var resources = await searchService.SearchResourcesAsync(lessonTopic);
+        var translated = await geminiApiService.TranslateTextAsync(lessonTopic, "english");
+        Console.WriteLine(translated);
+        var resources = await searchService.SearchResourcesAsync(translated);
         var feed = new List<UserFeedResponse>();
         
         foreach (var resource in resources)

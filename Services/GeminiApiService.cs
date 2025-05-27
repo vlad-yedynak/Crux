@@ -39,6 +39,12 @@ public class GeminiApiService(
         return await SendGeminiRequestAsync(prompt);
     }
 
+    public async Task<string> TranslateTextAsync(string text, string language)
+    {
+        var prompt = $"Translate the following text to the {language} language:\n\n{text}";
+        return await SendGeminiRequestAsync(prompt);
+    }
+
     public async Task<string> ExtractKeyPointsAsync(string content)
     {
         var prompt = $"Extract the 3 most important key points from this content. Return them as bullet points:\n\n{content}";
