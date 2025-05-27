@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { LessonsService, Lesson, Card } from '../../services/lessons.service';
 import { CookiesService } from '../../services/cookies.service';
+import { ConfigService } from '../../services/config.service';
 import { Subscription } from 'rxjs';
 import { AuthServiceService } from '../../services/auth-service.service';
 import { TimeTrackerService } from '../../services/time-tracker.service'; // Import TimeTrackerService
@@ -27,6 +28,10 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
   isPopupVisible = false;
   safeCardContent: SafeHtml | null = null;
 
+  // Add properties for educational content with images and attachments
+  educationalImages: { url: string; caption: string; altText: string }[] = [];
+  educationalAttachments: { url: string; description: string }[] = [];
+
   isViewAllMode = false;
   selectedLessonId: number | null = null;
   isAnimating = false;
@@ -38,7 +43,6 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
   redirectCountdown: number = 3;
 
   private redirectTimer: any = null;
-
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
@@ -47,7 +51,8 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
     private lessonsService: LessonsService,
     private cookiesService: CookiesService,
     private authService: AuthServiceService,
-    private timeTrackerService: TimeTrackerService // Add TimeTrackerService
+    private timeTrackerService: TimeTrackerService, // Add TimeTrackerService
+    private configService: ConfigService
   ) {}
 
   ngOnInit(): void {
@@ -220,6 +225,21 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
   closeAuthMessage(): void {
     this.clearRedirectTimer();
     this.showAuthMessage = false;
+  }  // Helper method to get full URL for images and attachments
+  getFullUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http')) {
+      return url;
+    }
+    // Add API base URL for relative paths
+    return `${this.configService.apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  // Helper method to check if attachment is downloadable
+  isDownloadableAttachment(url: string): boolean {
+    if (!url) return false;
+    const downloadableExtensions = ['.pdf', '.doc', '.docx', '.txt', '.zip', '.rar'];
+    return downloadableExtensions.some(ext => url.toLowerCase().includes(ext));
   }
 
   fetchCardDetails(cardId: number): void {
@@ -229,12 +249,52 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
           console.log('Card details received in LessonsPageComponent:', cardData);
           this.selectedCard = cardData;
           
+          // Clear previous images and attachments
+          this.educationalImages = [];
+          this.educationalAttachments = [];
+          
           if (this.selectedCard.content) {
-            
             let contentValue: string = '';
-            if (typeof this.selectedCard.content === 'object' && this.selectedCard.content !== null && 'content' in this.selectedCard.content) {
-              contentValue = (this.selectedCard.content as { content?: string }).content || '';
-            } else {
+            let parsedContent: any = null;
+            
+            // Parse content and extract images/attachments
+            try {
+              if (typeof this.selectedCard.content === 'string') {
+                try {
+                  parsedContent = JSON.parse(this.selectedCard.content);
+                  contentValue = parsedContent.content || '';
+                } catch {
+                  // If it's not valid JSON, use as-is (might be direct HTML)
+                  contentValue = this.selectedCard.content;
+                }              } else if (typeof this.selectedCard.content === 'object' && this.selectedCard.content !== null) {
+                if ('content' in this.selectedCard.content) {
+                  parsedContent = this.selectedCard.content;
+                  contentValue = (this.selectedCard.content as { content?: string }).content || '';
+                } else {
+                  // Convert object to string safely
+                  contentValue = JSON.stringify(this.selectedCard.content);
+                }
+              }
+              
+              // Extract images and attachments if they exist
+              if (parsedContent) {
+                if (parsedContent.images && Array.isArray(parsedContent.images)) {
+                  this.educationalImages = parsedContent.images.map((img: any) => ({
+                    url: img.url || '',
+                    caption: img.caption || '',
+                    altText: img.altText || ''
+                  }));
+                }
+                
+                if (parsedContent.attachments && Array.isArray(parsedContent.attachments)) {
+                  this.educationalAttachments = parsedContent.attachments.map((att: any) => ({
+                    url: att.url || '',
+                    description: att.description || ''
+                  }));
+                }
+              }
+            } catch (error) {
+              console.error('Error parsing educational content:', error);
               contentValue = this.selectedCard.content as string;
             }
             

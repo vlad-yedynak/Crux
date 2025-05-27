@@ -1,4 +1,4 @@
-<div class="main-content">
+Ь<div class="main-content">
     <h1 class="page-title">Уроки</h1>
     
     <!-- Loading state -->
@@ -72,6 +72,33 @@
                 <div class="popup-right-content">
                     <h2>{{ selectedCard.title }}</h2>
                     <p>{{ selectedCard.description }}</p>
+                    
+                    <!-- Images Section -->
+                    <div *ngIf="educationalImages && educationalImages.length > 0" class="images-section">
+                        <h3>Зображення</h3>
+                        <div class="images-container">
+                            <div *ngFor="let image of educationalImages" class="image-item">
+                                <img [src]="getFullUrl(image.url)" [alt]="image.altText || image.caption" class="educational-image">
+                                <p *ngIf="image.caption" class="image-caption">{{ image.caption }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attachments Section -->
+                    <div *ngIf="educationalAttachments && educationalAttachments.length > 0" class="attachments-section">
+                        <h3>Прикріплені файли</h3>
+                        <div class="attachments-container">
+                            <div *ngFor="let attachment of educationalAttachments" class="attachment-item">
+                                <a [href]="getFullUrl(attachment.url)" 
+                                   target="_blank" 
+                                   [download]="isDownloadableAttachment(attachment.url)" 
+                                   class="attachment-link">
+                                    <span class="attachment-icon">📎</span>
+                                    <span class="attachment-description">{{ attachment.description || 'Завантажити файл' }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
