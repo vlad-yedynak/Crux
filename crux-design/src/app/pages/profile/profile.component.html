@@ -5,24 +5,22 @@
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
       </svg>
-    </div>
-    <h2>Authentication Required</h2>
-    <p>You need to be logged in to view your profile.</p>
-    <p>Redirecting to login page in {{redirectCountdown}} seconds...</p>
+    </div>    <h2>Потрібна автентифікація</h2>
+    <p>Вам потрібно увійти в систему, щоб переглянути свій профіль.</p>
+    <p>Перенаправлення на сторінку входу через {{redirectCountdown}} секунд...</p>
     <div class="auth-buttons">
-      <button class="login-now-btn" (click)="router.navigate(['/auth'])">Login Now</button>
+      <button class="login-now-btn" (click)="router.navigate(['/auth'])">Увійти зараз</button>
     </div>
   </div>
 </div>
 
 <div *ngIf="!showAuthMessage" class="profile-page">
   <div class="navigation-profile">
-    <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav flex-column">
-      <li [ngbNavItem]="'info'">
-        <a ngbNavLink>General Info</a>
+    <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav flex-column">      <li [ngbNavItem]="'info'">
+        <a ngbNavLink>Загальна інформація</a>
       </li>
       <li [ngbNavItem]="'settings'">
-        <a ngbNavLink>Settings</a>
+        <a ngbNavLink>Налаштування</a>
       </li>
     </ul>
   </div>
@@ -33,27 +31,26 @@
         <div class="account-info user-info">
           <div class="avatar-wrapper">
             <img src="profile_placeholder.jpg" alt="User Avatar" class="avatar-image">
-          </div>
-          <h2>Account Information</h2>
+          </div>          <h2>Інформація про обліковий запис</h2>
           <div class="info-row first-row">
-            <span class="label">First Name:</span>
+            <span class="label">Ім'я:</span>
             <span class="value">{{ userInfo?.firstName }}</span>
           </div>
           <div class="info-row">
-            <span class="label">Last Name:</span>
+            <span class="label">Прізвище:</span>
             <span class="value">{{ userInfo?.lastName }}</span>
           </div>
           <div class="info-row">
-            <span class="label">Email:</span>
+            <span class="label">Електронна пошта:</span>
             <span class="value">{{ userInfo?.email }}</span>
           </div>
           <div class="info-row">
-            <span class="label">Role:</span>
+            <span class="label">Роль:</span>
             <span class="value">{{ userInfo?.userRole }}</span>
           </div>
         </div>
         <div class="account-info points-info">
-          <h2>Points Details</h2>
+          <h2>Деталі балів</h2>
           <div class="topic-points-container" *ngIf="lessons && lessons.length > 0 && userInfo">
             <div *ngFor="let lesson of lessons" class="topic-row">
               <div class="topic-name">{{ lesson.title }}</div>
@@ -61,18 +58,15 @@
                 <div class="topic-bar" [style.width.%]="getTopicPercentage(getLessonScore(lesson.id), lesson.totalPoints)"></div>
               </div>
               <div class="topic-value">{{ getLessonScore(lesson.id) }} / {{ lesson.totalPoints }}</div>
-            </div>
-
-            <div class="info-row total-points">
-              <span class="label">Total Points:</span>
+            </div>            <div class="info-row total-points">
+              <span class="label">Загальні бали:</span>
               <span class="value">{{ getCalculatedTotalScorePoints() }}</span>
             </div>
             <div class="topic-bar-container total-points-bar">
               <div class="topic-bar" [style.width.%]="getTotalScorePercentage()"></div>
             </div>
-          </div>
-          <div *ngIf="!lessons || lessons.length === 0 || !userInfo">
-            <p>No points details available.</p>
+          </div>          <div *ngIf="!lessons || lessons.length === 0 || !userInfo">
+            <p>Деталі балів недоступні.</p>
           </div>
         </div>
       </div>
@@ -82,25 +76,24 @@
           <div class="account-info user-info">
               <div class="avatar-wrapper">
                   <img src="profile_placeholder.jpg" alt="User Avatar" class="avatar-image">
-              </div>
-              <h2>Edit Account Information</h2>
+              </div>              <h2>Редагувати інформацію облікового запису</h2>
               <div class="info-row first-row">
-                  <span class="label">First Name:</span>
+                  <span class="label">Ім'я:</span>
                   <input type="text" [(ngModel)]="editableFirstName" [value]="userInfo?.firstName" class="input-field">
               </div>
               <div class="info-row">
-                  <span class="label">Last Name:</span>
+                  <span class="label">Прізвище:</span>
                   <input type="text" [(ngModel)]="editableLastName" [value]="userInfo?.lastName" class="input-field">
               </div>
               <div class="info-row">
-                  <span class="label">Email:</span>
+                  <span class="label">Електронна пошта:</span>
                   <input type="email" [value]="userInfo?.email" class="input-field" disabled>
               </div>
               <div class="info-row">
-                  <span class="label">Role:</span>
+                  <span class="label">Роль:</span>
                   <input type="text" [value]="userInfo?.userRole" class="input-field" disabled>
               </div>
-              <button class="save-button" (click)="saveSettings()">Save</button>
+              <button class="save-button" (click)="saveSettings()">Зберегти</button>
           </div>
       </div>
     </div>

@@ -180,14 +180,14 @@ export class TestPageComponent implements OnInit, OnDestroy {
           }
         } else {
           this.hasError = true;
-          this.errorMessage = `Failed to load card details for ID ${cardId}`;
+          this.errorMessage = `Не вдалося завантажити деталі картки для ID ${cardId}`;
         }
         this.isLoading = false;
       },
       error: (error) => {
         console.error(`TestPageComponent: Error fetching details for card ${cardId}:`, error);
         this.hasError = true;
-        this.errorMessage = 'Failed to connect to the server to get card details.';
+        this.errorMessage = 'Не вдалося підключитися до сервера для отримання деталей картки.';
         this.isLoading = false;
       }
     });
@@ -219,7 +219,7 @@ export class TestPageComponent implements OnInit, OnDestroy {
   
   submitTest(): void {
     if (!this.hasAllAnswers()) {
-      alert('Please answer all questions before submitting.');
+      alert('Будь ласка, дайте відповідь на всі питання перед завершенням тесту.');
       return;
     }
     

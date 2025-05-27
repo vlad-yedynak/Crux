@@ -199,7 +199,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         console.error('Error initializing lessons data:', error);
         this.isLoading = false;
         this.hasError = true;
-        this.errorMessage = 'Failed to load lessons data. Please try again.';
+        this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
       }
     });
   }
@@ -292,7 +292,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error updating lesson:', error);
-        alert('Failed to update lesson. Please try again.');
+        alert('Не вдалося оновити урок. Спробуйте ще раз.');
       }
     });
   }
@@ -402,7 +402,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error creating lesson:', error);
-        alert('Failed to create lesson. Please try again.');
+        alert('Не вдалося створити урок. Спробуйте ще раз.');
       }
     });
   }
@@ -597,7 +597,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error fetching educational card data:', error);
-          this.educationalContent = 'Error loading content. Please try again.';
+          this.educationalContent = 'Помилка завантаження контенту. Спробуйте ще раз.';
           this.isLoadingEducationalContent = false;
           this.cdr.detectChanges(); // Force UI update
         }
@@ -724,7 +724,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
           console.error('Server error headers:', error.headers?.keys?.());
         }
         
-        alert(`Failed to update educational content: ${error.message}`);
+        alert(`Не вдалося оновити навчальний контент: ${error.message}`);
       }
     });
   }
@@ -885,7 +885,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   
   // Method to delete a question
   deleteQuestion(question: TestQuestion, index: number): void {
-    if (confirm(`Are you sure you want to delete Question #${index+1}? This action cannot be undone.`)) {
+    if (confirm(`Ви впевнені, що хочете видалити питання №${index+1}? Цю дію неможливо скасувати.`)) {
       const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
@@ -901,7 +901,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting question:', error);
-            alert('Failed to delete question. Please try again.');
+            alert('Не вдалося видалити питання. Спробуйте ще раз.');
           }
         });
     }
@@ -948,7 +948,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
         this.setCorrectAnswer(0);
       }
     } else {
-      alert('Test must have at least one answer option.');
+      alert('Тест повинен мати принаймні один варіант відповіді.');
     }
   }
   
@@ -1097,7 +1097,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error(`Error ${isUpdating ? 'updating' : 'creating'} question:`, error);
-        alert(`Failed to ${isUpdating ? 'update' : 'create'} question. Please try again.`);
+        alert(`Не вдалося ${isUpdating ? 'оновити' : 'створити'} питання. Спробуйте ще раз.`);
       }
     });
   }
@@ -1170,7 +1170,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error updating card:', error);
-        alert('Failed to update card. Please try again.');
+        alert('Не вдалося оновити картку. Спробуйте ще раз.');
       }
     });
   }
@@ -1231,7 +1231,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   }
   
   deleteCard(card: Card): void {
-    if (confirm(`Are you sure you want to delete the card "${card.title}"? This action cannot be undone.`)) {
+    if (confirm(`Ви впевнені, що хочете видалити картку "${card.title}"? Цю дію неможливо скасувати.`)) {
       console.log('Deleting card:', card);
       
       const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
@@ -1265,7 +1265,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting card:', error);
-            alert('Failed to delete card. Please try again.');
+            alert('Не вдалося видалити картку. Спробуйте ще раз.');
           }
         });
     }
@@ -1283,7 +1283,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error refreshing lessons:', error);
         this.hasError = true;
-        this.errorMessage = 'Failed to load lessons. Please try again.';
+        this.errorMessage = 'Не вдалося завантажити уроки. Спробуйте ще раз.';
         this.isLoading = false;
       }
     });
@@ -1409,13 +1409,13 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error creating card:', error);
-        alert('Failed to create card. Please try again.');
+        alert('Не вдалося створити картку. Спробуйте ще раз.');
       }
     });
   }
   
   deleteLesson(lesson: Lesson): void {
-    if (confirm(`Are you sure you want to delete "${lesson.title}"? This action cannot be undone.`)) {
+    if (confirm(`Ви впевнені, що хочете видалити "${lesson.title}"? Цю дію неможливо скасувати.`)) {
       console.log('Deleting lesson:', lesson);
       
       const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
@@ -1434,7 +1434,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting lesson:', error);
-            alert('Failed to delete lesson. Please try again.');
+            alert('Не вдалося видалити урок. Спробуйте ще раз.');
           }
         });
     }
@@ -1680,14 +1680,14 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error(`Error ${isUpdating ? 'updating' : 'creating'} task:`, error);
-        alert(`Failed to ${isUpdating ? 'update' : 'create'} task. Please try again.`);
+        alert(`Не вдалося ${isUpdating ? 'оновити' : 'створити'} завдання. Спробуйте ще раз.`);
       }
     });
   }
   
   // Add method to delete tasks
   deleteTask(task: Task, index: number): void {
-    if (confirm(`Are you sure you want to delete the task "${task.name}"? This action cannot be undone.`)) {
+    if (confirm(`Ви впевнені, що хочете видалити завдання "${task.name}"? Цю дію неможливо скасувати.`)) {
       const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${token}`,
@@ -1705,7 +1705,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting task:', error);
-            alert('Failed to delete task. Please try again.');
+            alert('Не вдалося видалити завдання. Спробуйте ще раз.');
           }
         });
     }

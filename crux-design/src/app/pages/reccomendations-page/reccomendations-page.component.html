@@ -1,25 +1,25 @@
 <div class="recommendations-container">  <div class="recommendations-header">
-    <h1>Personalized Recommendations</h1>
+    <h1>Персоналізовані рекомендації</h1>
   </div>
 
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="loading-spinner"></div>
-    <p>Loading your personalized recommendations...</p>
+    <p>Завантаження ваших персоналізованих рекомендацій...</p>
   </div>
   <!-- Error State -->
   <div *ngIf="hasError && !isLoading" class="error-container">
     <div class="error-icon">⚠️</div>
-    <h3>Oops! Something went wrong</h3>
+    <h3>Упс! Щось пішло не так</h3>
     <p>{{ errorMessage }}</p>
   </div>
 
   <!-- No Recommendations State -->
   <div *ngIf="!isLoading && !hasError && recommendations.length === 0" class="no-recommendations-container">
     <div class="no-recommendations-icon">📚</div>
-    <h3>No Recommendations Yet</h3>
+    <h3>Рекомендацій поки немає</h3>
     <p>{{ noRecommendationsMessage }}</p>
-    <p class="suggestion">Start completing some lessons to get personalized recommendations!</p>
+    <p class="suggestion">Почніть проходити уроки, щоб отримати персоналізовані рекомендації!</p>
   </div>
 
   <!-- Recommendations List -->
@@ -54,9 +54,8 @@
         <div class="recommendation-status">
           <span 
             *ngIf="recommendation.success" 
-            class="status-badge success"
-            title="Recommended for you">
-            ✓ Recommended
+            class="status-badge success"            title="Рекомендовано для вас">
+            ✓ Рекомендовано
           </span>
           <span 
             *ngIf="recommendation.error" 

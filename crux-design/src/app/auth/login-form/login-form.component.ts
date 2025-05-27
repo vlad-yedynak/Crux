@@ -40,13 +40,11 @@ export class LoginFormComponent {
           if (user) {
             //console.log('Login successful, user data fetched by service:', user);
             this.router.navigate(['/profile']);
-          } else {
-            this.loginError = 'Login succeeded but failed to load user data. Please try again.';
+          } else {            this.loginError = 'Вхід пройшов успішно, але не вдалося завантажити дані користувача. Спробуйте ще раз.';
             console.error('Login succeeded but failed to load user data.');
           }
         },
-        error: (err) => {
-          this.loginError = 'Invalid email or password. Please try again.';
+        error: (err) => {          this.loginError = 'Неправильний email або пароль. Спробуйте ще раз.';
           console.error('Login failed:', err);
         }
       });

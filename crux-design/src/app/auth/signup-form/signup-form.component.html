@@ -1,55 +1,55 @@
 <div class="form-card">
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-        <h2>Create an account</h2>
+        <h2>Створити обліковий запис</h2>
         
         <div class="form-group">
-            <input type="text" placeholder="First name" formControlName="firstName"/>
+            <input type="text" placeholder="Ім'я" formControlName="firstName"/>
             <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('required') && (signupForm.controls.firstName.touched || signupForm.controls.firstName.dirty)">
-                First name is required.
+                Ім'я обов'язкове.
             </div>
             <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('pattern') && (signupForm.controls.firstName.touched || signupForm.controls.firstName.dirty)">
-                Invalid name.
+                Неправильне ім'я.
             </div>
         </div>
         
         <div class="form-group">
-            <input type="text" placeholder="Last name" formControlName="lastName" />
+            <input type="text" placeholder="Прізвище" formControlName="lastName" />
             <div class="error-feedback" *ngIf="signupForm.controls.lastName.hasError('required') && (signupForm.controls.lastName.touched || signupForm.controls.lastName.dirty)">
-                Last name is required.
+                Прізвище обов'язкове.
             </div>
             <div class="error-feedback" *ngIf="signupForm.controls.lastName.hasError('pattern') && (signupForm.controls.lastName.touched || signupForm.controls.lastName.dirty)">
-                Invalid name.
+                Неправильне прізвище.
             </div>
         </div>
         
         <div class="form-group-email">
-            <input type="email" placeholder="Email" formControlName="email" />
+            <input type="email" placeholder="Електронна пошта" formControlName="email" />
             <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('required') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
-                Email is required.
+                Електронна пошта обов'язкова.
             </div>
         </div>
         
         <div class="form-group-password">
-            <input type="password" placeholder="Enter your password" formControlName="password" />
+            <input type="password" placeholder="Введіть ваш пароль" formControlName="password" />
             <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('required') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
-                Password is required.
+                Пароль обов'язковий.
             </div>
             <div class="error-feedback-password-1" *ngIf="signupForm.controls.password.hasError('minlength') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
-                Password must have at least 8 characters.
+                Пароль повинен мати принаймні 8 символів.
             </div>
             <div class="error-feedback-password-2" *ngIf="signupForm.controls.password.hasError('pattern') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
-                Password must include uppercase and lowercase letters.
+                Пароль повинен містити великі та малі літери.
             </div>
         </div>
         
         <div>
-            <input type="password" placeholder="Confirm your password" formControlName="confirmPassword" />
+            <input type="password" placeholder="Підтвердіть ваш пароль" formControlName="confirmPassword" />
             <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('required') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
-                Confirm your password.
+                Підтвердіть ваш пароль.
             </div>
         </div>
         
-        <button type="submit">Create account</button>
-        <p>Already have an account? <a (click)="onSwitchToLogin()" style="cursor: pointer;">Log in</a></p>
+        <button type="submit">Створити обліковий запис</button>
+        <p>Вже маєте обліковий запис? <a (click)="onSwitchToLogin()" style="cursor: pointer;">Увійти</a></p>
     </form>
 </div>

@@ -53,19 +53,17 @@
         <span>{{ user.firstName }} {{ user.lastName }}</span> 
         <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
-        </svg>
-
-        <ul class="dropdown-options user-dropdown-options" *ngIf="isUserDropdownOpen" @dropdownAnimation (click)="$event.stopPropagation()">
-          <li (click)="goToProfile()">Profile</li>
-          <li (click)="logout()">Log out</li>
+        </svg>        <ul class="dropdown-options user-dropdown-options" *ngIf="isUserDropdownOpen" @dropdownAnimation (click)="$event.stopPropagation()">
+          <li (click)="goToProfile()">Профіль</li>
+          <li (click)="logout()">Вийти</li>
         </ul>
       </div>
     </ng-container>
 
     <ng-template #showLogin>
       <div class="auth-btn-group">
-        <button class="login-btn" [routerLink]="'/auth'">Log in</button>
-        <button class="signup-btn" [routerLink]="['/auth']" [queryParams]="{ signup: 1 }">Sign up</button>
+        <button class="login-btn" [routerLink]="'/auth'">Увійти</button>
+        <button class="signup-btn" [routerLink]="['/auth']" [queryParams]="{ signup: 1 }">Зареєструватися</button>
       </div>
     </ng-template>
   </div>

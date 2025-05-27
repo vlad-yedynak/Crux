@@ -35,7 +35,7 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   isLoading = true;
   hasError = false;
   errorMessage = '';
-  noRecommendationsMessage = 'Unable to get recommendations. Complete some lessons first.';
+  noRecommendationsMessage = 'Неможливо отримати рекомендації. Спочатку завершіть кілька уроків.';
 
   constructor(
     private router: Router,
@@ -59,7 +59,7 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
 
     const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     if (!token) {
-      this.handleError('Authentication required. Please log in to view recommendations.');
+      this.handleError('Потрібна автентифікація. Будь ласка, увійдіть, щоб переглянути рекомендації.');
       return;
     }
 
@@ -81,21 +81,19 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
               // No recommendations available - show default message
               this.recommendations = [];
               console.log('No recommendations available');
-            }
-          } else {
-            this.handleError(response?.error || 'Failed to load recommendations');
+            }          } else {
+            this.handleError(response?.error || 'Не вдалося завантажити рекомендації');
           }
         },
         error: (error) => {
           this.isLoading = false;
           console.error('Error loading recommendations:', error);
-          
-          if (error.status === 401 || error.status === 403) {
-            this.handleError('Authentication failed. Please log in again.');
+            if (error.status === 401 || error.status === 403) {
+            this.handleError('Помилка автентифікації. Будь ласка, увійдіть знову.');
             // Optionally redirect to login
             // this.router.navigate(['/auth']);
           } else {
-            this.handleError('Failed to load recommendations. Please try again later.');
+            this.handleError('Не вдалося завантажити рекомендації. Спробуйте пізніше.');
           }
         }
       });

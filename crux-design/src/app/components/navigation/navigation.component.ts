@@ -9,14 +9,13 @@ import { Subscription } from 'rxjs';
   imports: [
     CommonModule,
     RouterModule
-  ],
-  template: `
+  ],  template: `
     <nav class="tab-navigation">
         <ul class="tabs">
-            <li class="tab-item"><a [routerLink]="['/lessons']">Lessons</a></li>
-            <li class="tab-item"><a [routerLink]="['/foryou']">Materials</a></li>
-            <li class="tab-item"><a [routerLink]="['/about']">Other</a></li>
-            <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']">Edit content</a></li>
+            <li class="tab-item"><a [routerLink]="['/lessons']">Уроки</a></li>
+            <li class="tab-item"><a [routerLink]="['/foryou']">Матеріали</a></li>
+            <li class="tab-item"><a [routerLink]="['/about']">Інше</a></li>
+            <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']">Редагувати контент</a></li>
         </ul>
     </nav>
   `,

@@ -1,19 +1,19 @@
 <div class="form-card">
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <h2>Log in to your account</h2>
+    <h2>Увійти до вашого облікового запису</h2>
     
     <div class="form-group-email">
-      <input type="email" placeholder="Email" formControlName="email" />
+      <input type="email" placeholder="Електронна пошта" formControlName="email" />
       <div *ngIf="loginForm.controls['email'].invalid && (loginForm.controls['email'].dirty || loginForm.controls['email'].touched)">
-        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['required']">Email is required.</div>
-        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['email']">Please enter a valid email.</div>
+        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['required']">Електронна пошта обов'язкова.</div>
+        <div class="error-feedback" *ngIf="loginForm.controls['email'].errors?.['email']">Будь ласка, введіть дійсну електронну пошту.</div>
       </div>
     </div>
     
     <div>
-      <input type="password" placeholder="Password" formControlName="password" />
+      <input type="password" placeholder="Пароль" formControlName="password" />
       <div class="error-feedback" *ngIf="loginForm.controls['password'].invalid && (loginForm.controls['password'].dirty || loginForm.controls['password'].touched)">
-        <div *ngIf="loginForm.controls['password'].errors?.['required']">Password is required.</div>
+        <div *ngIf="loginForm.controls['password'].errors?.['required']">Пароль обов'язковий.</div>
       </div>
     </div>
     
@@ -21,7 +21,7 @@
       {{ loginError }}
     </div>
     
-    <button type="submit">Log in</button>
-    <p>Don't have an account? <a (click)="onSwitchToSignup()" style="cursor: pointer;">Sign up</a></p>
+    <button type="submit">Увійти</button>
+    <p>Немає облікового запису? <a (click)="onSwitchToSignup()" style="cursor: pointer;">Зареєструватися</a></p>
   </form>
 </div>
