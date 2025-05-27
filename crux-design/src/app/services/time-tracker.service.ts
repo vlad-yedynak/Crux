@@ -158,11 +158,10 @@ export class TimeTrackerService {
         return;
       }
     }
-    
-    const payload = {
+      const payload = {
       userId: userId,
       lessonId: lessonId,
-      trackedTime: timeSpent
+      trackedTime: Math.floor(timeSpent / 1000) // Convert milliseconds to seconds
     };
     
     console.log('Sending tracking data to server:', payload);

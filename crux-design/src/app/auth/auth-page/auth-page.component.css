@@ -129,28 +129,27 @@
   --target-opacity: 1;
 }
 
-/* Define target transforms for each letter based on the image */
-/* Welcome */
-.shuffle-text span:nth-child(1) { --target-y: -6px; --target-x: -2px; --target-rotate: -10deg; --target-opacity: 0.85; animation-delay: 0.00s; } /* W */
-.shuffle-text span:nth-child(2) { --target-y: 2px;  --target-x: -5px; --target-rotate: 7deg;   --target-opacity: 0.85; animation-delay: 0.05s; } /* e */
-.shuffle-text span:nth-child(3) { --target-y: -9px; --target-x: 4px;  --target-rotate: 12deg;  --target-opacity: 0.85; animation-delay: 0.10s; } /* l */
-.shuffle-text span:nth-child(4) { --target-y: 5px;  --target-x: -7px; --target-rotate: -14deg; --target-opacity: 0.85; animation-delay: 0.15s; } /* c */
-.shuffle-text span:nth-child(5) { --target-y: -3px; --target-x: 10px; --target-rotate: 5deg;   --target-opacity: 0.85; animation-delay: 0.20s; } /* o */
-.shuffle-text span:nth-child(6) { --target-y: 7px;  --target-x: -4px; --target-rotate: -8deg;  --target-opacity: 0.85; animation-delay: 0.25s; } /* m */
-.shuffle-text span:nth-child(7) { --target-y: -5px; --target-x: 6px;  --target-rotate: 9deg;   --target-opacity: 0.85; animation-delay: 0.30s; } /* e */
+/* Define target transforms for each letter based on Ukrainian text "Вітаємо в Crux!" */
+/* Вітаємо */
+.shuffle-text span:nth-child(1) { --target-y: -6px; --target-x: -2px; --target-rotate: -10deg; --target-opacity: 0.85; animation-delay: 0.00s; } /* В */
+.shuffle-text span:nth-child(2) { --target-y: 2px;  --target-x: -5px; --target-rotate: 7deg;   --target-opacity: 0.85; animation-delay: 0.05s; } /* і */
+.shuffle-text span:nth-child(3) { --target-y: -9px; --target-x: 4px;  --target-rotate: 12deg;  --target-opacity: 0.85; animation-delay: 0.10s; } /* т */
+.shuffle-text span:nth-child(4) { --target-y: 5px;  --target-x: -7px; --target-rotate: -14deg; --target-opacity: 0.85; animation-delay: 0.15s; } /* а */
+.shuffle-text span:nth-child(5) { --target-y: -3px; --target-x: 10px; --target-rotate: 5deg;   --target-opacity: 0.85; animation-delay: 0.20s; } /* є */
+.shuffle-text span:nth-child(6) { --target-y: 7px;  --target-x: -4px; --target-rotate: -8deg;  --target-opacity: 0.85; animation-delay: 0.25s; } /* м */
+.shuffle-text span:nth-child(7) { --target-y: -5px; --target-x: 6px;  --target-rotate: 9deg;   --target-opacity: 0.85; animation-delay: 0.30s; } /* о */
 /* Space 1 */
 .shuffle-text span:nth-child(8) { animation: none; --target-opacity: 1; }
-/* to */
-.shuffle-text span:nth-child(9) { --target-y: 3px;  --target-x: 8px;  --target-rotate: -6deg;  --target-opacity: 0.85; animation-delay: 0.35s; } /* t */
-.shuffle-text span:nth-child(10){ --target-y: -8px; --target-x: -5px; --target-rotate: 18deg;  --target-opacity: 0.85; animation-delay: 0.40s; } /* o */
-/* Space 2 */
-.shuffle-text span:nth-child(11){ animation: none; --target-opacity: 1; }
+/* в */
+.shuffle-text span:nth-child(9) { --target-y: 3px;  --target-x: 8px;  --target-rotate: -6deg;  --target-opacity: 0.85; animation-delay: 0.35s; } /* в */
+/* Space 2 (after "в") */
+.shuffle-text span:nth-child(10){ animation: none; --target-opacity: 1; }
 /* Crux! */
-.shuffle-text span:nth-child(12){ --target-y: 9px;  --target-x: 3px;  --target-rotate: -20deg; --target-opacity: 0.85; animation-delay: 0.45s; } /* C */
-.shuffle-text span:nth-child(13){ --target-y: -4px; --target-x: -12px;--target-rotate: 10deg;  --target-opacity: 0.85; animation-delay: 0.50s; } /* r */
-.shuffle-text span:nth-child(14){ --target-y: 1px;  --target-x: 10px; --target-rotate: -22deg; --target-opacity: 0.85; animation-delay: 0.55s; } /* u */
-.shuffle-text span:nth-child(15){ --target-y: -10px;--target-x: -3px; --target-rotate: 14deg;  --target-opacity: 0.85; animation-delay: 0.60s; } /* x */
-.shuffle-text span:nth-child(16){ --target-y: 5px;  --target-x: 8px;  --target-rotate: -9deg;  --target-opacity: 0.85; animation-delay: 0.65s; } /* ! */
+.shuffle-text span:nth-child(11){ --target-y: 9px;  --target-x: 3px;  --target-rotate: -20deg; --target-opacity: 0.85; animation-delay: 0.40s; } /* C */
+.shuffle-text span:nth-child(12){ --target-y: -4px; --target-x: -12px;--target-rotate: 10deg;  --target-opacity: 0.85; animation-delay: 0.45s; } /* r */
+.shuffle-text span:nth-child(13){ --target-y: 1px;  --target-x: 10px; --target-rotate: -22deg; --target-opacity: 0.85; animation-delay: 0.50s; } /* u */
+.shuffle-text span:nth-child(14){ --target-y: -10px;--target-x: -3px; --target-rotate: 14deg;  --target-opacity: 0.85; animation-delay: 0.55s; } /* x */
+.shuffle-text span:nth-child(15){ --target-y: 5px;  --target-x: 8px;  --target-rotate: -9deg;  --target-opacity: 0.85; animation-delay: 0.60s; } /* ! */
 
 
 /* Define the shuffle animation */

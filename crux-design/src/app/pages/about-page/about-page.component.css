@@ -208,6 +208,7 @@
   grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
   gap: 40px;
   margin-top: 50px;
+  align-items: start;
 }
 
 .team-category {
@@ -215,6 +216,9 @@
   padding: 40px;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .team-category h3 {
@@ -231,15 +235,17 @@
   display: flex;
   flex-direction: column;
   gap: 25px;
+  flex: 1;
 }
 
 .team-member {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 20px;
   background: var(--color-primary-light);
   border-radius: 12px;
   transition: transform 0.3s ease;
+  min-height: 150px;
 }
 
 .team-member:hover {
@@ -263,6 +269,13 @@
   color: var(--color-primary-light);
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .member-info h4 {
