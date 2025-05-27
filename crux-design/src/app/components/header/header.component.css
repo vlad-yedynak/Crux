@@ -221,7 +221,7 @@ app-navigation {
     font-weight: 600;
     font-size: 1rem;
     width: 80px;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.8rem 0.4rem 0.6rem;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
     outline: none;
@@ -247,7 +247,7 @@ app-navigation {
     font-weight: 600;
     font-size: 1rem;
     width: 80px;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.8rem;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
     outline: none;
@@ -274,6 +274,7 @@ app-navigation {
 .signup-btn:focus {
     z-index: 3;
 }
+
 
 /* User profile styles */
 .user-info {
