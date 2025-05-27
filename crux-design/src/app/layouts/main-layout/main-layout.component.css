@@ -1,0 +1,14 @@
+:host {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+main {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}

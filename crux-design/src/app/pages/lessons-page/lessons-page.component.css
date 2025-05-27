@@ -358,11 +358,12 @@
 .popup-content-area {
     display: flex;
     flex-direction: row; /* Default side-by-side layout */
-    /* height: 100%; */ /* Replaced by flex: 1 for better behavior in flex parent */
     flex: 1; /* Allows this area to take up available space in .card-popup-content */
-    /* overflow: hidden; */ /* Replaced to allow internal scrolling */
-    overflow-y: auto; /* Enables vertical scrolling for the entire content area if needed */
+    overflow-y: hidden; /* Changed to hidden - individual panels will scroll */
     overflow-x: hidden; /* Prevents horizontal scrolling */
+    flex-wrap: nowrap; /* Prevent wrapping to keep side-by-side layout */
+    gap: 20px; /* Add spacing between content sections */
+    height: 100%; /* Ensure it takes full height of parent */
 }
 
 .popup-left-content {
@@ -374,6 +375,26 @@
     border-radius: 8px;
     word-wrap: break-word;
     white-space: pre-wrap;
+    min-width: 60%; /* Ensure left content has minimum width */
+    max-height: 100%; /* Ensure the content respects container height */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--color-accent) var(--color-secondary-light); /* Firefox */
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.popup-left-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.popup-left-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.popup-left-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid white;
 }
 
 /* Fix for object content display */
@@ -421,7 +442,52 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Allows individual scrolling in row layout */
+    min-width: 250px; /* Minimum width to ensure readability */
+    max-width: 35%; /* Maximum width to balance with left content */
+    max-height: 100%; /* Ensure the right content respects the container height */
+    position: relative; /* Creates positioning context for sticky elements */
+    overflow-y: hidden; /* Prevent overflow on the container itself */
+}
+
+/* New scrollable container for right-side content */
+.right-content-scrollable {
+    flex: 1;
+    overflow-y: auto; /* Allow scrolling only for this content */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--color-accent) var(--color-secondary-light); /* Firefox */
+    padding-right: 5px; /* Add some space for scrollbar */
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.right-content-scrollable::-webkit-scrollbar {
+    width: 8px;
+}
+
+.right-content-scrollable::-webkit-scrollbar-track {
+    background: var(--color-secondary-light);
+    border-radius: 10px;
+}
+
+.right-content-scrollable::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid var(--color-primary-light);
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.popup-right-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.popup-right-content::-webkit-scrollbar-track {
+    background: var(--color-secondary-light);
+    border-radius: 10px;
+}
+
+.popup-right-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid var(--color-primary-light);
 }
 
 .popup-right-content h2 {
@@ -429,6 +495,12 @@
     font-size: 28px;
     margin-bottom: 20px;
     font-weight: 600;
+    position: relative; /* Not sticky - just normal positioning */
+    background-color: var(--color-primary-light);
+    padding: 10px 0;
+    z-index: 5;
+    margin-top: 0; /* Ensure no top margin pushes it down */
+    width: 100%; /* Ensure it spans the full width */
 }
 
 .popup-right-content p {
@@ -720,6 +792,15 @@
         /* Changed to display 2 cards */
         max-width: calc((325px * 2) + (16px * 1)); /* 666px */
     }
+    
+    /* Adjust content layout for medium screens */
+    .popup-right-content {
+        max-width: 40%;
+    }
+    
+    .educational-image {
+        max-height: 180px; /* Reduce height on medium screens */
+    }
 }
 @media (max-width: 500px) {
     .main-content {
@@ -767,11 +848,10 @@
     .view-all-btn {
         font-size: 12px;
         padding: 4px 8px;
-    }
-
-    /* Popup adjustments for smaller screens */
+    }    /* Popup adjustments for smaller screens */
     .popup-content-area {
         flex-direction: column; /* Stack left and right content vertically */
+        overflow-y: auto; /* Enable vertical scrolling for the entire content on mobile */
     }
 
     .popup-left-content {
@@ -781,14 +861,43 @@
         border-bottom: 1px solid var(--color-secondary-light); /* Add bottom border for separation */
         margin-bottom: 15px; /* Space below this section */
         padding-bottom: 15px; /* Adjust padding for balance with margin */
-        overflow-y: visible; /* Content will scroll within .popup-content-area */
-    }
-
-    .popup-right-content {
+        overflow-y: visible; /* Content is visible within scrollable parent */
+        min-width: auto; /* Reset min-width for mobile */
+        max-height: none; /* No max height on mobile */
+    }    .popup-right-content {
         flex: none; /* Reset flex sizing, content will determine height */
         width: 100%; /* Take full width in column layout */
-        overflow-y: visible; /* Content will scroll within .popup-content-area */
-        /* padding-top: 20px; */ /* Default padding is likely fine, adjust if too much space */
+        overflow-y: hidden; /* Keep hidden, scrolling is handled by inner container */
+        max-width: 100%; /* Full width on mobile */
+        max-height: none; /* No max height on mobile */
+    }
+    
+    /* Adjust the scrollable container for mobile */
+    .right-content-scrollable {
+        max-height: 400px; /* Limit height on mobile to ensure usability */
+    }
+      /* Keep header and section titles fixed on mobile */
+    .popup-right-content h2 {
+        position: relative;
+    }
+    
+    .images-section h3,
+    .attachments-section h3 {
+        position: relative;
+    }
+
+    /* Adjust images for small screens */
+    .images-container {
+        flex-direction: column; /* Stack images vertically */
+    }
+
+    .educational-image {
+        max-height: 200px; /* Slightly smaller on mobile */
+    }
+
+    .card-popup-content {
+        padding: 15px; /* Reduce padding on small screens */
+        height: 90vh; /* More height on mobile */
     }
 }
 
@@ -884,13 +993,15 @@
   }
 }
 
-/*Кирилова фігня яка переноситься вручну 
-/* Images and Attachments sections styling for right content */
+/* Images and Attachments sections styling */
 .images-section,
 .attachments-section {
     margin-top: 20px;
-    padding-top: 15px;
+    padding-top: 0; /* Remove top padding as the header will have padding */
     border-top: 1px solid var(--color-secondary-light);
+    width: 100%;
+    overflow: visible; /* Changed to visible to allow content to be scrollable within parent */
+    position: relative; /* Create positioning context for sticky headers */
 }
 
 .images-section h3,
@@ -899,47 +1010,70 @@
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 12px;
+    position: relative; /* Normal positioning - not sticky */
+    background-color: var(--color-primary-light);
+    padding: 8px 0;
+    margin-top: 0; /* Ensure no top margin pushes it down */
+    width: 100%; /* Ensure it spans the full width */
 }
 
 .images-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    width: 100%;
 }
 
 .image-item {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 6px;
+    background-color: #f8f8f8;
 }
 
 .educational-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 6px;
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 6px 6px 0 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 8px;
+    background-color: white;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.educational-image:hover {
+    transform: scale(1.02);
 }
 
 .image-caption {
     font-size: 14px;
     color: var(--color-secondary-dark);
     font-style: italic;
-    margin: 0;
+    margin: 0 0 8px 0;
+    padding: 0 8px;
+    text-align: center;
+    width: 100%;
+    overflow-wrap: break-word;
 }
 
 /* Controls always visible on the right */
 
 .attachments-container {
     display: flex;
-    
     flex-direction: column;
     gap: 8px;
+    width: 100%;
 }
 
 .attachment-item {
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 .attachment-link {
@@ -951,7 +1085,7 @@
     padding: 8px 12px;
     border: 1px solid var(--color-secondary-light);
     border-radius: 6px;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
     width: 100%;
 }
 

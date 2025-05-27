@@ -221,7 +221,8 @@ app-navigation {
     color: var(--color-accent);
     font-weight: 600;
     font-size: 1rem;
-    width: 80px;
+    width: auto; /* Changed from fixed 80px to auto */
+    min-width: 90px; /* Set minimum width to ensure it's large enough for the Ukrainian text */
     padding: 0.4rem 0.8rem 0.4rem 0.6rem;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
@@ -252,7 +253,8 @@ app-navigation {
     color: var(--color-secondary-dark);
     font-weight: 600;
     font-size: 1rem;
-    width: 80px;
+    width: auto; /* Changed from fixed 80px to auto */
+    min-width: 130px; /* Set minimum width to ensure it's large enough for the Ukrainian text "Зареєструватись" */
     padding: 0.4rem 0.6rem 0.4rem 0.8rem;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
@@ -317,7 +319,7 @@ app-navigation {
     z-index: 1001;
     background-color: var(--color-secondary-dark); /* Background for the dropdown */
     border-radius: 0 0 5px 5px; /* Rounded bottom corners */
-    margin-top: 5px; /* Small gap between user-info and dropdown */
+    margin-top: 0; /* Removed gap between user-info and dropdown */
     list-style: none; /* Remove default list bullets */
     padding: 0.5rem 0; /* Vertical padding inside the dropdown */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Dropdown shadow */
