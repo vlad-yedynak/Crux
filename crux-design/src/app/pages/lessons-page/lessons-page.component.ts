@@ -173,6 +173,8 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
             // Check sandboxType and route accordingly
             if (cardData.sandboxType === 'Bezier') {
               this.router.navigate(['lessons/sandbox-card-bezier']);
+            } else if (cardData.sandboxType === 'FractalSystem') {
+              this.router.navigate(['lessons/sandbox-card-fractal']);
             } else {
               this.router.navigate(['lessons/sandbox-card']);
             }

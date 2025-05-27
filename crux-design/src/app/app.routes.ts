@@ -7,6 +7,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { TestPageComponent } from './pages/test-page/test-page.component';
 import { SandboxCardComponent } from './pages/sandbox-card/sandbox-card.component';
 import { SandboxCardBezierComponent } from './pages/sandbox-card-bezier/sandbox-card-bezier.component';
+import { SandboxCardFractalComponent } from './pages/sandbox-card-fractal/sandbox-card-fractal/sandbox-card-fractal.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
 import { ReccomendationsPageComponent } from './pages/reccomendations-page/reccomendations-page.component';
 import { AboutPageComponent } from './pages/about-page/about-page.component';
@@ -40,6 +41,10 @@ export const routes: Routes = [
             {
                 path: 'lessons/sandbox-card-bezier',
                 component: SandboxCardBezierComponent,
+            },
+            {
+                path: 'lessons/sandbox-card-fractal',
+                component: SandboxCardFractalComponent,
             },
             {
                 path: 'admin',

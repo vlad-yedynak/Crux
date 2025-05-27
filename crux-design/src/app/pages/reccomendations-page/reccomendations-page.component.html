@@ -1,5 +1,52 @@
-<div class="recommendations-container">  <div class="recommendations-header">
-    <h1>Персоналізовані рекомендації</h1>
+<div class="recommendations-container">
+  <!-- Toast Notification -->
+  <div 
+    *ngIf="showNotification" 
+    class="toast-notification"
+    [ngClass]="'toast-' + notificationType"
+    [@slideInOut]>
+    <div class="toast-content">
+      <div class="toast-icon">
+        <span *ngIf="notificationType === 'success'">✓</span>
+        <span *ngIf="notificationType === 'error'">✗</span>
+        <span *ngIf="notificationType === 'warning'">⚠</span>
+        <span *ngIf="notificationType === 'info'">ℹ</span>
+      </div>
+      <div class="toast-message">{{ notificationMessage }}</div>
+      <button class="toast-close" (click)="hideNotification()">×</button>
+    </div>
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <div *ngIf="showConfirmDialog" class="confirmation-overlay">
+    <div class="confirmation-dialog">
+      <div class="confirmation-header">
+        <h3>{{ confirmDialogTitle }}</h3>
+      </div>
+      <div class="confirmation-body">
+        <p>{{ confirmDialogMessage }}</p>
+      </div>
+      <div class="confirmation-footer">
+        <button class="btn-cancel" (click)="onCancelAction()">Скасувати</button>
+        <button class="btn-confirm" (click)="onConfirmAction()">Підтвердити</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="recommendations-header">
+    <h1>Персоналізовані рекомендації</h1>    <button 
+      class="clear-data-btn" 
+      (click)="clearTrackingData()" 
+      [disabled]="isLoading || isResetting"
+      title="Очистити дані відстеження для нових рекомендацій">
+      <svg class="clear-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ isResetting ? 'Очищення...' : 'Очистити дані' }}
+    </button>
   </div>
 
   <!-- Loading State -->

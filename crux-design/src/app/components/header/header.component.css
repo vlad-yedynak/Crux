@@ -203,11 +203,12 @@ app-navigation {
     align-items: center;
     margin-left: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    overflow: hidden;
+    overflow: visible; /* Change from hidden to visible to avoid clipping in Safari */
     border-radius: 25px;
     border: 1.5px solid var(--color-secondary-dark);
     background: var(--color-primary-dark);
     padding: 0;
+    position: relative; /* Added to create a proper stacking context */
 }
 
 .login-btn {
@@ -225,9 +226,14 @@ app-navigation {
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
     outline: none;
+    /* Add Safari prefixes for clip-path */
+    -webkit-clip-path: polygon(0 0, 100% 0, 82% 100%, 0% 100%);
     clip-path: polygon(0 0, 100% 0, 82% 100%, 0% 100%);
     z-index: 1;
     background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    position: relative; /* Ensure position is set for Safari stacking context */
+    margin-right: -2px; /* Help overlap on Safari */
 }
 
 .login-btn:hover {
@@ -251,11 +257,16 @@ app-navigation {
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
     outline: none;
-    margin-left: 0;
     margin-left: -16px; 
+    /* Add Safari prefixes for clip-path */
+    -webkit-clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
     clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
     z-index: 2;
     background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    position: relative; /* Ensure position is set for Safari stacking context */
+    transform: translateZ(0); /* Promote to its own layer in Safari */
+    -webkit-transform: translateZ(0);
 }
 
 .signup-btn:hover {
@@ -265,16 +276,13 @@ app-navigation {
     transform: scale(1.03);
 }
 
-.login-btn,
-.signup-btn {
-    position: relative;
+/* Safari-specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    .auth-btn-group {
+        transform: translateZ(0); /* Force hardware acceleration on Safari */
+        -webkit-transform: translateZ(0);
+    }
 }
-
-.login-btn:focus,
-.signup-btn:focus {
-    z-index: 3;
-}
-
 
 /* User profile styles */
 .user-info {

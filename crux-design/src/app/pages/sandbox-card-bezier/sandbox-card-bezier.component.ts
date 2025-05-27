@@ -10,6 +10,7 @@ import { AuthServiceService, User } from '../../services/auth-service.service';
 import { LessonsService, Card, Task } from '../../services/lessons.service';
 import { CookiesService } from '../../services/cookies.service';
 import { CanvasCurveService } from './services/canvas-curve.service';
+import { ConfigService } from '../../services/config.service';
 
 interface Point {
   x: number;
@@ -93,6 +94,7 @@ export class SandboxCardBezierComponent implements OnInit, AfterViewInit, OnDest
     private lessonsService: LessonsService,
     public router: Router,
     private cookiesService: CookiesService,
+    private configService: ConfigService
   ) { }
 
   private isBrowser(): boolean {
@@ -513,7 +515,7 @@ export class SandboxCardBezierComponent implements OnInit, AfterViewInit, OnDest
       console.log('Submitting task answer with payload:', JSON.stringify(payload, null, 2));
 
       this.http.post<{ body: boolean; success: boolean; error: string | null }>(
-        'http://localhost:8080/test/validate-task',
+        this.configService.getEndpoint('/test/validate-task'),
         payload,
         { headers }
       ).subscribe({

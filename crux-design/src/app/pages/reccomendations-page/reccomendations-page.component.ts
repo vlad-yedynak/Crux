@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { CookiesService } from '../../services/cookies.service';
 import { ConfigService } from '../../services/config.service';
+import { TimeTrackerService } from '../../services/time-tracker.service';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 // Interface definitions for recommendations
 interface RecommendationItem {
@@ -26,33 +28,100 @@ interface RecommendationsResponse {
   standalone: true,
   imports: [CommonModule, HttpClientModule],
   templateUrl: './reccomendations-page.component.html',
-  styleUrl: './reccomendations-page.component.css'
+  styleUrl: './reccomendations-page.component.css',
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('300ms ease-in', style({ transform: 'translateY(0%)', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-out', style({ transform: 'translateY(-100%)', opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   private readonly AUTH_TOKEN_KEY = 'auth-token';
   
   recommendations: RecommendationItem[] = [];
   isLoading = true;
+  isResetting = false;
   hasError = false;
   errorMessage = '';
   noRecommendationsMessage = 'Неможливо отримати рекомендації. Спочатку завершіть кілька уроків.';
-
+    // Notification system properties
+  showNotification = false;
+  notificationMessage = '';
+  notificationType: 'success' | 'error' | 'warning' | 'info' = 'info';
+  notificationTimeout: any;
+  
+  // Confirmation dialog properties
+  showConfirmDialog = false;
+  confirmDialogMessage = '';
+  confirmDialogTitle = '';
+  pendingAction: () => void = () => {};
   constructor(
     private router: Router,
     private http: HttpClient,
     private cookiesService: CookiesService,
     private configService: ConfigService,
+    private timeTrackerService: TimeTrackerService
   ) {}
 
   ngOnInit(): void {
     this.loadRecommendations();
   }
-
   ngOnDestroy(): void {
-    // Cleanup if needed
+    // Cleanup notification timeout
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+    }
   }
 
-  private loadRecommendations(): void {
+  // Notification system methods
+  private showToastNotification(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration: number = 4000): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+
+    // Clear existing timeout
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+    }
+
+    // Auto-hide notification after duration
+    this.notificationTimeout = setTimeout(() => {
+      this.hideNotification();
+    }, duration);
+  }
+  hideNotification(): void {
+    this.showNotification = false;
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+      this.notificationTimeout = null;
+    }
+  }
+
+  // Confirmation dialog methods
+  private showConfirmationDialog(title: string, message: string, action: () => void): void {
+    this.confirmDialogTitle = title;
+    this.confirmDialogMessage = message;
+    this.pendingAction = action;
+    this.showConfirmDialog = true;
+  }
+
+  onConfirmAction(): void {
+    this.showConfirmDialog = false;
+    this.pendingAction();
+  }
+
+  onCancelAction(): void {
+    this.showConfirmDialog = false;
+    this.pendingAction = () => {};
+  }
+
+  loadRecommendations(): void {
     this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
@@ -127,5 +196,33 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   onImageError(event: any): void {
     event.target.style.display = 'none';
     // Could also set a default image here
+  }  clearTrackingData(): void {
+    if (this.isResetting || this.isLoading) return;
+
+    this.showConfirmationDialog(
+      'Підтвердження очищення даних',
+      'Ви впевнені, що хочете очистити всі дані відстеження часу? Це очистить вашу історію навчання і може змінити рекомендації.',
+      () => this.performDataClear()
+    );
+  }
+
+  private performDataClear(): void {
+    this.isResetting = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
+    this.timeTrackerService.resetAllTimeData()
+      .then(() => {
+        this.isResetting = false;
+        // Reload recommendations after clearing data
+        this.loadRecommendations();
+        this.showToastNotification('Дані успішно очищено! Рекомендації будуть оновлені на основі нових даних.', 'success', 5000);
+      })
+      .catch((error) => {
+        this.isResetting = false;
+        console.error('Error clearing tracking data:', error);
+        this.handleError('Не вдалося очистити дані. Спробуйте пізніше.');
+        this.showToastNotification('Помилка при очищенні даних. Спробуйте пізніше.', 'error');
+      });
   }
 }

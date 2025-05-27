@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ConfigService } from './config.service';
+import { CookiesService } from './cookies.service';
 
 interface CardTimeData {
   cardId: number;
@@ -24,6 +27,14 @@ export class TimeTrackerService {
   private startTime: number | null = null;
   private readonly CARD_STORAGE_KEY = 'card-tracking-data';
   private readonly LESSON_STORAGE_KEY = 'lesson-tracking-data';
+  private readonly AUTH_TOKEN_KEY = 'auth-token';
+  private readonly USER_ID_KEY = 'user-id';
+  
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService,
+    private cookiesService: CookiesService
+  ) {}
 
   startTracking(cardId: number, lessonId: number): void {
     this.activeCardId = cardId;
@@ -41,6 +52,9 @@ export class TimeTrackerService {
     // Save time for both card and lesson
     this.saveCardTimeData(this.activeCardId, timeSpent);
     this.saveLessonTimeData(this.activeLessonId, this.activeCardId, timeSpent);
+    
+    // Send data to server after saving to localStorage
+    this.sendLessonTimeToServer(this.activeLessonId, timeSpent);
 
     this.activeCardId = null;
     this.activeLessonId = null;
@@ -113,6 +127,66 @@ export class TimeTrackerService {
     localStorage.setItem(this.LESSON_STORAGE_KEY, JSON.stringify(lessonData));
   }
 
+  
+  private sendLessonTimeToServer(lessonId: number, timeSpent: number): void {
+    // Get the auth token from cookies
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+    
+    // Try to get userId from cookies first (more reliable)
+    let userId = this.cookiesService.getCookie(this.USER_ID_KEY);
+    
+    // If not in cookies, try localStorage as fallback
+    if (!userId) {
+      userId = localStorage.getItem('userId');
+      console.log('Using userId from localStorage:', userId);
+    }
+    
+    // If still no userId, use email or default value
+    if (!userId) {
+      userId = localStorage.getItem('userEmail') || '0';
+      console.log('Using email or default as userId:', userId);
+    }
+    
+    // Verify lessonId is valid
+    if (!lessonId || isNaN(lessonId)) {
+      const savedLessonId = localStorage.getItem('selectedLessonId');
+      if (savedLessonId) {
+        lessonId = parseInt(savedLessonId, 10);
+        console.log('Using lessonId from localStorage:', lessonId);
+      } else {
+        console.error('No valid lessonId available for tracking');
+        return;
+      }
+    }
+    
+    const payload = {
+      userId: userId,
+      lessonId: lessonId,
+      trackedTime: timeSpent
+    };
+    
+    console.log('Sending tracking data to server:', payload);
+    
+    // Set up headers with authorization
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      console.warn('No auth token available, request may fail');
+    }
+    
+    const endpoint = this.configService.getEndpoint('/personalization/update-lesson-time');
+    
+    this.http.post(endpoint, payload, { headers }).subscribe({
+      next: (response) => {
+        console.log('Time tracking data sent to server successfully:', response);
+      },
+      error: (error) => {
+        console.error('Failed to send time tracking data to server:', error);
+      }
+    });
+  }
+
   getCardTimeData(cardId: number): CardTimeData | null {
     const existingDataString = localStorage.getItem(this.CARD_STORAGE_KEY);
 
@@ -173,5 +247,40 @@ export class TimeTrackerService {
     
     console.warn('Failed to start time tracking: missing card or lesson ID in localStorage');
     return false;
+  }
+
+  resetAllTimeData(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // Get the auth token from cookies
+      const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+      
+      // Set up headers with authorization
+      let headers = new HttpHeaders().set('Content-Type', 'application/json');
+      if (token) {
+        headers = headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        console.warn('No auth token available, request may fail');
+        reject('No auth token available');
+        return;
+      }
+      
+      const endpoint = this.configService.getEndpoint('/personalization/reset-all-time');
+      
+      this.http.delete(endpoint, { headers, responseType: 'text' }).subscribe({
+        next: (response) => {
+          console.log('All time data reset successfully:', response);
+          
+          // Clear local storage time tracking data as well
+          localStorage.removeItem(this.CARD_STORAGE_KEY);
+          localStorage.removeItem(this.LESSON_STORAGE_KEY);
+          
+          resolve(response);
+        },
+        error: (error) => {
+          console.error('Failed to reset time data:', error);
+          reject(error);
+        }
+      });
+    });
   }
 }
