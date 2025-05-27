@@ -5,5 +5,6 @@ public enum SandboxCardType
     Primitives,
     Bezier,
     FractalSystem,
-    ColorSystem
+    ColorSystem,
+    Animation
 }

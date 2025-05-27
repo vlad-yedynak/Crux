@@ -12,6 +12,7 @@ public static class SandboxCardTypeExtension
             SandboxCardType.Bezier => nameof(SandboxCardType.Bezier),
             SandboxCardType.FractalSystem => nameof(SandboxCardType.FractalSystem),
             SandboxCardType.ColorSystem => nameof(SandboxCardType.ColorSystem),
+            SandboxCardType.Animation => nameof(SandboxCardType.Animation),
             _ => null
         };
     }
@@ -24,6 +25,7 @@ public static class SandboxCardTypeExtension
             nameof(SandboxCardType.Bezier) => SandboxCardType.Bezier,
             nameof(SandboxCardType.FractalSystem) => SandboxCardType.FractalSystem,
             nameof(SandboxCardType.ColorSystem) => SandboxCardType.ColorSystem,
+            nameof(SandboxCardType.Animation) => SandboxCardType.Animation,
             _ => SandboxCardType.Primitives
         };
     }
