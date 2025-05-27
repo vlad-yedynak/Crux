@@ -8,6 +8,8 @@ import { TestPageComponent } from './pages/test-page/test-page.component';
 import { SandboxCardComponent } from './pages/sandbox-card/sandbox-card.component';
 import { SandboxCardBezierComponent } from './pages/sandbox-card-bezier/sandbox-card-bezier.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
+import { ReccomendationsPageComponent } from './pages/reccomendations-page/reccomendations-page.component';
+import { AboutPageComponent } from './pages/about-page/about-page.component';
 
 export const routes: Routes = [
     {
@@ -42,6 +44,14 @@ export const routes: Routes = [
             {
                 path: 'admin',
                 component: AdminPageComponent,
+            },
+            {
+                path: 'foryou',
+                component: ReccomendationsPageComponent,
+            },
+            {
+                path: 'about',
+                component: AboutPageComponent,
             },
 
         ],

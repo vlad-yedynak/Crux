@@ -14,8 +14,8 @@ import { Subscription } from 'rxjs';
     <nav class="tab-navigation">
         <ul class="tabs">
             <li class="tab-item"><a [routerLink]="['/lessons']">Lessons</a></li>
-            <li class="tab-item"><a href="#materials">Materials</a></li>
-            <li class="tab-item"><a href="#other">Other</a></li>
+            <li class="tab-item"><a [routerLink]="['/foryou']">Materials</a></li>
+            <li class="tab-item"><a [routerLink]="['/about']">Other</a></li>
             <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']">Edit content</a></li>
         </ul>
     </nav>
