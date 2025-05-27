@@ -21,11 +21,13 @@
                 Неправильне прізвище.
             </div>
         </div>
-        
-        <div class="form-group-email">
+          <div class="form-group-email">
             <input type="email" placeholder="Електронна пошта" formControlName="email" />
             <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('required') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
                 Електронна пошта обов'язкова.
+            </div>
+            <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('email') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
+                Будь ласка, введіть дійсну електронну пошту.
             </div>
         </div>
         
@@ -41,12 +43,18 @@
                 Пароль повинен містити великі та малі літери.
             </div>
         </div>
-        
-        <div>
+          <div>
             <input type="password" placeholder="Підтвердіть ваш пароль" formControlName="confirmPassword" />
             <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('required') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
                 Підтвердіть ваш пароль.
             </div>
+            <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('passwordMismatch') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
+                Паролі не співпадають.
+            </div>
+        </div>
+        
+        <div *ngIf="signupError" class="signup-error">
+            {{ signupError }}
         </div>
         
         <button type="submit">Створити обліковий запис</button>

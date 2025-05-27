@@ -15,11 +15,12 @@ import { Router } from '@angular/router';
 export class SignupFormComponent {
   @Output() switchToLogin = new EventEmitter<void>();
   
+  signupForm: any;
+  signupError: string = '';
+  
   onSwitchToLogin() {
     this.switchToLogin.emit();
   }
-
-  signupForm: any;
 
   constructor(public formBuilder:FormBuilder, private service: AuthServiceService, private router: Router){
     this.signupForm = this.formBuilder.group({
@@ -53,6 +54,7 @@ export class SignupFormComponent {
   onSubmit() {
     if (this.signupForm.valid) {
       console.log(this.signupForm.value);
+      this.signupError = ''; // Clear any previous errors
       this.service.createUser(this.signupForm.value).subscribe({
         next:(user: User | null)=>{
           if (user) {
@@ -60,12 +62,34 @@ export class SignupFormComponent {
             this.router.navigate(['/profile']);
           } else {
             console.error("Signup completed but failed to fetch user details.");
-            // Тут можна показати повідомлення користувачу
+            this.signupError = 'Реєстрація пройшла успішно, але не вдалося завантажити дані користувача. Спробуйте ще раз.';
           }
-        },
-        error:err=>{
+        },        error:err=>{
           console.log("Error during signup process: ", err);
-          // Тут можна показати повідомлення користувачу, наприклад, "Помилка реєстрації. Спробуйте пізніше."
+          
+          // Check for specific error types based on the API response structure
+          if (err) {
+            // Check different possible locations for error message
+            const errorMessage = err.body?.error || err.error?.body?.error || err.error?.error || err.error?.message || err.message || '';
+            
+            console.log("Extracted error message:", errorMessage);
+            
+            if (errorMessage.toLowerCase().includes('email') || 
+                errorMessage.toLowerCase().includes('користувач') || 
+                errorMessage.toLowerCase().includes('exists') ||
+                errorMessage.toLowerCase().includes('already') ||
+                errorMessage.toLowerCase().includes('вже')) {
+              this.signupError = 'Ця електронна адреса вже зареєстрована.';
+            } else if (err.status === 400) {
+              this.signupError = 'Неправильні дані для реєстрації. Перевірте введені дані та спробуйте ще раз.';
+            } else if (err.status === 500) {
+              this.signupError = 'Помилка сервера. Спробуйте пізніше.';
+            } else {
+              this.signupError = errorMessage || 'Помилка реєстрації. Спробуйте пізніше.';
+            }
+          } else {
+            this.signupError = 'Помилка реєстрації. Спробуйте пізніше.';
+          }
         }
       });
     } else {

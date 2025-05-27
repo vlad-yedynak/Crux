@@ -91,10 +91,14 @@ export class AuthServiceService {
     }
     return this.fetchAndSetUser();
   }
-
   createUser(formData: any): Observable<User | null> {
     return this.http.post<AuthResponse>(this.configService.getEndpoint('/user/sign-up'), formData).pipe(
       switchMap(response => {
+        // Check if the response indicates success
+        if (response.body?.success === false) {
+          return throwError(() => ({ body: response.body }));
+        }
+        
         const token = response.body?.token;
         const userId = response.body?.userId;
         
