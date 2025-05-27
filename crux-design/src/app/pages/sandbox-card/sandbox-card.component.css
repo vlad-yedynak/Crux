@@ -953,37 +953,32 @@ select.task-input-field:focus {
   box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
 }
 
-/* Style the boolean options */
-select.task-input-field option {
-  padding: 10px;
-  background-color: white;
-  color: var(--color-secondary-dark);
+/* Mobile warning styles */
+.mobile-warning {
+  display: none; /* Hidden by default */
+  padding: 20px;
+  text-align: center;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  height: calc(100vh - 50px); /* Adjust if header height is different or not present */
+  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2em;
+  line-height: 1.5;
 }
 
-select.task-input-field option:first-child {
-  font-style: italic;
-  color: #999;
+.mobile-warning p {
+  margin-bottom: 15px;
 }
 
-/* For true/false specific styling */
-.point-inputs .point-label:has(+ .coordinates select.task-input-field) {
-  font-weight: 600;
-  color: var(--color-secondary-dark);
-}
-
-/* Add styles for the input fields */
-.task-input-field {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-secondary-dark);
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.task-input-field:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
+@media (max-width: 768px) {
+  .desktop-only-content {
+    display: none !important; /* Hide main content and popups */
+  }
+  .mobile-warning {
+    display: flex; /* Show warning message */
+  }
 }
 

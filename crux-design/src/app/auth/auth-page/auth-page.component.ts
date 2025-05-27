@@ -52,6 +52,7 @@ import { AuthServiceService } from '../../services/auth-service.service';
 })
 export class AuthPageComponent {
   activeForm: 'login' | 'signup' = 'login';
+  logoLetters: string[] = 'Goida'.split('');
 
   constructor(
     private route: ActivatedRoute, 

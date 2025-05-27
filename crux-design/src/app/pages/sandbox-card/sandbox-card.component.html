@@ -1,6 +1,9 @@
-
 <div *ngIf="!showAuthMessage">
-  <div *ngIf="card?.sandboxType === 'Primitives'" class="sandbox-layout-container">
+  <div class="mobile-warning">
+    <p>Ця сторінка не призначена для перегляду на мобільних пристроях через обмеження адаптивності.</p>
+    <p>Будь ласка, відкрийте її на персональному комп'ютері.</p>
+  </div>
+  <div *ngIf="card?.sandboxType === 'Primitives'" class="sandbox-layout-container desktop-only-content">
     <div class="canvas-section">
       <div #canvasContainer id="canvasContainer">
         <canvas #myCanvas id="coordinateCanvas"></canvas>
@@ -290,18 +293,9 @@
       </div>
     </div>
   </div>
-  
-  <div *ngIf="card?.sandboxType === 'Bezier'">
-    
-  </div>
-  
-  <div *ngIf="card?.sandboxType === 'color'">
-    <h1>Кольорова палітра</h1>
-    <p>Тут буде відображено кольорову палітру.</p>
-  </div>
 
   <!-- Task Results Popup -->
-  <div *ngIf="showResultsPopup" class="results-popup-overlay">
+  <div *ngIf="showResultsPopup" class="results-popup-overlay desktop-only-content">
     <div class="results-popup">
       <h2>Результат завдання</h2>
       <div class="results-content">

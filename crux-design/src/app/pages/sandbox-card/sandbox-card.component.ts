@@ -24,7 +24,7 @@ import { ConfigService } from '../../services/config.service'; // Added import
     trigger('slideTogglePanel', [
       state('void', style({
         opacity: 0,
-        maxHeight: '0px', // Використовуємо maxHeight
+        maxHeight: '0px',
         paddingTop: '0px',
         paddingBottom: '0px',
         marginTop: '0px',
@@ -47,7 +47,7 @@ import { ConfigService } from '../../services/config.service'; // Added import
 export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
   card: Card | null = null; // Uses Card from LessonsService
   private canvasInitialized = false;
-  activePanel: 'shapes' | 'tasks' = 'shapes'; 
+  activePanel: 'shapes' | 'tasks' = 'shapes';  // Removed 'curves'
 
   @ViewChild('myCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasContainer') containerRef!: ElementRef<HTMLElement>;
@@ -82,13 +82,13 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
   
   // Add a reference to the redirect timer
   private redirectTimer: any = null;
-
+  
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private authService: AuthServiceService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    public canvasService: CanvasService, 
+    public canvasService: CanvasService,
     private timeTrackerService: TimeTrackerService,
     private lessonsService: LessonsService,
     public router: Router,
@@ -120,6 +120,9 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       sessionStorage.setItem('canvasSessionActive', 'true');
+      
+      // Це не завжди спрацює при початковій завантаженні, так як card може ще не бути завантажений
+      console.log('Initial sandboxType:', this.card?.sandboxType);
     }
   }
 
@@ -145,6 +148,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isBrowser() || !this.canvasInitialized) return;
     
     this.updateCanvasSize();
+    
     const shapes = this.canvasService.loadShapesFromLocalStorage();
     if (shapes && shapes.length > 0) {
       this.canvasService.restoreShapes(shapes);
@@ -206,9 +210,11 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
           console.log('Card details received in SandboxCardComponent:', cardData);
           this.card = cardData;
           
+          // Установка правильної активної панелі
+          this.activePanel = 'shapes';
+          
           if (cardData.lessonId) {
             localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
-            // Removed time tracking code
           }
           
           setTimeout(() => this.setupCanvasIfReady(), 100);
@@ -799,7 +805,7 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     this.canvasService.setTempShape(tempShape);
   }
-
+  
   switchPanel(panel: 'shapes' | 'tasks'): void {
     this.activePanel = panel;
   }

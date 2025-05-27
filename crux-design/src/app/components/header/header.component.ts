@@ -9,10 +9,11 @@ import {
   transition,
   animate,
 } from '@angular/animations';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router'; // Import NavigationEnd
 import { AuthServiceService, User} from '../../services/auth-service.service';
 import { isPlatformBrowser } from '@angular/common';
 import { CookiesService } from '../../services/cookies.service'; // Import CookiesService
+import { filter } from 'rxjs/operators'; // Import filter operator
 
 @Component({
   selector: 'app-header',
@@ -66,12 +67,16 @@ import { CookiesService } from '../../services/cookies.service'; // Import Cooki
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit{
-  isOpen = false;
+  // isOpen = false; // Commented out for language selection
   isUserDropdownOpen = false;
-  selectedLanguage = 'en';
+  isMobileMenuOpen = false; // For mobile navigation state
+  // selectedLanguage = 'en'; // Commented out for language selection
   user: User | null = null;
   isAdmin = false;
   private readonly AUTH_TOKEN_KEY = 'auth-token'; // Define the key for the auth token
+  
+  
+  logoLetters: string[] = 'Goida'.split('');
 
   constructor(
     private eRef: ElementRef, 
@@ -79,7 +84,13 @@ export class HeaderComponent implements OnInit{
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
     private cookiesService: CookiesService // Inject CookiesService
-  ) {}
+  ) {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.isMobileMenuOpen = false; // Close mobile menu on successful navigation
+    });
+  }
 
   ngOnInit(): void {
     this.authService.getUser().subscribe(user => {
@@ -102,23 +113,27 @@ export class HeaderComponent implements OnInit{
     }
   }
 
-  toggleDropdownLang() {
-    this.isOpen = !this.isOpen;
-  }
+  // toggleDropdownLang() { // Commented out for language selection
+  //   this.isOpen = !this.isOpen;
+  // }
 
   toggleDropdownUser() {
     this.isUserDropdownOpen = !this.isUserDropdownOpen;
-    this.isOpen = false; // Close language dropdown if user dropdown is toggled
+    // this.isOpen = false; // Close language dropdown if user dropdown is toggled // Commented out
   }
 
-  selectLanguage(lang: string) {
-    this.selectedLanguage = lang;
-    this.isOpen = false;
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 
-  getLanguageLabel(lang: string): string {
-    return lang === 'en' ? 'EN' : 'UA';
-  }
+  // selectLanguage(lang: string) { // Commented out for language selection
+  //   this.selectedLanguage = lang;
+  //   this.isOpen = false;
+  // }
+
+  // getLanguageLabel(lang: string): string { // Commented out for language selection
+  //   return lang === 'en' ? 'EN' : 'UA';
+  // }
 
   goToProfile() {
     this.isUserDropdownOpen = false;
@@ -128,19 +143,30 @@ export class HeaderComponent implements OnInit{
   logout() {
     this.isUserDropdownOpen = false;
     this.authService.logout();
-    this.isAdmin = false; // Reset admin status explicitly
+    this.isAdmin = false; 
     this.router.navigate(['/auth']);
   }
 
   @HostListener('document:click', ['$event'])
   clickOutside(event: Event) {
-    if (!this.eRef.nativeElement.contains(event.target)) {
-      this.isOpen = false;
+    const clickedElement = event.target as Element;
+
+    if (this.isUserDropdownOpen && !clickedElement.closest('.user-info')) {
       this.isUserDropdownOpen = false;
-    } else if (this.isOpen && !(event.target as Element).closest('.language-dropdown')) {
-      this.isOpen = false;
-    } else if (this.isUserDropdownOpen && !(event.target as Element).closest('.user-info')) {
-      this.isUserDropdownOpen = false;
+    }
+
+    // Mobile Menu
+    // Check if the click was outside the toggle button and outside the navigation wrapper
+    const mobileMenuToggle = this.eRef.nativeElement.querySelector('.mobile-menu-toggle');
+    const navigationWrapper = this.eRef.nativeElement.querySelector('.navigation-wrapper');
+
+    if (this.isMobileMenuOpen) {
+      const clickedOnToggle = mobileMenuToggle && mobileMenuToggle.contains(clickedElement);
+      const clickedInsideNavWrapper = navigationWrapper && navigationWrapper.contains(clickedElement);
+
+      if (!clickedOnToggle && !clickedInsideNavWrapper) {
+        this.isMobileMenuOpen = false;
+      }
     }
   }
 

@@ -153,19 +153,45 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
         return; 
       }
       
-      // Save card and lesson IDs for the sandbox page
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem('selectedCardId', card.id.toString());
-        localStorage.setItem('selectedLessonId', card.lessonId.toString());
-      }
+      // Fetch full card details before navigation
+      this.lessonsService.getCardById(card.id).subscribe({
+        next: (cardData) => {
+          if (cardData) {
+            console.log('Full sandbox card details fetched:', cardData);
+            
+            // Save card and lesson IDs for the sandbox page
+            if (isPlatformBrowser(this.platformId)) {
+              localStorage.setItem('selectedCardId', card.id.toString());
+              localStorage.setItem('selectedLessonId', card.lessonId.toString());
+            }
 
-      const element = document.documentElement;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      }
+            const element = document.documentElement;
+            if (element.requestFullscreen) {
+              element.requestFullscreen();
+            }
 
-      this.router.navigate(['lessons/sandbox-card']);
-      document.body.style.overflow = 'hidden';
+            // Check sandboxType and route accordingly
+            if (cardData.sandboxType === 'Bezier') {
+              this.router.navigate(['lessons/sandbox-card-bezier']);
+            } else {
+              this.router.navigate(['lessons/sandbox-card']);
+            }
+            
+            document.body.style.overflow = 'hidden';
+          } else {
+            console.error(`LessonsPageComponent: Failed to fetch full details for sandbox card ${card.id}.`);
+          }
+        },
+        error: (error) => {
+          console.error(`LessonsPageComponent: Error fetching sandbox card ${card.id} details:`, error);
+          
+          // If authentication error, show auth message
+          if (error.status === 401 || error.status === 403) {
+            this.showAuthMessage = true;
+            this.startRedirectCountdown();
+          }
+        }
+      });
     }
   }
   

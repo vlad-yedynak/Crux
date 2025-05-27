@@ -11,7 +11,7 @@
 .main-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-start; /* Default for large screens */
     justify-content: flex-start;
     text-align: left;
     width: 100%;
@@ -55,7 +55,7 @@
     font-size: 32px;
     color: var(--color-primary-dark);
     margin: 20px 0;
-    align-self: flex-start;
+    align-self: flex-start; /* Default for large screens */
 }
 
 /* Category container */
@@ -325,7 +325,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     padding: 30px;
-    overflow: hidden;
+    overflow: hidden; /* Ensures content scrolls within designated areas */
     display: flex;
     flex-direction: column;
     animation: popupFadeIn 0.3s ease-out forwards;
@@ -357,16 +357,19 @@
 
 .popup-content-area {
     display: flex;
-    flex-direction: row;
-    height: 100%;
-    overflow: hidden;
+    flex-direction: row; /* Default side-by-side layout */
+    /* height: 100%; */ /* Replaced by flex: 1 for better behavior in flex parent */
+    flex: 1; /* Allows this area to take up available space in .card-popup-content */
+    /* overflow: hidden; */ /* Replaced to allow internal scrolling */
+    overflow-y: auto; /* Enables vertical scrolling for the entire content area if needed */
+    overflow-x: hidden; /* Prevents horizontal scrolling */
 }
 
 .popup-left-content {
-    flex: 3;
+    flex: 3; /* Takes 3 parts of the space in row layout */
     padding: 20px;
-    border-right: 1px solid var(--color-secondary-light);
-    overflow-y: auto;
+    border-right: 1px solid var(--color-secondary-light); /* Default border for row layout */
+    overflow-y: auto; /* Allows individual scrolling in row layout */
     background-color: white;
     border-radius: 8px;
     word-wrap: break-word;
@@ -414,11 +417,11 @@
 }
 
 .popup-right-content {
-    flex: 1;
+    flex: 1; /* Takes 1 part of the space in row layout */
     padding: 20px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: auto; /* Allows individual scrolling in row layout */
 }
 
 .popup-right-content h2 {
@@ -672,11 +675,29 @@
     .main-content {
         padding-left: 16px; 
         padding-right: 16px; 
+        align-items: center; /* Center content for medium/small screens */
+    }
+    .page-title {
+        align-self: center; /* Center page title for medium/small screens */
+    }
+    .category-header,
+    .scroll-container {
+        max-width: calc((325px * 3) + (16px * 2)); /* 1007px, same as .lesson-container */
     }
     .lesson-container {
         width: 100%; 
-        max-width: calc((340px * 2) + (20px * 1)); 
+        /* Changed to display 3 cards */
+        max-width: calc((325px * 3) + (16px * 2)); /* 1007px */
     }
+}
+@media (max-width: 1200px) {
+    .main-content {
+        padding-left: 16px; 
+        padding-right: 16px; 
+    }
+    /* Removed specific max-width for lesson-container here.
+       It will inherit the 3-card layout from the (max-width: 1300px) rule
+       for screens between 981px and 1200px. */
 }
 @media (max-width: 980px) {
     .main-content {
@@ -685,13 +706,18 @@
     }
     .category-header {
         gap: 12px; 
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px, same as .lesson-container */
+    }
+    .scroll-container {
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px, same as .lesson-container */
     }
     .category-title {
         font-size: 22px; 
     }
     .lesson-container {
         width: 100%; 
-        max-width: 340px; 
+        /* Changed to display 2 cards */
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px */
     }
 }
 @media (max-width: 500px) {
@@ -712,17 +738,6 @@
         padding: 4px 8px;
     }
 }
-@media (max-width: 1200px) {
-    .main-content {
-        padding-left: 16px; 
-        padding-right: 16px; 
-    }
-    .lesson-container {
-        width: 100%; 
-        max-width: calc((325px * 2) + (16px * 1)); 
-    }
-}
-
 @media (max-width: 700px) {
     .main-content {
         padding-left: 10px; 
@@ -731,6 +746,10 @@
     .category-header {
         gap: 8px;
         align-items: center; 
+        max-width: 325px; /* same as .lesson-container */
+    }
+    .scroll-container {
+        max-width: 325px; /* same as .lesson-container */
     }
     .category-title {
         font-size: 20px;
@@ -747,6 +766,28 @@
     .view-all-btn {
         font-size: 12px;
         padding: 4px 8px;
+    }
+
+    /* Popup adjustments for smaller screens */
+    .popup-content-area {
+        flex-direction: column; /* Stack left and right content vertically */
+    }
+
+    .popup-left-content {
+        flex: none; /* Reset flex sizing, content will determine height */
+        width: 100%; /* Take full width in column layout */
+        border-right: none; /* Remove side border */
+        border-bottom: 1px solid var(--color-secondary-light); /* Add bottom border for separation */
+        margin-bottom: 15px; /* Space below this section */
+        padding-bottom: 15px; /* Adjust padding for balance with margin */
+        overflow-y: visible; /* Content will scroll within .popup-content-area */
+    }
+
+    .popup-right-content {
+        flex: none; /* Reset flex sizing, content will determine height */
+        width: 100%; /* Take full width in column layout */
+        overflow-y: visible; /* Content will scroll within .popup-content-area */
+        /* padding-top: 20px; */ /* Default padding is likely fine, adjust if too much space */
     }
 }
 

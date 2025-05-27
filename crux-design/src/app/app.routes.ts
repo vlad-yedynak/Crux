@@ -6,6 +6,7 @@ import { AuthPageComponent } from './auth/auth-page/auth-page.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { TestPageComponent } from './pages/test-page/test-page.component';
 import { SandboxCardComponent } from './pages/sandbox-card/sandbox-card.component';
+import { SandboxCardBezierComponent } from './pages/sandbox-card-bezier/sandbox-card-bezier.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
 
 export const routes: Routes = [
@@ -33,6 +34,10 @@ export const routes: Routes = [
             {
                 path: 'lessons/sandbox-card',
                 component: SandboxCardComponent,
+            },
+            {
+                path: 'lessons/sandbox-card-bezier',
+                component: SandboxCardBezierComponent,
             },
             {
                 path: 'admin',

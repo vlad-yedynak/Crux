@@ -1,34 +1,39 @@
-  <div class="auth-wrapper">
+<div class="auth-wrapper">
     <div class="background"></div>
-  
-    <div class="forms-layer">
-        <div class="logo">
-            <h1>
-                <a routerLink="/">Goida</a>
-            </h1>
-        </div>
-        <div class="left-promo">
-            <h2>Welcome to Crux!</h2>
-        </div>
+    <div class="logo">
+        <h1>
+            <a routerLink="/">
+                <span *ngFor="let letter of logoLetters; let i = index" 
+                      class="letter" 
+                      [style.animation-delay]="i * 0.15 + 's'">{{ letter }}</span>
+            </a>
+        </h1>
+    </div>
 
-        <div class="auth-forms">
-            <div
-              class="signup-form-wrapper"
-              [class.active]="activeForm === 'signup'"
-              [@formSwitch]="activeForm === 'signup' ? 'login' : 'signup'"
-              (click)="activeForm !== 'signup' && switchForm()"
-            >
-              <app-signup-form (switchToLogin)="switchForm()" (click)="$event.stopPropagation()"></app-signup-form>
-            </div>
-            
-            <div
-              class="login-form-wrapper"
-              [class.active]="activeForm === 'login'"
-              [@formSwitch]="activeForm === 'login' ? 'login' : 'signup'"
-              (click)="activeForm !== 'login' && switchForm()"
-            >
-              <app-login-form (switchToSignup)="switchForm()" (click)="$event.stopPropagation()"></app-login-form>
-            </div>
+    <div class="left-promo">
+        <h2 class="shuffle-text">
+            <span>W</span><span>e</span><span>l</span><span>c</span><span>o</span><span>m</span><span>e</span><span>&nbsp;</span><span>t</span><span>o</span><span>&nbsp;</span><span>C</span><span>r</span><span>u</span><span>x</span><span>!</span>
+        </h2>
+        <p>Join our community and start your journey.</p>
+    </div>
+
+    <div class="auth-forms">
+        <div
+          class="signup-form-wrapper"
+          [class.active]="activeForm === 'signup'"
+          [@formSwitch]="activeForm === 'signup' ? 'login' : 'signup'"
+          (click)="activeForm !== 'signup' && switchForm()"
+        >
+          <app-signup-form (switchToLogin)="switchForm()" (click)="$event.stopPropagation()"></app-signup-form>
+        </div>
+        
+        <div
+          class="login-form-wrapper"
+          [class.active]="activeForm === 'login'"
+          [@formSwitch]="activeForm === 'login' ? 'login' : 'signup'"
+          (click)="activeForm !== 'login' && switchForm()"
+        >
+          <app-login-form (switchToSignup)="switchForm()" (click)="$event.stopPropagation()"></app-login-form>
         </div>
     </div>
 </div>
