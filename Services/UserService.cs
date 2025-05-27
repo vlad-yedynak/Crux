@@ -1,5 +1,6 @@
 using Crux.Data;
 using Crux.Models.Entities;
+using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
@@ -210,103 +211,121 @@ public class UserService(
         };
     }
 
-    public async Task<UserResponse> UpdateAvatarAsync(int id, string url)
+    public async Task<UserResponse> UpdateAvatarAsync(int id, UpdateAvatarRequest request)
+{
+    var user = await dbContext.Users
+        .FirstOrDefaultAsync(u => u.Id == id);
+
+    if (user == null)
     {
-        var user = await dbContext.Users
-            .Include(u => u.ScorePoints)
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        if (user == null)
+        return new UserResponse
         {
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Can't find user info"
-            };
-        }
-
-        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
-        {
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Url is empty"
-            };
-        }
-
-        var s3FolderPath = $"uploads/avatars/{id}";
-
-        try
-        {  
-            var client = new HttpClient();
-            var response = await client.GetAsync(url);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var imageResponse = await response.Content.ReadAsByteArrayAsync();
-                var contentType = response.Content.Headers.ContentType?.MediaType;
-
-                if (contentType == null)
-                {
-                    return new UserResponse
-                    {
-                        Success = false,
-                        Error = "Invalid avatar"
-                    };
-                }
-                
-                var extension = Path.GetExtension(uri.AbsolutePath);
-                if (string.IsNullOrWhiteSpace(extension) || extension.Length > 5)
-                {
-                    if (contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase)) extension = ".jpg";
-                    else if (contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)) extension = ".png";
-                    else if (contentType.Equals("image/gif", StringComparison.OrdinalIgnoreCase)) extension = ".gif";
-                    else if (contentType.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) extension = ".webp";
-                    else extension = ".img";
-                }
-                
-                if (!string.IsNullOrEmpty(user.Avatar) && 
-                    !user.Avatar.Contains("defaultAvatar") &&
-                    Uri.TryCreate(user.Avatar, UriKind.Absolute, out var oldAvatarUri))
-                {
-                    await s3StorageService.DeleteFileAsync(user.Avatar);
-                }
-
-                var fileName = $"{Guid.NewGuid()}{extension}";
-                var s3Url = await s3StorageService.UploadFileAsync(imageResponse, s3FolderPath, fileName);
-                
-                user.Avatar = s3Url;
-                await dbContext.SaveChangesAsync();
-                
-                return new UserResponse
-                {
-                    Success = true,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    ScorePoints = GetUserScorePoints(user.ScorePoints),
-                    UserRole = user.Role.ToString(),
-                    AvatarUrl = s3Url
-                };
-            }
-            else
-            {
-                return new UserResponse
-                {
-                    Success = false,
-                    Error = "Failed to download avatar"
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            return new UserResponse
-            {
-                Success = false,
-                Error = "Failed to save avatar"
-            };
-        }
+            Success = false,
+            Error = "Can't find user info"
+        };
     }
+
+    if (string.IsNullOrWhiteSpace(request.Data))
+    {
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Image data is required"
+        };
+    }
+
+    if (string.IsNullOrWhiteSpace(request.ContentType))
+    {
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Image content type is required"
+        };
+    }
+
+    byte[] imageBytes;
+    try
+    {
+        imageBytes = Convert.FromBase64String(request.Data);
+    }
+    catch (FormatException)
+    {
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Invalid Base64 image data"
+        };
+    }
+    
+    if (imageBytes.Length > 5 * 1024 * 1024) 
+    {
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Image size exceeds 5MB limit"
+        };
+    }
+
+    var extension = request.ContentType.ToLowerInvariant() switch
+    {
+        "image/jpeg" => ".jpg",
+        "image/jpg" => ".jpg",
+        "image/png" => ".png",
+        "image/gif" => ".gif",
+        "image/webp" => ".webp",
+        _ => null 
+    };
+
+    if (extension == null)
+    {
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Unsupported image type. Please use JPEG, PNG, GIF, or WEBP."
+        };
+    }
+
+    var s3FolderPath = $"uploads/avatars/{id}";
+    var fileName = $"{Guid.NewGuid()}{extension}";
+    string oldAvatarUrl = user.Avatar;
+
+    try
+    {  
+        var newS3Url = await s3StorageService.UploadFileAsync(imageBytes, s3FolderPath, fileName);
+        
+        user.Avatar = newS3Url;
+        await dbContext.SaveChangesAsync();
+        
+        if (!string.IsNullOrEmpty(oldAvatarUrl) && 
+            !oldAvatarUrl.Contains("defaultAvatar") &&
+            oldAvatarUrl != newS3Url)
+        {
+            try
+            {
+                await s3StorageService.DeleteFileAsync(oldAvatarUrl);
+            }
+            catch(Exception exDelete)
+            {
+                Console.WriteLine($"Failed to delete old avatar {oldAvatarUrl} for user {id}: {exDelete.Message}");
+            }
+        }
+            
+        return new UserResponse
+        {
+            Success = true,
+            AvatarUrl = newS3Url
+        };
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error updating avatar for user {id}: {ex.Message}");
+        return new UserResponse
+        {
+            Success = false,
+            Error = "Failed to save avatar"
+        };
+    }
+}
 
     private static Dictionary<int, int> GetUserScorePoints(ICollection<UserLessonProgress> progresses)
     {

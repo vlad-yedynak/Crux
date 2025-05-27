@@ -227,7 +227,7 @@ public class UserController (
     }
     
     [HttpPut("update-avatar")]
-    public async Task<ActionResult<Response>> UpdateAvatarAsync([FromBody] string url)
+    public async Task<ActionResult<Response>> UpdateAvatarAsync([FromBody] UpdateAvatarRequest request)
     {
         try
         {
@@ -242,7 +242,7 @@ public class UserController (
                 };
             }
             
-            var user = await userService.UpdateAvatarAsync(userId.Value, url);
+            var user = await userService.UpdateAvatarAsync(userId.Value, request);
 
             return new ControllerResponse<UserResponse>
             {
