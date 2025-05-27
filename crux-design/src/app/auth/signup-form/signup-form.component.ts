@@ -23,8 +23,8 @@ export class SignupFormComponent {
 
   constructor(public formBuilder:FormBuilder, private service: AuthServiceService, private router: Router){
     this.signupForm = this.formBuilder.group({
-      firstName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-я])(?=.*[A-ZА-Я])[A-Za-zА-Яа-яіґїєІҐЇЄ]+$/)]],
-      lastName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-я])(?=.*[A-ZА-Я])[A-Za-zА-Яа-яіґїєІҐЇЄ]+$/)]],
+      firstName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-яіїєґ])(?=.*[A-ZА-ЯІЇЄҐ])[A-Za-zА-Яа-яІіЇїЄєҐґ]+$/)]],
+      lastName: ['', [Validators.required, Validators.pattern(/^(?=.*[a-zа-яіїєґ])(?=.*[A-ZА-ЯІЇЄҐ])[A-Za-zА-Яа-яІіЇїЄєҐґ]+$/)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])[A-Za-z\d@$!%*?&]+$/)]],
       confirmPassword: ['', [Validators.required]]
