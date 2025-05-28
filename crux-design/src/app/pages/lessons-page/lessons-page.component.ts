@@ -238,6 +238,8 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
               this.router.navigate(['lessons/sandbox-card-fractal']);
             }  else if (cardData.sandboxType === 'Animation') {
               this.router.navigate(['lessons/sandbox-card-animations']);
+            } else if (cardData.sandboxType === 'ColorSystem' || cardData.sandboxType === 'Colors') {
+              this.router.navigate(['lessons/sandbox-card-colors']);
             } else {
               this.router.navigate(['lessons/sandbox-card']);
             }
