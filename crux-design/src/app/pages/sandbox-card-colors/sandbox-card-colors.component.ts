@@ -1,5 +1,5 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, HostListener, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, HostListener, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LessonsService, Card, Task } from '../../services/lessons.service';
@@ -68,28 +68,42 @@ export class SandboxCardColorsComponent implements OnInit, AfterViewInit, OnDest
   
   // Ім'я файлу для завантаження зображення
   private fileName: string = "image-edited.png";
-
   constructor(
     private route: ActivatedRoute,
     private lessonsService: LessonsService,
     private http: HttpClient,
     private authService: AuthServiceService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.resetColorValuesToDefaults();
   }
-
   ngOnInit(): void {
     // Check authentication state
     if (this.authService.isLoggedIn()) {
       // First try to get card ID from localStorage (when navigating from lessons page)
-      const storedCardId = localStorage.getItem('selectedCardId');
-      if (storedCardId) {
-        console.log('Loading card from localStorage with ID:', storedCardId);
-        this.cardId = storedCardId;
-        this.loadCardDetails(parseInt(storedCardId, 10));
+      if (isPlatformBrowser(this.platformId)) {
+        const storedCardId = localStorage.getItem('selectedCardId');
+        if (storedCardId) {
+          console.log('Loading card from localStorage with ID:', storedCardId);
+          this.cardId = storedCardId;
+          this.loadCardDetails(parseInt(storedCardId, 10));
+        } else {
+          // If not in localStorage, try from route params
+          this.route.paramMap.subscribe(params => {
+            const cardIdParam = params.get('id');
+            if (cardIdParam) {
+              this.cardId = cardIdParam;
+              this.loadCardDetails(parseInt(cardIdParam, 10));
+            } else {
+              // No card ID found, show interface without card data
+              console.log('No card ID found in params or localStorage');
+              this.showAuthMessage = false;
+            }
+          });
+        }
       } else {
-        // If not in localStorage, try from route params
+        // On server side, try from route params only
         this.route.paramMap.subscribe(params => {
           const cardIdParam = params.get('id');
           if (cardIdParam) {
@@ -97,7 +111,7 @@ export class SandboxCardColorsComponent implements OnInit, AfterViewInit, OnDest
             this.loadCardDetails(parseInt(cardIdParam, 10));
           } else {
             // No card ID found, show interface without card data
-            console.log('No card ID found in params or localStorage');
+            console.log('No card ID found in params');
             this.showAuthMessage = false;
           }
         });
@@ -116,9 +130,8 @@ export class SandboxCardColorsComponent implements OnInit, AfterViewInit, OnDest
           
           // Set active panel to 'colors' by default
           this.activePanel = 'colors';
-          
-          // Store lesson ID if available
-          if (card.lessonId) {
+            // Store lesson ID if available
+          if (card.lessonId && isPlatformBrowser(this.platformId)) {
             localStorage.setItem('selectedLessonId', card.lessonId.toString());
           }
           
@@ -135,7 +148,6 @@ export class SandboxCardColorsComponent implements OnInit, AfterViewInit, OnDest
       }
     );
   }
-
   ngOnDestroy(): void {
     // Clean up resources if needed
     if (this.originalImage) {
@@ -143,7 +155,9 @@ export class SandboxCardColorsComponent implements OnInit, AfterViewInit, OnDest
     }
     
     // Save progress to local storage if needed
-    localStorage.removeItem('selectedCardId');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('selectedCardId');
+    }
   }
 
   ngAfterViewInit(): void {
