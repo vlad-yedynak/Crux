@@ -1,3 +1,15 @@
 .env
 /obj
 /bin
+
+bin/
+obj/
+wwwroot/uploads/*
+wwwroot/lib
+.idea/*/*
+.idea/.idea.Crux/.idea
+Crux.sln.DotSettings.user
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.env
