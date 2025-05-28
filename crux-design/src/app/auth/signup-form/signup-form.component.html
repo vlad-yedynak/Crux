@@ -1,0 +1,63 @@
+<div class="form-card">
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <h2>Створити обліковий запис</h2>
+        
+        <div class="form-group">
+            <input type="text" placeholder="Ім'я" formControlName="firstName"/>
+            <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('required') && (signupForm.controls.firstName.touched || signupForm.controls.firstName.dirty)">
+                Ім'я обов'язкове.
+            </div>
+            <div class="error-feedback" *ngIf="signupForm.controls.firstName.hasError('pattern') && (signupForm.controls.firstName.touched || signupForm.controls.firstName.dirty)">
+                Неправильне ім'я.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <input type="text" placeholder="Прізвище" formControlName="lastName" />
+            <div class="error-feedback" *ngIf="signupForm.controls.lastName.hasError('required') && (signupForm.controls.lastName.touched || signupForm.controls.lastName.dirty)">
+                Прізвище обов'язкове.
+            </div>
+            <div class="error-feedback" *ngIf="signupForm.controls.lastName.hasError('pattern') && (signupForm.controls.lastName.touched || signupForm.controls.lastName.dirty)">
+                Неправильне прізвище.
+            </div>
+        </div>
+          <div class="form-group-email">
+            <input type="email" placeholder="Електронна пошта" formControlName="email" />
+            <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('required') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
+                Електронна пошта обов'язкова.
+            </div>
+            <div class="error-feedback" *ngIf="signupForm.controls.email.hasError('email') && (signupForm.controls.email.touched || signupForm.controls.email.dirty)">
+                Будь ласка, введіть дійсну електронну пошту.
+            </div>
+        </div>
+        
+        <div class="form-group-password">
+            <input type="password" placeholder="Введіть ваш пароль" formControlName="password" />
+            <div class="error-feedback" *ngIf="signupForm.controls.password.hasError('required') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
+                Пароль обов'язковий.
+            </div>
+            <div class="error-feedback-password-1" *ngIf="signupForm.controls.password.hasError('minlength') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
+                Пароль повинен мати принаймні 8 символів.
+            </div>
+            <div class="error-feedback-password-2" *ngIf="signupForm.controls.password.hasError('pattern') && (signupForm.controls.password.touched || signupForm.controls.password.dirty)">
+                Пароль повинен містити великі та малі літери.
+            </div>
+        </div>
+          <div>
+            <input type="password" placeholder="Підтвердіть ваш пароль" formControlName="confirmPassword" />
+            <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('required') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
+                Підтвердіть ваш пароль.
+            </div>
+            <div class="error-feedback-password-3" *ngIf="signupForm.controls.confirmPassword.hasError('passwordMismatch') && (signupForm.controls.confirmPassword.touched || signupForm.controls.confirmPassword.dirty)">
+                Паролі не співпадають.
+            </div>
+        </div>
+        
+        <div *ngIf="signupError" class="signup-error">
+            {{ signupError }}
+        </div>
+        
+        <button type="submit">Створити обліковий запис</button>
+        <p>Вже маєте обліковий запис? <a (click)="onSwitchToLogin()" style="cursor: pointer;">Увійти</a></p>
+    </form>
+</div>

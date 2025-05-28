@@ -1,0 +1,616 @@
+<div class="main-content">    <h1 class="page-title">Панель адміністратора</h1>
+    
+    <div class="admin-controls">
+        <button class="add-lesson-btn" (click)="openAddLessonForm()">+ Додати урок</button>
+    </div>
+    
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-state">
+        <p>Завантаження уроків...</p>
+    </div>
+    
+    <!-- Error state -->
+    <div *ngIf="!isLoading && hasError" class="error-state">
+        <p>{{ errorMessage }}</p>
+        <button (click)="refreshLessons()" class="retry-button">Повторити</button>
+    </div>
+    
+    <!-- Lessons List for Management -->
+    <div *ngIf="!isLoading && !hasError" class="admin-lessons-list">        <div *ngFor="let lesson of lessons" class="admin-lesson-item">
+            <div class="lesson-info">
+                <h2>{{ lesson.title }}</h2>
+                <p>{{ lesson.cards.length || 0 }} карток</p>
+            </div>
+            <div class="lesson-actions">
+                <button class="action-btn edit-btn" (click)="editLesson(lesson)">Редагувати</button>
+                <button class="action-btn view-cards-btn" (click)="viewCards(lesson)">Переглянути картки</button>
+                <button class="action-btn delete-btn" (click)="deleteLesson(lesson)">Видалити</button>
+            </div>
+        </div>
+        
+        <!-- No lessons message -->
+        <div *ngIf="lessons.length === 0" class="no-data">
+            <p>Немає доступних уроків. Створіть свій перший урок за допомогою кнопки "Додати урок" вище.</p>
+        </div>
+    </div>
+    
+    <!-- Add Lesson Popup -->
+    <div *ngIf="isAddLessonPopupVisible" class="add-lesson-popup-overlay" (click)="closeAddLessonPopup($event)">        <div class="add-lesson-popup-content">
+            <div class="popup-header">
+                <h2>Додати новий урок</h2>
+                <button class="close-popup-btn" (click)="closeAddLessonPopup($event)">&times;</button>
+            </div>
+            
+            <div class="popup-body">
+                <div class="form-group">
+                    <label for="lessonName">Назва уроку</label>
+                    <input type="text" id="lessonName" [(ngModel)]="newLessonName" 
+                           placeholder="Введіть назву уроку" class="form-control">
+                </div>
+            </div>
+              <div class="popup-footer">
+                <button class="cancel-btn" (click)="closeAddLessonPopup($event)">Скасувати</button>
+                <button class="create-btn" [disabled]="!newLessonName.trim()" 
+                        (click)="createLesson()">Створити урок</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards Popup -->
+    <div *ngIf="selectedLesson && isCardsPopupVisible" class="cards-popup-overlay" (click)="closeCardsPopup($event)">        <div class="cards-popup-content">
+            <div class="popup-header">
+                <h2>Картки в "{{ selectedLesson.title }}"</h2>
+                <button class="close-popup-btn" (click)="closeCardsPopup($event)">&times;</button>
+            </div>
+            
+            <div class="cards-container">
+                <div *ngIf="selectedLesson.cards.length === 0" class="no-cards-message">
+                    <p>У цьому уроці немає доступних карток.</p>
+                    <button class="add-card-btn" (click)="addCardToLesson(selectedLesson)">+ Додати картку</button>
+                </div>
+                
+                <div *ngFor="let card of selectedLesson.cards" class="admin-card-item" [ngClass]="getCardTypeClass(card.type)">
+                    <div class="card-header">
+                        <h3>{{ card.title }}</h3>
+                        <span class="card-type-badge">{{ card.type }}</span>
+                    </div>
+                    <p class="card-description">{{ card.description }}</p>                    <div class="card-actions">
+                        <button class="card-action-btn edit-btn" (click)="editCard(card)">Редагувати</button>
+                        <button class="card-action-btn delete-btn" (click)="deleteCard(card)">Видалити</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="popup-footer">
+                <button class="add-card-btn" (click)="addCardToLesson(selectedLesson)">+ Додати картку</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Card Popup - moved to the end to ensure it's rendered on top -->
+<div *ngIf="isAddCardPopupVisible" class="add-card-popup-overlay" (click)="closeAddCardPopup($event)">    <div class="add-card-popup-content">
+        <div class="popup-header">
+            <h2>Додати нову картку</h2>
+            <button class="close-popup-btn" (click)="closeAddCardPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Debug info to verify popup state -->
+            <p style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                Редагування уроку: {{ currentLessonForCard?.title }}
+            </p>
+            
+            <div class="form-group">
+                <label for="cardTitle">Назва картки</label>
+                <input type="text" id="cardTitle" [(ngModel)]="newCard.title" 
+                       placeholder="Введіть назву картки" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="cardDescription">Опис картки</label>
+                <textarea id="cardDescription" [(ngModel)]="newCard.description" 
+                        placeholder="Введіть опис картки" class="form-control" rows="3"></textarea>
+            </div>
+              <div class="form-group">
+                <label for="cardType">Тип картки</label>
+                <select id="cardType" [(ngModel)]="newCard.type" class="form-control">
+                    <option value="Educational">Навчальна</option>
+                    <option value="Test">Тест</option>
+                    <option value="Sandbox">Пісочниця</option>
+                </select>
+            </div>
+            
+            <!-- Add sandbox type selection when Sandbox is selected -->
+            <div class="form-group" *ngIf="newCard.type === 'Sandbox'">
+                <label for="sandboxType">Тип пісочниці</label>
+                <select id="sandboxType" [(ngModel)]="newCard.sandboxType" class="form-control">
+                    <option value="Primitives">Примітиви</option>
+                    <option value="Bezier">Безьє</option>
+                    <option value="FractalSystem">Фрактальна система</option>
+                    <option value="ColorSystem">Колірна система</option>
+                    <option value="Animation">Анімації</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeAddCardPopup($event)">Скасувати</button>
+            <button class="create-btn" [disabled]="!isCardFormValid()" 
+                    (click)="createCard()">Створити картку</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Questions List Popup -->
+<div *ngIf="isViewTestQuestionsPopupVisible" class="view-test-questions-overlay" (click)="closeViewTestQuestionsPopup($event)">    <div class="view-test-questions-content">
+        <div class="popup-header">
+            <h2>Запитання в "{{ currentEditingCard?.title }}"</h2>
+            <button class="close-popup-btn" (click)="closeViewTestQuestionsPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Loading state for questions -->
+            <div *ngIf="isLoadingQuestions" class="loading-state">
+                <p>Завантаження запитань...</p>
+            </div>
+            
+            <!-- Questions list -->
+            <div *ngIf="!isLoadingQuestions" class="questions-list">
+                <div *ngIf="testQuestions.length === 0" class="no-questions-message">
+                    <p>Для цього тесту немає доступних запитань.</p>
+                </div>
+                
+                <div *ngFor="let question of testQuestions; let i = index" class="question-item">
+                    <div class="question-header">
+                        <h3>Запитання #{{i+1}}</h3>
+                    </div>
+                    <p class="question-text">{{ question.questionText }}</p>
+                    <div class="answer-count">{{ question.answers.length || 0 }} відповідей</div>
+                    <div class="question-actions">
+                        <button class="action-btn edit-btn" (click)="editQuestion(question)">Редагувати</button>
+                        <button class="action-btn delete-btn" (click)="deleteQuestion(question, i)">Видалити</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="add-question-btn" (click)="addNewQuestion()">+ Додати запитання</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Card Edit Popup -->
+<div *ngIf="isEditTestCardPopupVisible" class="edit-test-card-popup-overlay" (click)="closeEditTestCardPopup($event)">
+    <div class="edit-test-card-popup-content">
+        <div class="popup-header">
+            <h2 class="popup-title">{{ questionPopupTitle }}</h2>
+            <button class="close-popup-btn" (click)="closeEditTestCardPopup($event)">&times;</button>
+        </div>
+          <div class="popup-body">
+            <div class="form-group">
+                <label for="questionText">Запитання</label>
+                <textarea id="questionText" [(ngModel)]="testCardData.questionText" 
+                        placeholder="Введіть текст запитання" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div class="answers-section">
+                <h3>Відповіді</h3>
+                <div *ngFor="let answer of testCardData.answers; let i = index" class="answer-item">
+                    <div class="answer-header">
+                        <h4>Відповідь #{{i+1}}</h4>
+                        <button type="button" class="remove-answer-btn" (click)="removeAnswer(i)">Видалити</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label [for]="'answerText' + i">Текст відповіді</label>
+                        <input [id]="'answerText' + i" [(ngModel)]="answer.answerText" 
+                               placeholder="Введіть текст відповіді" class="form-control">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half-width">
+                            <label [for]="'answerScore' + i">Бали</label>
+                            <input [id]="'answerScore' + i" type="number" [(ngModel)]="answer.score" 
+                                   placeholder="Бали за цю відповідь" class="form-control"
+                                   [disabled]="answer.isCorrect">
+                        </div>
+                        
+                        <div class="form-group half-width radio-group">
+                            <label>
+                                <input type="radio" name="correctAnswer" [value]="i" 
+                                       [checked]="answer.isCorrect"
+                                       (change)="setCorrectAnswer(i)">
+                                Правильна відповідь
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="add-answer-btn" (click)="addAnswer()">+ Додати відповідь</button>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditTestCardPopup($event)">Скасувати</button>
+            <button type="button" 
+                    class="save-btn" 
+                    [disabled]="!isTestCardFormValid()" 
+                    (click)="saveTestCard()">
+                {{ questionPopupSubmitText }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Edit Card Popup -->
+<div *ngIf="isEditCardPopupVisible" class="edit-card-popup-overlay" (click)="closeEditCardPopup($event)">
+    <div class="edit-card-popup-content">
+        <div class="popup-header">
+            <h2 class="popup-title">{{ questionPopupTitle }}</h2>
+            <button class="close-popup-btn" (click)="closeEditCardPopup($event)">&times;</button>
+        </div>
+          <div class="popup-body">
+            <div class="form-group">
+                <label for="cardTitle">Назва картки</label>
+                <input type="text" id="cardTitle" [(ngModel)]="editedCardData.title" 
+                       placeholder="Введіть назву картки" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="cardDescription">Опис картки</label>
+                <textarea id="cardDescription" [(ngModel)]="editedCardData.description" 
+                        placeholder="Введіть опис картки" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <!-- Optional: Add additional content based on card type -->
+            <div *ngIf="cardBeingEdited?.type === 'Test'" class="edit-test-questions">
+                <button class="edit-questions-btn" (click)="editTestCardQuestions(cardBeingEdited!)">
+                    Редагувати запитання тесту
+                </button>
+                <p class="help-text">Натисніть, щоб редагувати запитання тесту для цієї картки.</p>
+            </div>
+            
+            <div *ngIf="cardBeingEdited?.type === 'Educational'" class="edit-educational-data">
+                <button class="edit-educational-btn" (click)="editEducationalData(cardBeingEdited!)">
+                    Редагувати навчальний контент
+                </button>
+                <p class="help-text">Натисніть, щоб редагувати навчальний контент для цієї картки.</p>
+            </div>
+            
+            <!-- Add Edit Tasks button for Sandbox cards -->
+            <div *ngIf="cardBeingEdited?.type === 'Sandbox'" class="edit-sandbox-tasks">
+                <button class="edit-tasks-btn" (click)="editSandboxCardTasks(cardBeingEdited!)">
+                    Редагувати завдання
+                </button>
+                <p class="help-text">Натисніть, щоб редагувати завдання для цієї картки пісочниці.</p>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditCardPopup($event)">Скасувати</button>
+            <button class="save-btn" [disabled]="!isEditCardFormValid()" 
+                    (click)="saveEditedCard()">Зберегти зміни</button>
+        </div>
+    </div>
+</div>
+
+<!-- Educational Content Edit Popup (Enhanced) -->
+<div *ngIf="isViewEducationalContentPopupVisible" class="view-educational-content-overlay" (click)="closeEducationalContentPopup($event)">
+    <div class="view-educational-content">        <div class="popup-header">
+            <h2>Редагувати навчальний контент для "{{ currentEditingCard?.title }}"</h2>
+            <button class="close-popup-btn" (click)="closeEducationalContentPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <!-- Loading state for content -->
+            <div *ngIf="isLoadingEducationalContent" class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Завантаження контенту...</p>
+            </div>
+            
+            <div *ngIf="!isLoadingEducationalContent" class="educational-editor-container">                <div class="educational-content-form">
+                    <div class="content-section">
+                        <h3>HTML контент</h3>
+                        
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" title="Заголовок 1" (click)="insertHeader(1)">H1</button>
+                            <button type="button" class="toolbar-btn" title="Заголовок 2" (click)="insertHeader(2)">H2</button>
+                            <button type="button" class="toolbar-btn" title="Заголовок 3" (click)="insertHeader(3)">H3</button>
+                            <button type="button" class="toolbar-btn" title="Абзац" (click)="insertHtmlTag('<p>', '</p>')">P</button>
+                            <button type="button" class="toolbar-btn" title="Жирний" (click)="insertBold()"><strong>B</strong></button>
+                            <button type="button" class="toolbar-btn" title="Курсив" (click)="insertItalic()"><em>I</em></button>
+                            <button type="button" class="toolbar-btn" title="Ненумерований список" (click)="insertHtmlTag('<ul>\n  <li>', '</li>\n</ul>')">Список</button>
+                            <button type="button" class="toolbar-btn" title="Елемент списку" (click)="insertHtmlTag('<li>', '</li>')">Елемент списку</button>
+                            <button type="button" class="toolbar-btn" title="Блок коду" (click)="insertHtmlTag('<pre><code>', '</code></pre>')">Код</button>
+                            <button type="button" class="toolbar-btn" title="Вставити посилання" (click)="insertLink()">Посилання</button>
+                            <button type="button" class="toolbar-btn" title="Вставити зображення" (click)="insertImage()">Зображення</button>
+                        </div>
+                        
+                        <textarea 
+                            class="html-editor form-control" 
+                            [(ngModel)]="educationalContent" 
+                            (ngModelChange)="onContentChange()"
+                            placeholder="Введіть HTML контент тут"></textarea>
+                        
+                        <div *ngIf="educationalContent" class="content-preview-section">
+                            <h4>Попередній перегляд:</h4>
+                            <div class="content-preview" [innerHTML]="educationalContent | sanitizeHtml"></div>
+                        </div>
+                    </div>                    <!-- Images Section -->
+                    <div class="content-section images-section">
+                        <div class="section-header">
+                            <h3>Зображення</h3>
+                            <button type="button" class="add-btn" (click)="addImage()">+ Додати зображення</button>
+                        </div>
+                        
+                        <div *ngIf="educationalImages.length === 0" class="no-items-message">
+                            <p>Зображення не додані. Використовуйте кнопку "Додати зображення", щоб включити зображення.</p>
+                        </div>
+                        
+                        <div *ngFor="let image of educationalImages; let i = index" class="image-item">
+                            <div class="item-header">
+                                <h4>Зображення #{{ i + 1 }}</h4>
+                                <button type="button" class="remove-btn" (click)="removeImage(i)">Видалити</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-file-{{ i }}">Виберіть файл зображення</label>
+                                <input type="file" 
+                                       id="image-file-{{ i }}" 
+                                       (change)="onImageFileSelected($event, i)" 
+                                       accept="image/*" 
+                                       class="form-control file-input">
+                                <small class="file-info">Підтримувані формати: JPG, PNG, GIF, WebP</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-caption-{{ i }}">Підпис</label>
+                                <input type="text" id="image-caption-{{ i }}" [(ngModel)]="image.caption" placeholder="Введіть підпис зображення" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="image-alt-{{ i }}">Альтернативний текст</label>
+                                <input type="text" id="image-alt-{{ i }}" [(ngModel)]="image.altText" placeholder="Введіть альтернативний текст для доступності" class="form-control">
+                            </div>
+                            <!-- Показати поточну інформацію про файл або попередній перегляд -->
+                            <div *ngIf="image.fileName || originalImageUrls[i]" class="file-preview">
+                                <div class="file-info-display">
+                                    <strong>Поточний файл:</strong> {{ image.fileName || 'Оригінальне зображення' }}
+                                    <span *ngIf="image.contentType" class="file-type">({{ image.contentType }})</span>
+                                </div>
+                                <div *ngIf="image.previewUrl || originalImageUrls[i]" class="image-preview">
+                                    <img [src]="image.previewUrl || originalImageUrls[i]" [alt]="image.altText || 'Попередній перегляд'" style="max-width: 100%; max-height: 150px;">
+                                </div>
+                                <div *ngIf="originalImageUrls[i] && !image.fileName" class="original-image-note">
+                                    (Використовується оригінальне зображення - виберіть новий файл для зміни)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                      <!-- Attachments Section -->
+                    <div class="content-section attachments-section">
+                        <div class="section-header">
+                            <h3>Вкладення</h3>
+                            <button type="button" class="add-btn" (click)="addAttachment()">+ Додати вкладення</button>
+                        </div>
+                        
+                        <div *ngIf="educationalAttachments.length === 0" class="no-items-message">
+                            <p>Вкладення не додані. Використовуйте кнопку "Додати вкладення", щоб включити файли для завантаження.</p>
+                        </div>
+                        
+                        <div *ngFor="let attachment of educationalAttachments; let i = index" class="attachment-item">
+                            <div class="item-header">
+                                <h4>Вкладення #{{ i + 1 }}</h4>
+                                <button type="button" class="remove-btn" (click)="removeAttachment(i)">Видалити</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="attachment-file-{{ i }}">Виберіть файл</label>
+                                <input type="file" 
+                                       id="attachment-file-{{ i }}" 
+                                       (change)="onAttachmentFileSelected($event, i)" 
+                                       class="form-control file-input">
+                                <small class="file-info">Підтримувані формати: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT тощо</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label for="attachment-desc-{{ i }}">Опис</label>
+                                <input type="text" id="attachment-desc-{{ i }}" [(ngModel)]="attachment.description" placeholder="Введіть опис файлу" class="form-control">
+                            </div>
+                            <!-- Показати поточну інформацію про файл -->
+                            <div *ngIf="attachment.fileName || originalAttachmentUrls[i]" class="file-preview">
+                                <div class="file-info-display">
+                                    <strong>Поточний файл:</strong> {{ attachment.fileName || 'Оригінальний файл' }}
+                                    <span *ngIf="attachment.contentType" class="file-type">({{ attachment.contentType }})</span>
+                                </div>
+                                <div *ngIf="originalAttachmentUrls[i] && !attachment.fileName" class="original-file-note">
+                                    (Використовується оригінальний файл - виберіть новий файл для зміни)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEducationalContentPopup($event)">Скасувати</button>
+            <button class="save-btn" (click)="saveEducationalContent()">Зберегти контент</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Lesson Popup -->
+<div *ngIf="isEditLessonPopupVisible" class="edit-lesson-popup-overlay" (click)="closeEditLessonPopup($event)">    <div class="edit-lesson-popup-content">
+        <div class="popup-header">
+            <h2>Редагувати урок</h2>
+            <button class="close-popup-btn" (click)="closeEditLessonPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="form-group">
+                <label for="editLessonName">Назва уроку</label>
+                <input type="text" id="editLessonName" [(ngModel)]="editedLessonName" 
+                       placeholder="Введіть назву уроку" class="form-control">
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditLessonPopup($event)">Скасувати</button>
+            <button class="save-btn" [disabled]="!editedLessonName.trim()" 
+                    (click)="saveEditedLesson()">Зберегти зміни</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Tasks Popup -->
+<div *ngIf="isViewTasksPopupVisible" class="view-tasks-overlay" (click)="closeViewTasksPopup($event)">    <div class="popup-content">
+        <div class="popup-header">
+            <h2>Завдання для {{ currentEditingCard?.title }}</h2>
+            <button class="close-popup-btn" (click)="closeViewTasksPopup($event)">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div *ngIf="isLoadingTasks" class="loading-message">
+                Завантаження завдань...
+            </div>
+            
+            <div *ngIf="!isLoadingTasks">
+                <div class="action-buttons">
+                    <button class="primary-btn" (click)="openAddTaskPopup()">Додати нове завдання</button>
+                </div>
+                
+                <div *ngIf="tasks.length === 0" class="no-items-message">
+                    Завдання не знайдені. Натисніть "Додати нове завдання", щоб створити одне.
+                </div>
+                
+                <div *ngIf="tasks.length > 0" class="items-list">
+                    <div *ngFor="let task of tasks; let i = index" class="item-card">
+                        <div class="item-info">
+                            <h3>{{ task.name }}</h3>
+                            <p>{{ task.description }}</p>                            <div class="item-details">
+                                <span class="detail-badge">Бали: {{ task.points }}</span>
+                                <span class="detail-badge" *ngIf="task.expectedData && task.expectedData.length > 0">
+                                    Очікувані дані: {{ task.expectedData.length }} елемент(ів)
+                                </span>
+                            </div>
+                        </div>                        <div class="item-actions">
+                            <button class="edit-btn" (click)="openEditTaskPopup(task)">Редагувати</button>
+                            <button class="delete-btn" (click)="deleteTask(task, i)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                                Видалити
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Task Popup -->
+<div *ngIf="isEditTaskPopupVisible" class="edit-task-overlay" (click)="closeEditTaskPopup($event)">
+    <div class="edit-task-popup-content">
+        <div class="popup-header">
+            <h2 class="popup-title">{{ taskPopupTitle }}</h2>
+            <button class="close-popup-btn" (click)="closeEditTaskPopup($event)">&times;</button>
+        </div>
+          <div class="popup-body">
+            <div class="form-group">
+                <label for="taskName">Назва завдання</label>
+                <input type="text" id="taskName" class="form-control" 
+                       placeholder="Введіть назву завдання" 
+                       [(ngModel)]="newTask.name">
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Опис</label>
+                <textarea id="taskDescription" class="form-control" 
+                          rows="3" placeholder="Введіть опис завдання" 
+                          [(ngModel)]="newTask.description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskPoints">Бали</label>
+                <input type="number" id="taskPoints" class="form-control" 
+                       min="1" placeholder="Введіть кількість балів" 
+                       [(ngModel)]="newTask.points">
+            </div>            <div class="expected-data-section">
+                <div class="section-header">
+                    <h3>Очікувані дані</h3>
+                    <button type="button" class="add-btn" (click)="addExpectedData()">+ Додати дані</button>
+                </div>
+                  <div class="expected-data-list">
+                    <!-- Repeat for each expected data item -->
+                    <div *ngFor="let data of newTask.expectedData; let i = index" class="expected-data-item">
+                        <div class="item-header">
+                            <h4>Очікувані дані #{{i+1}}</h4>
+                            <button type="button" class="remove-btn" (click)="removeExpectedData(i)">Видалити</button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group type-selector">
+                                <label>Тип даних</label>
+                                <select class="form-control" [ngModel]="getExpectedDataType(data)" 
+                                        (ngModelChange)="updateExpectedDataType(i, $event)">
+                                    <option value="string">Рядок</option>
+                                    <option value="int">Ціле число</option>
+                                    <option value="double">Дробове число</option>
+                                    <option value="bool">Логічне значення</option>
+                                </select>
+                            </div>
+                            <div class="form-group value-input">
+                                <label>Зразок значення</label>
+                                <input *ngIf="getExpectedDataType(data) === 'string'" 
+                                       type="text" 
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Введіть зразок рядкового значення">
+                                <input *ngIf="getExpectedDataType(data) === 'int'" 
+                                       type="number" 
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Введіть зразок цілого числа">
+                                <input *ngIf="getExpectedDataType(data) === 'double'" 
+                                       type="number" 
+                                       step="0.01"
+                                       class="form-control" 
+                                       [ngModel]="getExpectedDataValue(data)" 
+                                       (ngModelChange)="updateExpectedDataValue(i, $event)"
+                                       placeholder="Введіть зразок дробового числа">
+                                <select *ngIf="getExpectedDataType(data) === 'bool'" 
+                                        class="form-control" 
+                                        [ngModel]="getExpectedDataValue(data)" 
+                                        (ngModelChange)="updateExpectedDataValue(i, $event)">
+                                    <option value="true">Істина</option>
+                                    <option value="false">Хибність</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div *ngIf="!newTask.expectedData || newTask.expectedData.length === 0" class="no-items-message">
+                        Очікувані дані не визначені. Натисніть "+ Додати дані", щоб визначити, які дані слід очікувати для цього завдання.
+                    </div>
+                    
+                    <div *ngIf="newTask.expectedData && newTask.expectedData.length > 0" class="data-count-info">
+                        <p><strong>Кількість очікуваних даних:</strong> {{ newTask.expectedData.length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popup-footer">
+            <button class="cancel-btn" (click)="closeEditTaskPopup($event)">Скасувати</button>
+            <button class="save-btn" (click)="saveTask()">{{ taskPopupSubmitText || 'Зберегти завдання' }}</button>
+        </div>
+    </div>
+</div>
+

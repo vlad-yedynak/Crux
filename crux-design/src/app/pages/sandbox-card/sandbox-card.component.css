@@ -1,0 +1,984 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-primary-light);
+}
+
+.sandbox-layout-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 50px); /* 50px - висота header, підлаштуйте якщо інша */
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.canvas-section {
+  flex: 2 1 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+#canvasContainer {
+  flex: 1 1 0;
+  background-color: var(--color-secondary-light);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+#coordinateCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.overlay-section {
+  flex: 1 1 0;
+  min-width: 320px;
+  max-width: 480px;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-secondary-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+  border-bottom-left-radius: 12px;
+  border-top-left-radius: 12px;
+  border-left: 1px solid var(--color-secondary-dark);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  min-height: 0;
+}
+
+/* --- Fix scrollable lists --- */
+.drawn-shapes-list ul,
+.task-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.shape-selector {
+    margin-bottom: 15px;
+}
+
+.shape-selector label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.shape-selector select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.shape-selector h4 {
+  font-size: 0.95em;
+  font-weight: bold;
+  color: var(--color-secondary-dark);
+  margin-bottom: 10px;
+}
+
+.draw-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--color-secondary-dark);
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    /* Add some margin if needed, e.g., margin-bottom: 15px; */
+}
+
+.draw-button:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+}
+
+.drawn-shapes-list {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-secondary-light);
+    flex-grow: 1; /* Allow this to grow */
+    display: flex; /* Make it a flex container */
+    flex-direction: column; /* Stack h4 and ul vertically */
+    min-height: 0; /* Important for flex children inside fixed height parent */
+}
+
+.drawn-shapes-list h4 {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--color-secondary-dark);
+    margin-bottom: 10px;
+}
+
+.drawn-shapes-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    /* max-height: 200px; */ /* Remove or comment out max-height */
+    overflow-y: auto; /* Keep scrolling */
+    flex-grow: 1; /* Allow ul to take available space in .drawn-shapes-list */
+    max-height: calc(100vh - 300px); /* Limit height to allow scrolling */
+}
+
+.drawn-shapes-list li {
+    padding: 8px 10px;
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    color: var(--color-secondary-dark);
+    display: flex; /* Use flexbox to align items */
+    flex-wrap: wrap; /* Allow wrapping for edit panel */
+    justify-content: space-between; /* Puts text on left, buttons on right */
+    align-items: center; /* Vertically aligns items in the center */
+}
+
+.drawn-shapes-list li:last-child {
+    margin-bottom: 0;
+}
+
+.drawn-shapes-list .shape-info {
+    flex-grow: 1; /* Takes available space */
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+.drawn-shapes-list .shape-actions {
+    display: flex;
+    align-items: center; /* Align buttons vertically */
+    gap: 8px; /* Space between buttons */
+}
+
+.drawn-shapes-list .edit-arrow-btn,
+.drawn-shapes-list .delete-cross-btn {
+    background: none;
+    color: var(--color-accent);
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drawn-shapes-list .edit-arrow-btn .dropdown-arrow {
+    width: 20px; /* Adjust size */
+    height: 20px;
+    fill: var(--color-secondary-dark);
+    transition: transform 0.3s ease;
+}
+
+.drawn-shapes-list .edit-arrow-btn.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.drawn-shapes-list .delete-cross-btn {
+    font-size: 1em; /* Reset or adjust if needed for SVG sizing */
+    color: var(--color-accent); /* Use accent color for the icon */
+    line-height: 1; 
+}
+
+.drawn-shapes-list .delete-cross-btn .cross-icon {
+    width: 18px; /* Adjust size as needed */
+    height: 18px;
+    display: block; /* Helps with alignment */
+}
+
+.drawn-shapes-list .edit-arrow-btn:hover {
+    background-color: var(--color-accent-light);
+}
+
+.drawn-shapes-list .edit-arrow-btn:hover .dropdown-arrow {
+    fill: var(--color-primary-dark);
+}
+
+.drawn-shapes-list .delete-cross-btn:hover {
+    background-color: var(--color-secondary-light); /* Subtle hover for accent color icon */
+    /* Or a darker shade of accent if preferred and defined */
+    /* color: var(--color-accent-dark); */ 
+}
+
+/* Shape edit panel adjustments */
+.shape-edit-panel {
+  width: 100%; 
+  background-color: var(--color-primary-light); /* Match the cream color in the screenshot */
+  border-radius: 4px;
+  border: 1px solid var(--color-secondary-dark); 
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Changed from visible to auto */
+  box-sizing: border-box;
+  padding: 10px;
+  margin-top: 8px;
+  /* max-height will be controlled by the animation, e.g., 500px */
+}
+
+.color-section {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.color-section label {
+  margin-right: 10px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.color-section input[type="color"] {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.points-section {
+  margin-bottom: 12px;
+}
+
+.points-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.points-container {
+  margin-left: 5px;
+  max-height: 200px; /* Add max height to force scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding-right: 5px; /* Add some padding for the scrollbar */
+}
+
+.point-inputs {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #ccc;
+  min-height: 65px; /* Ensure minimum height for point inputs */
+}
+
+.point-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.coordinates {
+  display: flex;
+  gap: 15px;
+  margin-left: 10px;
+}
+
+.coordinate {
+  display: flex;
+  align-items: center;
+}
+
+.coordinate label {
+  margin-right: 5px;
+  width: 15px;
+}
+
+.coordinate input {
+  width: 60px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.save-btn {
+  background-color: var(--color-accent, #ff5722);
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: var(--color-secondary-dark, #333);
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.shape-edit-panel input[type="color"] {
+    width: 40px;
+    height: 25px;
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.no-shapes-message {
+    font-style: italic;
+    color: var(--color-secondary-dark);
+    text-align: center;
+    padding: 10px;
+}
+
+.task-section {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.task-list {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.task-list h4 {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--color-secondary-dark);
+    margin-bottom: 10px;
+}
+
+.task-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+    max-height: calc(100vh - 300px);
+}
+
+.task-list li {
+    padding: 8px 10px;
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    color: var(--color-secondary-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.task-list li:hover {
+    background-color: var(--color-accent);
+    color: var(--color-primary-light);
+}
+
+.task-details {
+    width: 100%;
+}
+
+.task-description {
+    font-size: 14px;
+    color: var(--color-secondary-dark);
+    line-height: 1.5;
+    margin-bottom: 15px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.input-group input, 
+.task-details input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.submit-button, .back-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.submit-button {
+    background-color: var(--color-accent, #ff5722);
+    color: white;
+}
+
+.submit-button:hover {
+    background-color: var(--color-secondary-dark, #333);
+}
+
+.back-button {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.back-button:hover {
+    background-color: #d0d0d0;
+}
+
+.task-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.task-list li {
+    padding: 10px;
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.task-list li:hover {
+    background-color: var(--color-accent);
+    color: var(--color-secondary-light);
+}
+
+.task-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-details label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.task-details input {
+    padding: 8px;
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.submit-button, .back-button {
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--color-secondary-light);
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-button:hover, .back-button:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--color-secondary-dark);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.overlay-navigation {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-secondary-dark);
+}
+
+.overlay-navigation button {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--color-secondary-dark);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.overlay-navigation button.active {
+    color: var(--color-accent);
+    border-bottom: 3px solid var(--color-accent);
+    font-weight: bold;
+}
+
+.overlay-navigation button:hover:not(.active) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.panel {
+    animation: fadeIn 0.3s ease-in-out;
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1; 
+    min-height: 0; 
+    overflow: hidden; 
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.name-section {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.name-section label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.name-section input[type="text"] {
+  padding: 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.points-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.add-point-btn {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-accent);
+  color: var(--color-secondary-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.add-point-btn:hover {
+  background-color: var(--color-secondary-dark);
+  color: var(--color-accent);
+}
+
+.add-point-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-point-btn {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-point-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 50%;
+}
+
+.validation-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.no-points-message {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.save-btn:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.invalid-point {
+  background-color: rgba(255, 0, 0, 0.05);
+  border-left: 3px solid #f44336;
+  padding-left: 6px;
+}
+
+.invalid-input {
+  border-color: #f44336 !important;
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.point-validation-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 10px;
+}
+
+.completed-task {
+  border-left: 4px solid #4caf50 !important;
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.task-status {
+  display: flex;
+  align-items: center;
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: bold;
+  gap: 4px;
+}
+
+.completed-icon {
+  width: 16px;
+  height: 16px;
+  color: #4caf50;
+}
+
+.completed-text {
+  display: inline-block;
+}
+
+/* Style for the task details when completed */
+.task-details.completed-task h4::after {
+  content: " (Виконано)";
+  color: #4caf50;
+  font-size: 14px;
+}
+
+/* Results Popup Styles */
+.results-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.results-popup {
+  width: 90%;
+  max-width: 500px;
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: popup-fade-in 0.3s ease-out;
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.results-popup h2 {
+  color: var(--color-primary-dark);
+  font-size: 28px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 10px;
+}
+
+.results-content {
+  margin-bottom: 30px;
+}
+
+.results-score {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--color-secondary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.highlight {
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.highlight.success {
+  color: #4caf50;
+}
+
+.highlight.error {
+  color: #EB5E28;
+}
+
+.big-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.task-message {
+  margin-top: 20px;
+  font-size: 16px;
+  color: var(--color-secondary-dark);
+  line-height: 1.5;
+}
+
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.retry-btn, .return-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn {
+  background-color: var(--color-secondary-dark);
+  color: white;
+}
+
+.return-btn {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.retry-btn:hover, .return-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.retry-btn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.return-btn:hover {
+  background-color: #EB5E28; /* Darker accent color */
+}
+
+/* Points Animation Styles */
+.points-animation-container {
+  margin: 15px auto;
+  text-align: center;
+  position: relative;
+  height: 60px;
+}
+
+.points-badge {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: bold;
+  color: #4caf50;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 2px solid #4caf50;
+  animation: points-appear 0.7s ease-out;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+@keyframes points-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes text-appear {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Boolean select field styling */
+select.task-input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--color-secondary-dark);
+  border-radius: 4px;
+  background-color: white;
+  color: var(--color-secondary-dark);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3e%3cpath fill='%23EB5E28' d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select.task-input-field:hover {
+  border-color: var(--color-accent);
+}
+
+select.task-input-field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
+}
+
+/* Mobile warning styles */
+.mobile-warning {
+  display: none; /* Hidden by default */
+  padding: 20px;
+  text-align: center;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  height: calc(100vh - 50px); /* Adjust if header height is different or not present */
+  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2em;
+  line-height: 1.5;
+}
+
+.mobile-warning p {
+  margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+  .desktop-only-content {
+    display: none !important; /* Hide main content and popups */
+  }
+  .mobile-warning {
+    display: flex; /* Show warning message */
+  }
+}
+

@@ -1,0 +1,81 @@
+<div *ngIf="showAuthMessage" class="auth-message-container">
+  <div class="auth-message">
+    <div class="auth-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>    <h2>Потрібна автентифікація</h2>
+    <p>Вам потрібно увійти в систему, щоб проходити тести.</p>
+    <p>Перенаправлення на сторінку входу через {{redirectCountdown}} секунд...</p>
+    <div class="auth-buttons">
+      <button class="login-now-btn" (click)="router.navigate(['/auth'])">Увійти зараз</button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!showAuthMessage" class="test-page-container">  <div *ngIf="isLoading" class="loading-indicator">
+    <p>Завантаження тесту...</p>
+  </div>
+  
+  <div *ngIf="hasError" class="error-message">
+    <p>{{ errorMessage }}</p>
+  </div>
+  
+  <div *ngIf="!isLoading && !hasError && card" class="test-content">
+    <h1>{{ card.title }}</h1>
+    <p class="test-description">{{ card.description }}</p>
+    
+    <!-- <div class="test-instructions" [innerHTML]="card.content"></div> -->
+      <!-- Questions section -->
+      <div class="questions-section">
+        <h2>Запитання</h2>
+        <div *ngFor="let question of questions; let qIndex = index" class="question-card">
+          <p class="question-text">{{ question.questionText }}</p>
+          <div class="options-list">
+            <div *ngFor="let answer of question.answers" class="option-item">
+              <label class="option-label">
+                <input 
+                  type="radio" 
+                  [name]="'question' + question.id"  
+                  [value]="answer.id"
+                  [checked]="selectedAnswerIds[question.id!] === answer.id"
+                  (change)="selectAnswer(question.id, answer.id)"
+                  style="accent-color: var(--color-accent);"
+                  class="option-radio">
+                <span class="option-text">{{ answer.answerText }}</span>
+              </label>
+            </div>
+          </div>
+        </div>        <div class="test-actions" *ngIf="questions && questions.length > 0">
+          <button class="submit-test-btn" 
+                  (click)="submitTest()" 
+                  [disabled]="!hasAllAnswers() || testSubmitted">
+            Надіслати відповіді
+          </button>
+        </div>
+
+    <div *ngIf="!questions || questions.length === 0" class="no-questions">
+      <p>Для цього тесту немає доступних запитань.</p>
+    </div>
+  </div>
+  <!-- Results Popup -->
+  <div *ngIf="showResultsPopup && allQuestionsProcessed" class="results-popup-overlay">
+    <div class="results-popup">
+      <h2>Результати тесту</h2>
+      <div class="results-content">
+        <p class="results-score">Ви набрали <span class="highlight">{{ correctAnswersCount }}</span> з <span class="highlight">{{ questions.length }}</span></p>
+        <div class="results-percentage">
+          <div class="percentage-bar">
+            <div class="percentage-fill" [style.width.%]="(correctAnswersCount / questions.length) * 100"></div>
+          </div>
+          <p>{{ ((correctAnswersCount / questions.length) * 100).toFixed(0) }}%</p>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="retry-btn" (click)="restartTest()">Спробувати ще раз</button>
+        <button class="return-btn" (click)="returnToLessons()">Повернутися до уроків</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<div class="auth-wrapper">
+    <div class="background"></div>
+    <div class="logo">
+        <h1>
+            <a routerLink="/">
+                <span *ngFor="let letter of logoLetters; let i = index" 
+                      class="letter" 
+                      [style.animation-delay]="i * 0.15 + 's'">{{ letter }}</span>
+            </a>
+        </h1>
+    </div>    
+      <div class="left-promo">        <h2 class="shuffle-text">
+            <span>В</span><span>і</span><span>т</span><span>а</span><span>є</span><span>м</span><span>о</span><span>&nbsp;</span><span>в</span><span>&nbsp;</span><span>C</span><span>r</span><span>u</span><span>x</span><span>!</span>
+        </h2>
+        <p>Приєднуйтесь до нашої спільноти<br>та почніть свою навчальну подорож.</p>
+    </div>
+
+    <div class="auth-forms">
+        <div
+          class="signup-form-wrapper"
+          [class.active]="activeForm === 'signup'"
+          [@formSwitch]="activeForm === 'signup' ? 'login' : 'signup'"
+          (click)="activeForm !== 'signup' && switchForm()"
+        >
+          <app-signup-form (switchToLogin)="switchForm()" (click)="$event.stopPropagation()"></app-signup-form>
+        </div>
+        
+        <div
+          class="login-form-wrapper"
+          [class.active]="activeForm === 'login'"
+          [@formSwitch]="activeForm === 'login' ? 'login' : 'signup'"
+          (click)="activeForm !== 'login' && switchForm()"
+        >
+          <app-login-form (switchToSignup)="switchForm()" (click)="$event.stopPropagation()"></app-login-form>
+        </div>
+    </div>
+</div>
