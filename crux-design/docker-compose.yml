@@ -1,0 +1,14 @@
+services:
+  # Frontend Angular application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"  # Map container port 80 to host port 4200
+    container_name: frontend-1
+    # Використовуємо зовнішню мережу для доступу до api-1
+    network_mode: "bridge"
+    # Додаємо належність до тієї ж мережі, де розміщений api-1
+    extra_hosts:
+      - "api-1:host-gateway"

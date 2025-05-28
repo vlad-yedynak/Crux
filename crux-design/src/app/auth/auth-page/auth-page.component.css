@@ -1,0 +1,272 @@
+.auth-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+  
+/* Фон — дві половини */
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    z-index: 0;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        height: 100%;
+    }
+
+    &::before {
+        background: linear-gradient(
+        225deg,
+        var(--color-primary-dark) 0%,
+        var(--color-secondary-dark) 75%,
+        var(--color-accent) 250%
+    );
+    }
+
+    &::after {
+        background: var(--color-secondary-light);
+    }
+}
+
+.logo {
+    position: absolute;
+    padding: 2rem 4rem;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px; /* Adjusted for individual letter spacing */
+    color: var(--color-accent);
+    /* text-shadow: 0 0px 5px var(--color-accent); Will be applied to spans */
+    z-index: 10;
+}
+
+.logo h1 a {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+/* Individual letter styling for animation */
+.logo h1 a .letter {
+    display: inline-block;
+    position: relative;
+    text-shadow: 0 0px 5px var(--color-accent);
+    animation-name: jump;
+    animation-duration: 3s; 
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out; 
+}
+
+.logo h1 a .letter:nth-child(1) { animation-delay: 0s; }
+.logo h1 a .letter:nth-child(2) { animation-delay: 0.15s; }
+.logo h1 a .letter:nth-child(3) { animation-delay: 0.3s; }
+.logo h1 a .letter:nth-child(4) { animation-delay: 0.45s; }
+.logo h1 a .letter:nth-child(5) { animation-delay: 0.6s; }
+
+
+@keyframes jump {
+    0%, 60%, 100% {
+        transform: translateY(0) scaleY(1) scaleX(1);
+    }
+    70% {
+        transform: translateY(0) scaleY(0.95) scaleX(1.05);
+    }
+    80% {
+        transform: translateY(-10px) scaleY(1.1) scaleX(0.9);
+    }
+    85% {
+        transform: translateY(-5px) scaleY(1.05) scaleX(0.95);
+    }
+    90% {
+        transform: translateY(0) scaleY(0.9) scaleX(1.1);
+    }
+    95% {
+        transform: translateY(-2px) scaleY(1.02) scaleX(0.98);
+    }
+}
+
+.left-promo {
+    position: absolute;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    padding: 4rem;
+    color: var(--color-accent);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+  
+    h2 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      position: relative; /* Context for child span positioning if needed */
+    }
+}
+
+.shuffle-text span {
+  display: inline-block; /* Required for transforms */
+  position: relative; /* Allows z-index and fine-tuning position */
+  animation-name: shuffleLetters;
+  animation-duration: 8s; /* Total cycle for each letter */
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+
+  /* Default values for custom properties */
+  --target-y: 0px;
+  --target-x: 0px;
+  --target-rotate: 0deg;
+  --target-opacity: 1;
+}
+
+/* Define target transforms for each letter based on Ukrainian text "Вітаємо в Crux!" */
+/* Вітаємо */
+.shuffle-text span:nth-child(1) { --target-y: -6px; --target-x: -2px; --target-rotate: -10deg; --target-opacity: 0.85; animation-delay: 0.00s; } /* В */
+.shuffle-text span:nth-child(2) { --target-y: 2px;  --target-x: -5px; --target-rotate: 7deg;   --target-opacity: 0.85; animation-delay: 0.05s; } /* і */
+.shuffle-text span:nth-child(3) { --target-y: -9px; --target-x: 4px;  --target-rotate: 12deg;  --target-opacity: 0.85; animation-delay: 0.10s; } /* т */
+.shuffle-text span:nth-child(4) { --target-y: 5px;  --target-x: -7px; --target-rotate: -14deg; --target-opacity: 0.85; animation-delay: 0.15s; } /* а */
+.shuffle-text span:nth-child(5) { --target-y: -3px; --target-x: 10px; --target-rotate: 5deg;   --target-opacity: 0.85; animation-delay: 0.20s; } /* є */
+.shuffle-text span:nth-child(6) { --target-y: 7px;  --target-x: -4px; --target-rotate: -8deg;  --target-opacity: 0.85; animation-delay: 0.25s; } /* м */
+.shuffle-text span:nth-child(7) { --target-y: -5px; --target-x: 6px;  --target-rotate: 9deg;   --target-opacity: 0.85; animation-delay: 0.30s; } /* о */
+/* Space 1 */
+.shuffle-text span:nth-child(8) { animation: none; --target-opacity: 1; }
+/* в */
+.shuffle-text span:nth-child(9) { --target-y: 3px;  --target-x: 8px;  --target-rotate: -6deg;  --target-opacity: 0.85; animation-delay: 0.35s; } /* в */
+/* Space 2 (after "в") */
+.shuffle-text span:nth-child(10){ animation: none; --target-opacity: 1; }
+/* Crux! */
+.shuffle-text span:nth-child(11){ --target-y: 9px;  --target-x: 3px;  --target-rotate: -20deg; --target-opacity: 0.85; animation-delay: 0.40s; } /* C */
+.shuffle-text span:nth-child(12){ --target-y: -4px; --target-x: -12px;--target-rotate: 10deg;  --target-opacity: 0.85; animation-delay: 0.45s; } /* r */
+.shuffle-text span:nth-child(13){ --target-y: 1px;  --target-x: 10px; --target-rotate: -22deg; --target-opacity: 0.85; animation-delay: 0.50s; } /* u */
+.shuffle-text span:nth-child(14){ --target-y: -10px;--target-x: -3px; --target-rotate: 14deg;  --target-opacity: 0.85; animation-delay: 0.55s; } /* x */
+.shuffle-text span:nth-child(15){ --target-y: 5px;  --target-x: 8px;  --target-rotate: -9deg;  --target-opacity: 0.85; animation-delay: 0.60s; } /* ! */
+
+
+/* Define the shuffle animation */
+@keyframes shuffleLetters {
+  /* Initial and final resting state */
+  0%, 40%, 100% { 
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+    opacity: 1;
+  }
+
+  /* Transition to mixed-up state (e.g., over 1.2 seconds of 8s = 15%) */
+  5% { /* Initial gentle shuffle */
+    transform: translateY(-5px) translateX(3px) rotate(2deg);
+    opacity: 0.95;
+  }
+  10% { /* More pronounced shuffle */
+    transform: translateY(5px) translateX(-3px) rotate(-2deg);
+    opacity: 0.9;
+  }
+
+  /* At 15%, letters reach their specific "paused" pose */
+  15% {
+    transform: translateY(var(--target-y)) translateX(var(--target-x)) rotate(var(--target-rotate));
+    opacity: var(--target-opacity);
+  }
+  
+  /* Hold the mixed-up state for 1 second (1s of 8s = 12.5%) */
+  /* So, 15% + 12.5% = 27.5% */
+  27.5% {
+    transform: translateY(var(--target-y)) translateX(var(--target-x)) rotate(var(--target-rotate));
+    opacity: var(--target-opacity);
+  }
+
+  /* Transition back to original position (from 27.5% to 40%) */
+  33% { /* Mid-way returning - gentle movement */
+    transform: translateY(-2px) translateX(1px) rotate(1deg);
+    opacity: 0.95;
+  }
+  /* At 40%, it's back to normal (defined at the top) */
+}
+
+.auth-forms {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+  
+.signup-form-wrapper, .login-form-wrapper {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: absolute;
+    width: 350px;
+}
+  
+.signup-form-wrapper.active, .login-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+    opacity: 1;
+    pointer-events: all;
+}
+.signup-form-wrapper.active app-signup-form,
+.login-form-wrapper.active app-login-form {
+    pointer-events: all;
+}
+
+.signup-form-wrapper:not(.active), .login-form-wrapper:not(.active) {
+    opacity: 0.4;
+    z-index: 1;
+    pointer-events: auto;
+}
+.signup-form-wrapper:not(.active) app-signup-form,
+.login-form-wrapper:not(.active) app-login-form {
+    pointer-events: none;
+}
+  
+.signup-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+}
+  
+.login-form-wrapper.active {
+    transform: scale(1.05);
+    z-index: 2;
+}
+  
+.login-form-wrapper {
+    position: absolute;
+    width: 350px;
+    opacity: 0.4;
+    pointer-events: none; 
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+    .logo {
+        padding: 1.5rem 2rem; /* Adjust padding for smaller screens */
+        font-size: 20px; /* Optionally adjust font size */
+        z-index: 1; /* Lower z-index on mobile to place logo behind forms */
+    }
+
+    .left-promo {
+        display: none; /* Hide the left promo section on mobile */
+    }
+
+    .signup-form-wrapper,
+    .login-form-wrapper {
+        width: 90%; /* Make forms take up most of the screen width */
+        max-width: 350px; /* Keep max width as per desktop, or adjust if too large */
+    }
+    
+    /* Ensure forms are above logo on mobile */
+    .signup-form-wrapper.active, 
+    .login-form-wrapper.active {
+        z-index: 20; /* Higher z-index to ensure forms are above logo */
+    }
+}

@@ -1,0 +1,27 @@
+/* Кнопки керування під панеллю кольорів */
+.color-control-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.color-control-buttons .control-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: var(--color-accent, #444);
+  color: white;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.color-control-buttons .control-button:hover {
+  background-color: var(--color-accent-dark, #333);
+}
+
+.color-control-buttons .control-button.active {
+  background-color: var(--color-primary, #dc3232);
+}

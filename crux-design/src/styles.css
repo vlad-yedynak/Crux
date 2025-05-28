@@ -1,0 +1,36 @@
+/* CSS Reset */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+    --color-primary-light: #FFFCF2;
+    --color-secondary-light: #CCC5B9;
+    --color-secondary-dark: #403D39;
+    --color-primary-dark: #252422;
+    --color-accent: #EB5E28;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+main {
+    /* padding: 40px 20px; */
+    height: calc(100vh - 50px); /* Додає повну висоту екрану */
+    box-sizing: border-box; /* Щоб padding не додавався зверху до vh */
+    background-color: var(--color-primary-light);
+}
