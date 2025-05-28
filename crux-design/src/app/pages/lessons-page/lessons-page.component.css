@@ -1,0 +1,1107 @@
+/* Ensure the host container doesn't overflow */
+:host {
+    display: block;
+    width: 100%;
+    background-color: var(--color-primary-light);
+    padding-bottom: 40px;
+    overflow-x: hidden; 
+    box-sizing: border-box;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Default for large screens */
+    justify-content: flex-start;
+    text-align: left;
+    width: 100%;
+    max-width: 1400px; 
+    margin: 0 auto;
+    padding-left: 24px; 
+    padding-right: 24px; 
+    position: relative;
+    overflow-x: hidden; 
+    box-sizing: border-box;
+}
+
+/* Circle decorations - copied from landing page */
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.circle-left {
+    width: 150px;
+    height: 150px;
+    background-color: var(--color-primary-dark);
+    left: -75px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+}
+
+.circle-right {
+    width: 200px;
+    height: 200px;
+    background-color: var(--color-secondary-light);
+    right: -100px;
+    top: 30%;
+    opacity: 0.6;
+}
+
+/* Page title */
+.page-title {
+    font-size: 32px;
+    color: var(--color-primary-dark);
+    margin: 20px 0;
+    align-self: flex-start; /* Default for large screens */
+}
+
+/* Category container */
+.category-container {
+    width: 100%;
+    margin-bottom: 40px;
+    text-align: left;
+    padding-left: 0;   
+    padding-right: 0;  
+    box-sizing: border-box;
+    position: relative; /* Added for proper positioning of elements */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the contents */
+}
+
+/* New category header styling */
+.category-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 16px; 
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+.category-title {
+    font-size: 24px;
+    color: var(--color-secondary-dark);
+    padding-left: 10px;
+    border-left: 4px solid var(--color-accent);
+    margin-bottom: 0; 
+    flex-grow: 1; 
+    min-width: 0; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    box-sizing: border-box; 
+}
+
+.category-controls {
+    display: flex;
+    gap: 8px; 
+    align-items: center;
+    flex-shrink: 0; 
+}
+
+.control-btn {
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.control-btn:hover {
+    background-color: var(--color-accent);
+}
+
+.scroll-btn {
+    width: 32px; 
+    height: 32px; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px; 
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s, background-color 0.3s;
+    opacity: 0.85;
+}
+
+.scroll-btn:hover {
+    background-color: var(--color-accent);
+    opacity: 1;
+}
+
+.view-all-btn {
+    padding: 4px 10px; /* Reduced padding from 6px 12px */
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Scroll container for arrows and lessons */
+.scroll-container {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    overflow: hidden; /* Changed from visible to hidden to clip content */
+    position: relative;
+    padding-left: 0;   
+    padding-right: 0;
+    box-sizing: border-box;
+}
+
+/* Arrow button styling - with inverted rounded corners */
+.scroll-arrow {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 100%; 
+    background-color: var(--color-secondary-light); 
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 2;
+    opacity: 0.7;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0; 
+}
+
+.scroll-arrow:hover {
+    opacity: 1;
+    background-color: var(--color-accent);
+}
+
+.scroll-left {
+    left: 0;
+    border-top-left-radius: 4px; 
+    border-bottom-left-radius: 4px;
+}
+
+.scroll-right {
+    right: 0;
+    border-top-right-radius: 4px; 
+    border-bottom-right-radius: 4px;
+}
+
+.arrow-icon {
+    line-height: 1;
+}
+
+/* Lesson card styles */
+.lesson-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 16px; /* Reduced from 20px for better fitting */
+    overflow-x: auto;
+    width: 100%; 
+    min-width: 0;
+    padding: 10px 0 20px 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    transition: width 0.2s, max-width 0.2s;
+    box-sizing: border-box;
+    /* Calculate width for exactly 4 cards with equal spacing */
+    max-width: calc((325px * 4) + (16px * 3)); /* 4 cards + 3 gaps = 1348px */
+    margin: 0 auto; /* Center the container */
+}
+
+.lesson-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* Adjust card sizes to fit better */
+.lesson-card {
+    min-width: 325px; /* Increased from 320px */
+    width: 325px;     /* Increased from 320px */
+    height: 215px;    /* Increased from 210px */
+    background-color: white; 
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+    position: relative;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+    border: 1px solid var(--color-secondary-light);
+}
+
+.lesson-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lesson-description {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-secondary-dark);
+    color: white; 
+    font-size: 14px;
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.5;
+    overflow: auto;
+    border-radius: 8px;
+}
+
+/* Normal state with ellipsis */
+.lesson-card > p {
+    margin-top: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    max-height: 105px;
+    color: var(--color-secondary-dark);
+    font-size: 14px;
+}
+
+.lesson-card:hover .lesson-description {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Updated hover state to make left border disappear on hover for all card types */
+.lesson-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-accent); /* This replaces all borders including left */
+}
+
+/* Popup styles */
+.card-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.card-popup-content {
+    position: relative;
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh;
+    background-color: var(--color-primary-light);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    overflow: hidden; /* Ensures content scrolls within designated areas */
+    display: flex;
+    flex-direction: column;
+    animation: popupFadeIn 0.3s ease-out forwards;
+}
+
+.close-popup-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-secondary-dark);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.close-popup-btn:hover {
+    background-color: var(--color-accent);
+    transform: scale(1.1);
+}
+
+.popup-content-area {
+    display: flex;
+    flex-direction: row; /* Default side-by-side layout */
+    flex: 1; /* Allows this area to take up available space in .card-popup-content */
+    overflow-y: hidden; /* Changed to hidden - individual panels will scroll */
+    overflow-x: hidden; /* Prevents horizontal scrolling */
+    flex-wrap: nowrap; /* Prevent wrapping to keep side-by-side layout */
+    gap: 20px; /* Add spacing between content sections */
+    height: 100%; /* Ensure it takes full height of parent */
+}
+
+.popup-left-content {
+    flex: 3; /* Takes 3 parts of the space in row layout */
+    padding: 20px;
+    border-right: 1px solid var(--color-secondary-light); /* Default border for row layout */
+    overflow-y: auto; /* Allows individual scrolling in row layout */
+    background-color: white;
+    border-radius: 8px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    min-width: 60%; /* Ensure left content has minimum width */
+    max-height: 100%; /* Ensure the content respects container height */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--color-accent) var(--color-secondary-light); /* Firefox */
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.popup-left-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.popup-left-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.popup-left-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid white;
+}
+
+/* Fix for object content display */
+.content-wrapper {
+    width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Style HTML elements in content */
+.educational-content {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-secondary-dark);
+}
+
+.educational-content strong,
+.educational-content b {
+    font-weight: bold;
+}
+
+.educational-content li {
+    display: list-item;
+    margin-left: 20px;
+}
+
+.educational-content ul, 
+.educational-content ol {
+    padding-left: 20px;
+    margin: 1em 0;
+}
+
+/* Fallback content styling */
+.content-fallback {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--color-secondary-light);
+    font-style: italic;
+}
+
+.popup-right-content {
+    flex: 1; /* Takes 1 part of the space in row layout */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-width: 250px; /* Minimum width to ensure readability */
+    max-width: 35%; /* Maximum width to balance with left content */
+    max-height: 100%; /* Ensure the right content respects the container height */
+    position: relative; /* Creates positioning context for sticky elements */
+    overflow-y: hidden; /* Prevent overflow on the container itself */
+}
+
+/* New scrollable container for right-side content */
+.right-content-scrollable {
+    flex: 1;
+    overflow-y: auto; /* Allow scrolling only for this content */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--color-accent) var(--color-secondary-light); /* Firefox */
+    padding-right: 5px; /* Add some space for scrollbar */
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.right-content-scrollable::-webkit-scrollbar {
+    width: 8px;
+}
+
+.right-content-scrollable::-webkit-scrollbar-track {
+    background: var(--color-secondary-light);
+    border-radius: 10px;
+}
+
+.right-content-scrollable::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid var(--color-primary-light);
+}
+
+/* Custom scrollbar styles for webkit browsers */
+.popup-right-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.popup-right-content::-webkit-scrollbar-track {
+    background: var(--color-secondary-light);
+    border-radius: 10px;
+}
+
+.popup-right-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 10px;
+    border: 2px solid var(--color-primary-light);
+}
+
+.popup-right-content h2 {
+    color: var(--color-primary-dark);
+    font-size: 28px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    position: relative; /* Not sticky - just normal positioning */
+    background-color: var(--color-primary-light);
+    padding: 10px 0;
+    z-index: 5;
+    margin-top: 0; /* Ensure no top margin pushes it down */
+    width: 100%; /* Ensure it spans the full width */
+}
+
+.popup-right-content p {
+    color: var(--color-secondary-dark);
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* Add animation for popup entrance */
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Make educational cards visually distinct */
+.lesson-card[data-type="Educational"] {
+    cursor: pointer;
+}
+
+.lesson-card[data-type="Educational"]:hover::after {
+    content: "Click to view";
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: var(--color-accent);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Card type styling */
+.educational-card,
+.test-card,
+.sandbox-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Maintain left borders only in normal state, not hover */
+.educational-card {
+  border-left: 4px solid var(--color-accent);
+}
+
+.test-card {
+  border-left: 4px solid green;
+}
+
+.sandbox-card {
+  border-left: 4px solid blue;
+}
+
+/* Remove these specific hover styles to prevent border preservation */
+.educational-card:hover,
+.test-card:hover,
+.sandbox-card:hover {
+  cursor: pointer;
+}
+
+/* Style for the view button */
+.view-button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.view-button:hover {
+  background-color: #0069d9;
+}
+
+/* Test card button specific styling */
+.test-card .view-button {
+  background-color: #28a745;
+}
+
+.test-card .view-button:hover {
+  background-color: #218838;
+}
+
+/* Sandbox card button specific styling */
+.sandbox-card .view-button {
+  background-color: #17a2b8;
+}
+
+.sandbox-card .view-button:hover {
+  background-color: #138496;
+}
+
+/* Controls always visible on the right */
+.scroll-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px; 
+    flex-shrink: 0; 
+    height: auto;
+    position: static;
+    top: unset;
+    margin-left: auto; 
+}
+
+/* View All mode styles */
+.view-all-mode {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.view-all-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.view-all-cards {
+    display: flex;
+    flex-direction: row; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 20px; 
+    width: 100%;
+}
+
+/* Back button styling */
+.back-btn {
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.back-btn:hover {
+    background-color: var(--color-accent);
+}
+
+
+.view-all-mode .lesson-card {
+    min-width: 325px; 
+    width: 325px;     
+    height: 215px;   
+    max-width: unset;
+    flex: 0 0 auto;   
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Animation: Cards in scroller sliding out */
+.card-scroller-slide-out-left {
+  animation: cardScrollerSlideOutLeft 0.5s forwards ease-out;
+}
+
+.card-scroller-slide-out-right {
+  animation: cardScrollerSlideOutRight 0.5s forwards ease-out;
+}
+
+@keyframes cardScrollerSlideOutLeft {
+  to {
+    transform: translateX(-150%);
+    opacity: 0;
+  }
+}
+
+@keyframes cardScrollerSlideOutRight {
+  to {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+}
+
+/* Animation: Cards in scroller sliding out FAR */
+.card-scroller-slide-out-far-left {
+  animation: cardScrollerSlideOutFarLeft 0.5s forwards ease-out;
+}
+
+.card-scroller-slide-out-far-right {
+  animation: cardScrollerSlideOutFarRight 0.5s forwards ease-out;
+}
+
+@keyframes cardScrollerSlideOutFarLeft {
+  to {
+    transform: translateX(-250%); /* Increased distance to ensure off-screen */
+    opacity: 0;
+  }
+}
+
+@keyframes cardScrollerSlideOutFarRight {
+  to {
+    transform: translateX(250%); /* Increased distance to ensure off-screen */
+    opacity: 0;
+  }
+}
+
+/* Animation: Other category containers fading out */
+.category-container-fade-out {
+  animation: categoryContainerFadeOut 0.4s forwards ease-out;
+}
+
+@keyframes categoryContainerFadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Animation: Cards in grid view fading in */
+.card-grid-fade-in {
+  animation: cardGridFadeIn 0.6s forwards ease-in;
+  animation-delay: 0.2s; 
+}
+
+@keyframes cardGridFadeIn {
+  from {
+    opacity: 0.3;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lesson-card.animated, .category-container.animated {
+    opacity: 1;
+    transform: none;
+}
+
+@media (max-width: 1300px) {
+    .main-content {
+        padding-left: 16px; 
+        padding-right: 16px; 
+        align-items: center; /* Center content for medium/small screens */
+    }
+    .page-title {
+        align-self: center; /* Center page title for medium/small screens */
+    }
+    .category-header,
+    .scroll-container {
+        max-width: calc((325px * 3) + (16px * 2)); /* 1007px, same as .lesson-container */
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Changed to display 3 cards */
+        max-width: calc((325px * 3) + (16px * 2)); /* 1007px */
+    }
+}
+@media (max-width: 1200px) {
+    .main-content {
+        padding-left: 16px; 
+        padding-right: 16px; 
+    }
+    /* Removed specific max-width for lesson-container here.
+       It will inherit the 3-card layout from the (max-width: 1300px) rule
+       for screens between 981px and 1200px. */
+}
+@media (max-width: 980px) {
+    .main-content {
+        padding-left: 12px; 
+        padding-right: 12px; 
+    }
+    .category-header {
+        gap: 12px; 
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px, same as .lesson-container */
+    }
+    .scroll-container {
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px, same as .lesson-container */
+    }
+    .category-title {
+        font-size: 22px; 
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Changed to display 2 cards */
+        max-width: calc((325px * 2) + (16px * 1)); /* 666px */
+    }
+    
+    /* Adjust content layout for medium screens */
+    .popup-right-content {
+        max-width: 40%;
+    }
+    
+    .educational-image {
+        max-height: 180px; /* Reduce height on medium screens */
+    }
+}
+@media (max-width: 500px) {
+    .main-content {
+        padding-left: 8px; 
+        padding-right: 8px; 
+    }
+    .category-title {
+        font-size: 18px;
+        max-width: 50%; /* Further limit title width on very small screens */
+    }
+    .lesson-container {
+        width: 100%; 
+        gap: 10px;
+    }
+    .view-all-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+@media (max-width: 700px) {
+    .main-content {
+        padding-left: 10px; 
+        padding-right: 10px; 
+    }
+    .category-header {
+        gap: 8px;
+        align-items: center; 
+        max-width: 325px; /* same as .lesson-container */
+    }
+    .scroll-container {
+        max-width: 325px; /* same as .lesson-container */
+    }
+    .category-title {
+        font-size: 20px;
+        max-width: 65%; /* Ensure title doesn't push controls off screen */
+    }
+    .lesson-container {
+        width: 100%; 
+        /* Adjust for 1 card on small screens */
+        max-width: 325px;
+    }
+    .scroll-controls {
+        gap: 4px; /* Reduce gap between buttons on small screens */
+    }
+    .view-all-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }    /* Popup adjustments for smaller screens */
+    .popup-content-area {
+        flex-direction: column; /* Stack left and right content vertically */
+        overflow-y: auto; /* Enable vertical scrolling for the entire content on mobile */
+    }
+
+    .popup-left-content {
+        flex: none; /* Reset flex sizing, content will determine height */
+        width: 100%; /* Take full width in column layout */
+        border-right: none; /* Remove side border */
+        border-bottom: 1px solid var(--color-secondary-light); /* Add bottom border for separation */
+        margin-bottom: 15px; /* Space below this section */
+        padding-bottom: 15px; /* Adjust padding for balance with margin */
+        overflow-y: visible; /* Content is visible within scrollable parent */
+        min-width: auto; /* Reset min-width for mobile */
+        max-height: none; /* No max height on mobile */
+    }    .popup-right-content {
+        flex: none; /* Reset flex sizing, content will determine height */
+        width: 100%; /* Take full width in column layout */
+        overflow-y: hidden; /* Keep hidden, scrolling is handled by inner container */
+        max-width: 100%; /* Full width on mobile */
+        max-height: none; /* No max height on mobile */
+    }
+    
+    /* Adjust the scrollable container for mobile */
+    .right-content-scrollable {
+        max-height: 400px; /* Limit height on mobile to ensure usability */
+    }
+      /* Keep header and section titles fixed on mobile */
+    .popup-right-content h2 {
+        position: relative;
+    }
+    
+    .images-section h3,
+    .attachments-section h3 {
+        position: relative;
+    }
+
+    /* Adjust images for small screens */
+    .images-container {
+        flex-direction: column; /* Stack images vertically */
+    }
+
+    .educational-image {
+        max-height: 200px; /* Slightly smaller on mobile */
+    }
+
+    .card-popup-content {
+        padding: 15px; /* Reduce padding on small screens */
+        height: 90vh; /* More height on mobile */
+    }
+}
+
+/* Auth Message Styles */
+.auth-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.auth-message {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.auth-icon {
+  margin-bottom: 20px;
+  color: var(--color-secondary-dark);
+}
+
+.auth-message h2 {
+  color: var(--color-primary-dark);
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.auth-message p {
+  color: var(--color-secondary-dark);
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.auth-message .auth-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.login-now-btn, .close-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-now-btn {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.login-now-btn:hover {
+  background-color: var(--color-secondary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary-dark);
+}
+
+.close-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Images and Attachments sections styling */
+.images-section,
+.attachments-section {
+    margin-top: 20px;
+    padding-top: 0; /* Remove top padding as the header will have padding */
+    border-top: 1px solid var(--color-secondary-light);
+    width: 100%;
+    overflow: visible; /* Changed to visible to allow content to be scrollable within parent */
+    position: relative; /* Create positioning context for sticky headers */
+}
+
+.images-section h3,
+.attachments-section h3 {
+    color: var(--color-primary-dark);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    position: relative; /* Normal positioning - not sticky */
+    background-color: var(--color-primary-light);
+    padding: 8px 0;
+    margin-top: 0; /* Ensure no top margin pushes it down */
+    width: 100%; /* Ensure it spans the full width */
+}
+
+.images-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.image-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 6px;
+    background-color: #f8f8f8;
+}
+
+.educational-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+    background-color: white;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.educational-image:hover {
+    transform: scale(1.02);
+}
+
+.image-caption {
+    font-size: 14px;
+    color: var(--color-secondary-dark);
+    font-style: italic;
+    margin: 0 0 8px 0;
+    padding: 0 8px;
+    text-align: center;
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* Controls always visible on the right */
+
+.attachments-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.attachment-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--color-secondary-dark);
+    padding: 8px 12px;
+    border: 1px solid var(--color-secondary-light);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.attachment-link:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.attachment-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.attachment-description {
+    font-size: 14px;
+    flex-grow: 1;
+}
+

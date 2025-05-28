@@ -1,0 +1,361 @@
+<div *ngIf="!showAuthMessage">
+  <div class="mobile-warning">
+    <p>Ця сторінка не призначена для перегляду на мобільних пристроях через обмеження адаптивності.</p>
+    <p>Будь ласка, відкрийте її на персональному комп'ютері.</p>
+  </div>
+
+  <div *ngIf="card?.sandboxType === 'ColorSystem' || card?.sandboxType === 'Colors'" class="sandbox-layout-container desktop-only-content">
+    <!-- Секція з канвасами для оригінального та модифікованого зображення -->
+    <div class="canvas-section">
+      <div class="canvas-container">
+        <!-- Оригінальне зображення (ліворуч) -->
+        <div class="canvas-wrapper">
+          <h3>Оригінальне</h3>
+          <canvas #originalCanvas class="image-canvas"></canvas>
+        </div>
+        
+        <!-- Модифіковане зображення (праворуч) -->
+        <div class="canvas-wrapper">
+          <h3>Модифіковане</h3>
+          <canvas #modifiedCanvas class="image-canvas" 
+                  (mousedown)="startSelection($event)"
+                  (mousemove)="drawSelection($event)"
+                  (mouseup)="endSelection()"
+                  [class.region-selecting]="isSelectingRegion"></canvas>
+        </div>
+      </div>
+    
+    <!-- Керування канвасом -->
+    <div class="canvas-controls">
+      <div class="instructions" *ngIf="isSelectingRegion">
+        <p *ngIf="selectionRect.startX === selectionRect.endX && selectionRect.startY === selectionRect.endY">
+          Клікніть та перетягніть на зображенні, щоб вибрати область для редагування.
+        </p>
+        <p *ngIf="selectionRect.startX !== selectionRect.endX || selectionRect.startY !== selectionRect.endY">
+          Область вибрано. Всі зміни кольору будуть застосовані тільки до цієї області.
+        </p>
+      </div>
+    </div>
+    
+    <!-- Повідомлення про відсутність зображення -->
+    <div class="no-image-message" *ngIf="!currentImageData">
+      <p>Завантажте зображення для редагування</p>
+      <label for="initialImageUpload" class="upload-button">
+        Завантажити зображення
+        <input type="file" id="initialImageUpload" (change)="handleImageUpload($event)" accept="image/*">
+      </label>
+    </div>
+  </div>
+
+  <!-- Секція з колірними системами -->
+  <div class="overlay-section">
+    <!-- Панель кольорів -->
+    <div class="panel">
+      <!-- Навігація між колірними системами -->
+      <div class="color-system-navigation">
+        <button *ngFor="let system of colorSystems" 
+                [class.active]="activeColorSystem === system"
+                (click)="switchColorSystem(system)">
+          {{ system }}
+        </button>
+      </div>
+
+    <!-- Превью поточного кольору -->
+    <div class="color-preview-container">
+      <div class="color-preview-label">Поточний колір:</div>
+      <div class="color-preview" [style.backgroundColor]="'rgb(' + rgbValues.r + ',' + rgbValues.g + ',' + rgbValues.b + ')'"></div>
+      <div class="color-preview-hex">#{{ rgbToHex(rgbValues.r, rgbValues.g, rgbValues.b) }}</div>
+    </div>
+
+    <!-- Панель керування кольором -->
+    <div class="color-controls-panel">
+      <!-- RGB Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'RGB'">
+        <div class="color-slider-container">
+          <label>Червоний (R): {{ rgbValues.r }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient r-gradient"></div>
+            <input type="range" min="0" max="255" [(ngModel)]="rgbValues.r" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Зелений (G): {{ rgbValues.g }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient g-gradient"></div>
+            <input type="range" min="0" max="255" [(ngModel)]="rgbValues.g" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Синій (B): {{ rgbValues.b }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient b-gradient"></div>
+            <input type="range" min="0" max="255" [(ngModel)]="rgbValues.b" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- HSL Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'HSL'">
+        <div class="color-slider-container">
+          <label>Відтінок (H): {{ hslValues.h }}°</label>
+          <div class="slider-container">
+            <div class="slider-gradient hue-gradient"></div>
+            <input type="range" min="0" max="360" [(ngModel)]="hslValues.h" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container hsl-slider">
+          <label><span>Насиченість (S):</span> <span class="value-badge">{{ hslValues.s }}%</span></label>
+          <div class="slider-container">
+            <div class="slider-gradient s-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="hslValues.s" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container hsl-slider">
+          <label><span>Яскравість (L):</span> <span class="value-badge">{{ hslValues.l }}%</span></label>
+          <div class="slider-container">
+            <div class="slider-gradient l-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="hslValues.l" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- HSV Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'HSV'">
+        <div class="color-slider-container">
+          <label>Відтінок (H): {{ hsvValues.h }}°</label>
+          <div class="slider-container">
+            <div class="slider-gradient hue-gradient"></div>
+            <input type="range" min="0" max="360" [(ngModel)]="hsvValues.h" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container hsl-slider">
+          <label><span>Насиченість (S):</span> <span class="value-badge">{{ hsvValues.s }}%</span></label>
+          <div class="slider-container">
+            <div class="slider-gradient sv-s-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="hsvValues.s" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container hsl-slider">
+          <label><span>Значення (V):</span> <span class="value-badge">{{ hsvValues.v }}%</span></label>
+          <div class="slider-container">
+            <div class="slider-gradient v-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="hsvValues.v" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- CMYK Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'CMYK'">
+        <div class="color-slider-container">
+          <label>Блакитний (C): {{ cmykValues.c }}%</label>
+          <div class="slider-container">
+            <div class="slider-gradient c-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="cmykValues.c" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Пурпурний (M): {{ cmykValues.m }}%</label>
+          <div class="slider-container">
+            <div class="slider-gradient m-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="cmykValues.m" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Жовтий (Y): {{ cmykValues.y }}%</label>
+          <div class="slider-container">
+            <div class="slider-gradient y-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="cmykValues.y" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Чорний (K): {{ cmykValues.k }}%</label>
+          <div class="slider-container">
+            <div class="slider-gradient k-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="cmykValues.k" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- LAB Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'LAB'">
+        <div class="color-slider-container">
+          <label>Яскравість (L): {{ labValues.l }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient lab-l-gradient"></div>
+            <input type="range" min="0" max="100" [(ngModel)]="labValues.l" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>A (зелений-червоний): {{ labValues.a }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient lab-a-gradient"></div>
+            <input type="range" min="-128" max="127" [(ngModel)]="labValues.a" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>B (синій-жовтий): {{ labValues.b_val }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient lab-b-gradient"></div>
+            <input type="range" min="-128" max="127" [(ngModel)]="labValues.b_val" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <!-- XYZ Controls -->
+      <div class="color-system-panel" *ngIf="activeColorSystem === 'XYZ'">
+        <div class="color-slider-container">
+          <label>X: {{ xyzValues.x }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient x-gradient"></div>
+            <input type="range" min="0" max="95.047" step="0.1" [(ngModel)]="xyzValues.x" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Y: {{ xyzValues.y_val }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient y-gradient"></div>
+            <input type="range" min="0" max="100" step="0.1" [(ngModel)]="xyzValues.y_val" (input)="onColorInputChange()">
+          </div>
+        </div>
+        
+        <div class="color-slider-container">
+          <label>Z: {{ xyzValues.z_val }}</label>
+          <div class="slider-container">
+            <div class="slider-gradient z-gradient"></div>
+            <input type="range" min="0" max="108.883" step="0.1" [(ngModel)]="xyzValues.z_val" (input)="onColorInputChange()">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Кнопки керування -->
+    <div class="color-control-buttons">
+      <label for="imageUpload" class="compact-upload-button">
+        <i class="upload-icon"></i>Завантажити зображення
+        <input type="file" id="imageUpload" (change)="handleImageUpload($event)" accept="image/*">
+      </label>
+      
+      <button class="control-button" (click)="resetColorValues()">
+        Скинути зміни
+      </button>
+      
+      <button class="control-button" [class.active]="isSelectingRegion" (click)="toggleRegionSelectionMode()">
+        {{ isSelectingRegion ? 'Скасувати вибір області' : 'Вибрати область' }}
+      </button>
+      
+      <button class="control-button download-button" [disabled]="!currentImageData" (click)="downloadModifiedImage()">
+        <i class="download-icon"></i>Зберегти зображення
+        <span class="download-ready-badge" *ngIf="currentImageData">Готово</span>
+      </button>
+    </div>
+    
+    <!-- Таблиця значень кольорів в різних системах -->
+    <div class="color-values-table">
+      <h4>Значення кольору у всіх системах</h4>
+      <table>
+        <tr>
+          <th>RGB</th>
+          <td>R: {{ rgbValues.r }}, G: {{ rgbValues.g }}, B: {{ rgbValues.b }}</td>
+        </tr>
+        <tr>
+          <th>HEX</th>
+          <td>#{{ rgbToHex(rgbValues.r, rgbValues.g, rgbValues.b) }}</td>
+        </tr>
+        <tr>
+          <th>HSL</th>
+          <td>H: {{ hslValues.h }}°, S: {{ hslValues.s }}%, L: {{ hslValues.l }}%</td>
+        </tr>
+        <tr>
+          <th>HSV</th>
+          <td>H: {{ hsvValues.h }}°, S: {{ hsvValues.s }}%, V: {{ hsvValues.v }}%</td>
+        </tr>
+        <tr>
+          <th>CMYK</th>
+          <td>C: {{ cmykValues.c }}%, M: {{ cmykValues.m }}%, Y: {{ cmykValues.y }}%, K: {{ cmykValues.k }}%</td>
+        </tr>
+        <tr>
+          <th>LAB</th>
+          <td>L: {{ labValues.l }}, a: {{ labValues.a }}, b: {{ labValues.b_val }}</td>
+        </tr>
+        <tr>
+          <th>XYZ</th>
+          <td>X: {{ xyzValues.x }}, Y: {{ xyzValues.y_val }}, Z: {{ xyzValues.z_val }}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Швидкі пресети колірних фільтрів -->
+    <div class="color-presets">
+      <h4>Швидкі колірні фільтри</h4>
+      <div class="presets-container">
+        <button class="preset-button" (click)="applyPreset('original')">
+          <span class="preset-icon original"></span>
+          <span>Оригінал</span>
+        </button>
+        <button class="preset-button" (click)="applyPreset('grayscale')">
+          <span class="preset-icon grayscale"></span>
+          <span>Чорно-білий</span>
+        </button>
+        <button class="preset-button" (click)="applyPreset('sepia')">
+          <span class="preset-icon sepia"></span>
+          <span>Сепія</span>
+        </button>
+        <button class="preset-button" (click)="applyPreset('negative')">
+          <span class="preset-icon negative"></span>
+          <span>Негатив</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Інформація про колірні системи -->
+    <div class="color-system-info">
+      <div *ngIf="activeColorSystem === 'RGB'">
+        <p><strong>RGB</strong> (Red, Green, Blue) - адитивна система кольорів, що використовується в електронних екранах. Кожен колір має значення від 0 до 255.</p>
+      </div>
+      
+      <div *ngIf="activeColorSystem === 'HSL'">
+        <p><strong>HSL</strong> (Hue, Saturation, Lightness) - представляє колір через відтінок (0-360°), насиченість (0-100%) та яскравість (0-100%).</p>
+      </div>
+      
+      <div *ngIf="activeColorSystem === 'HSV'">
+        <p><strong>HSV</strong> (Hue, Saturation, Value) - як HSL, але використовує значення (Value) замість яскравості, що може бути інтуїтивнішим для вибору кольору.</p>
+      </div>
+      
+      <div *ngIf="activeColorSystem === 'CMYK'">
+        <p><strong>CMYK</strong> (Cyan, Magenta, Yellow, Key/Black) - субтрактивна система, що використовується в друкарстві. Значення представлені у відсотках (0-100%).</p>
+      </div>
+      
+      <div *ngIf="activeColorSystem === 'LAB'">
+        <p><strong>LAB</strong> - незалежна від пристрою система, де L - яскравість (0-100), a - зелений-червоний (-128 до 127), b - синій-жовтий (-128 до 127).</p>
+      </div>
+      
+      <div *ngIf="activeColorSystem === 'XYZ'">
+        <p><strong>XYZ</strong> - система, що базується на людському сприйнятті кольорів, є базисом для інших систем. X, Y та Z відповідають умовним характеристикам сприйняття.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Auth Message -->
+<div *ngIf="showAuthMessage" class="auth-message-container">
+  <div class="auth-message">
+    <h2>Необхідна авторизація</h2>
+    <p>Для доступу до цієї сторінки необхідно увійти в систему.</p>
+    <div class="auth-actions">
+      <a routerLink="/auth/login" class="login-btn">Увійти</a>
+      <a routerLink="/auth/signup" class="signup-btn">Зареєструватися</a>
+    </div>
+  </div>
+</div>

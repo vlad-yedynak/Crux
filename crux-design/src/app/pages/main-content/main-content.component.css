@@ -1,0 +1,236 @@
+/* Main content styles */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 1200px;
+    position: relative;
+    padding: 40px 20px;
+    min-height: 100vh;
+}
+
+/* Circle decorations */
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.circle-left {
+    width: 150px;
+    height: 150px;
+    background-color: var(--color-primary-dark);
+    left: -75px;
+    top: 10%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+}
+
+.circle-right {
+    width: 200px;
+    height: 200px;
+    background-color: var(--color-secondary-light);
+    right: -100px;
+    top: 15%;
+    opacity: 0.6;
+}
+
+/* Hero Section */
+.hero-section {
+    margin-bottom: 60px;
+    z-index: 2;
+    position: relative;
+}
+
+.main-title {
+    font-size: 80px;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin-bottom: 30px;
+    max-width: 600px;
+}
+
+.divider {
+    width: 80%;
+    border: none;
+    border-top: 3px solid var(--color-primary-dark);
+    margin: 30px auto;
+}
+
+/* Intro Section */
+.intro-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+    margin-bottom: 80px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.intro-card {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.intro-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+}
+
+.card-icon {
+    font-size: 56px;
+    margin-bottom: 25px;
+}
+
+.intro-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    margin-bottom: 20px;
+}
+
+.intro-card p {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+}
+
+/* Project Section - REMOVED */
+
+/* Technologies Section - REMOVED */
+
+/* CTA Section */
+.cta-section {
+    background: linear-gradient(135deg, var(--color-secondary-light), var(--color-primary-light));
+    padding: 60px 40px;
+    border-radius: 25px;
+    width: 100%;
+    max-width: 700px;
+}
+
+.cta-section h3 {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    margin-bottom: 40px;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    min-width: 180px;
+}
+
+.cta-btn.primary {
+    background: var(--color-primary-dark);
+    color: white;
+}
+
+.cta-btn.primary:hover {
+    background: var(--color-primary-darker);
+    transform: translateY(-2px);
+}
+
+.cta-btn.secondary {
+    background: transparent;
+    color: var(--color-primary-dark);
+    border: 2px solid var(--color-primary-dark);
+}
+
+.cta-btn.secondary:hover {
+    background: var(--color-primary-dark);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 60px;
+    }
+    
+    .subtitle {
+        font-size: 20px;
+    }
+    
+    .intro-section {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+    
+    .intro-card {
+        padding: 30px;
+    }
+    
+    .cta-section {
+        padding: 40px 30px;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .circle-left, .circle-right {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 48px;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+    }
+    
+    .intro-card {
+        padding: 25px;
+    }
+    
+    .card-icon {
+        font-size: 48px;
+    }
+    
+    .intro-card h3 {
+        font-size: 22px;
+    }
+    
+    .intro-card p {
+        font-size: 16px;
+    }
+    
+    .cta-section h3 {
+        font-size: 28px;
+    }
+}

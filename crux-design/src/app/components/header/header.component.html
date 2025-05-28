@@ -1,0 +1,73 @@
+<header class="main-header">
+  <div class="logo">
+    <h1>
+      <a routerLink="/">
+      <span *ngFor="let letter of logoLetters; let i = index" class="letter">{{ letter }}</span>
+    </a>
+    </h1>
+  </div>
+  
+  <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" [attr.aria-expanded]="isMobileMenuOpen" aria-label="Toggle navigation">
+    <svg viewBox="0 0 100 80" width="20" height="20" fill="currentColor">
+      <rect width="100" height="15" rx="8"></rect>
+      <rect y="30" width="100" height="15" rx="8"></rect>
+      <rect y="60" width="100" height="15" rx="8"></rect>
+    </svg>
+  </button>
+
+  <div class="navigation-wrapper" [class.mobile-active]="isMobileMenuOpen">
+    <app-navigation></app-navigation>
+  </div>
+
+  <div class="header-right">
+    <!--
+    <div class="language-dropdown" [class.open]="isOpen">
+      
+      <div class="selected-language" (click)="toggleDropdownLang()">{{ getLanguageLabel(selectedLanguage) }}
+        <svg
+          class="dropdown-arrow"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+        </svg>
+        
+      </div>
+
+      <ul class="dropdown-options" *ngIf="isOpen" @dropdownAnimation>
+        <li (click)="selectLanguage('en')">
+          EN
+          <img src="/flags/en.svg" alt="EN" class="flag-icon" />
+        </li>
+        <li (click)="selectLanguage('ua')">
+          UA
+          <img src="/flags/ua.svg" alt="UA" class="flag-icon" />
+        </li>
+      </ul>
+    </div>
+    -->
+
+    <ng-container *ngIf="user; else showLogin">
+      <div class="user-info" [class.open]="isUserDropdownOpen" (click)="toggleDropdownUser()">
+        <img [src]="getUserAvatar()" alt="Avatar" class="avatar" title="Натисніть для управління профілем" />
+        <span>{{ user.firstName }} {{ user.lastName }}</span> 
+        <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+        </svg>        <ul class="dropdown-options user-dropdown-options" *ngIf="isUserDropdownOpen" @dropdownAnimation (click)="$event.stopPropagation()">
+          <li (click)="goToProfile()">Профіль</li>
+          <li (click)="logout()">Вийти</li>
+        </ul>
+      </div>
+    </ng-container>
+
+    <ng-template #showLogin>
+      <div class="auth-btn-group">
+        <button class="login-btn" [routerLink]="'/auth'">Увійти</button>
+        <button class="signup-btn" [routerLink]="['/auth']" [queryParams]="{ signup: 1 }">Зареєструватися</button>
+      </div>
+    </ng-template>
+  </div>
+</header>
+
+
+

@@ -1,0 +1,468 @@
+/* Header styles */
+
+/*Style for main container*/
+.main-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 10px 30px;
+    height: 50px;
+    background-color: var(--color-primary-dark);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/*Style for main logo - "Crux"*/
+.logo h1 {
+    padding: 0.5rem 0.8rem;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px; /* Adjusted for individual letter spacing */
+    color: var(--color-accent);
+    /* text-shadow: 0 0px 3px var(--color-accent); Removed, will apply to spans */
+}
+  
+.logo h1 a {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+}
+  
+.logo h1 a:hover {
+    opacity: 0.8;
+}
+
+/* Individual letter styling for animation */
+.logo h1 a .letter {
+    display: inline-block; 
+    position: relative; 
+    text-shadow: 0 0px 3px var(--color-accent);
+    animation-name: jump;
+    animation-duration: 3s; 
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out; 
+}
+
+
+.logo h1 a .letter:nth-child(1) { animation-delay: 0s; }
+.logo h1 a .letter:nth-child(2) { animation-delay: 0.15s; } 
+.logo h1 a .letter:nth-child(3) { animation-delay: 0.3s; }  
+.logo h1 a .letter:nth-child(4) { animation-delay: 0.45s; } 
+
+
+@keyframes jump {
+    0%, 60%, 100% { 
+        transform: translateY(0) scaleY(1) scaleX(1);
+    }
+    70% { 
+        transform: translateY(0) scaleY(0.95) scaleX(1.05);
+    }
+    80% { 
+        transform: translateY(-10px) scaleY(1.1) scaleX(0.9);
+    }
+    85% { 
+        transform: translateY(-5px) scaleY(1.05) scaleX(0.95);
+    }
+    90% { 
+        transform: translateY(0) scaleY(0.9) scaleX(1.1);
+    }
+    95% { 
+        transform: translateY(-2px) scaleY(1.02) scaleX(0.98);
+    }
+}
+
+/* Desktop navigation wrapper - centered */
+.navigation-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 0; /* Align to the top of the header */
+    height: 100%; /* Take full header height */
+    transform: translateX(-50%);
+    display: flex; /* Used to vertically center app-navigation */
+    align-items: center; /* Vertically centers app-navigation */
+    z-index: 1; /* Behind header-right if overlap, but above logo bg */
+}
+
+.mobile-menu-toggle {
+    display: none; /* Hidden on desktop */
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    cursor: pointer;
+    padding: 8px; 
+    z-index: 1001; 
+    /* Removed margin-left: auto; will be handled by header-right or flex order */
+}
+
+.mobile-menu-toggle svg {
+    display: block; /* Removes extra space below SVG */
+}
+
+/* REMOVE this absolute positioning for app-navigation. 
+   The .navigation-wrapper handles positioning. */
+/*
+app-navigation {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+*/
+
+/**/
+.header-right {
+    display: flex;
+    align-items: center;
+    /* gap: 0; */ 
+    z-index: 2; 
+}
+
+/*
+.language-dropdown {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    color: var(--color-accent);
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.language-dropdown:hover {
+    background-color: var(--color-secondary-dark);
+}
+
+.selected-language {
+    padding: 0.6rem 0.75rem 0.5rem 0.75rem;
+    border-radius: 5px;
+    width: 80px;
+    height: 40px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    justify-content: center;
+}
+*/
+
+.dropdown-arrow {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+/* Обертання зображення при відкритті меню */
+/*
+.language-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+*/
+
+/*
+.dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: var(--color-secondary-dark);
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-top: 5px;
+    list-style: none;
+    padding: 0;
+    z-index: 10;
+}
+
+.flag-icon {
+    width: 16px;
+    height: 12px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+    object-fit: cover;
+}
+.dropdown-options li {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+}
+
+.dropdown-options li:hover {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background-color: var(--color-primary-dark);
+}
+*/
+
+.auth-btn-group {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: visible; /* Change from hidden to visible to avoid clipping in Safari */
+    border-radius: 25px;
+    border: 1.5px solid var(--color-secondary-dark);
+    background: var(--color-primary-dark);
+    padding: 0;
+    position: relative; /* Added to create a proper stacking context */
+}
+
+.login-btn {
+    border: none;
+    border-radius: 25px 0 0 25px;
+    border-right: none;
+    border: 1px solid var(--color-secondary-dark);
+    border-right: none;
+    background-color: inherit;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 1rem;
+    width: auto; /* Changed from fixed 80px to auto */
+    min-width: 90px; /* Set minimum width to ensure it's large enough for the Ukrainian text */
+    padding: 0.4rem 0.8rem 0.4rem 0.6rem;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    cursor: pointer;
+    outline: none;
+    /* Add Safari prefixes for clip-path */
+    -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0% 100%);
+    z-index: 1;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    position: relative; /* Ensure position is set for Safari stacking context */
+    margin-right: -2px; /* Help overlap on Safari - Kept from original */
+}
+
+.login-btn:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+    z-index: 2;
+    transform: scale(1.03);
+}
+
+.signup-btn {
+    border: none;
+    border-radius: 0 25px 25px 0;
+    border-left: none;
+    border: 1px solid var(--color-secondary-dark);
+    background-color: var(--color-accent);
+    color: var(--color-secondary-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    width: auto; /* Changed from fixed 80px to auto */
+    min-width: 150px; /* Set minimum width to ensure it's large enough for the Ukrainian text "Зареєструватись" */
+    padding: 0.4rem 0.6rem 0.4rem 0.8rem;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    cursor: pointer;
+    outline: none;
+    margin-left: -16px; /* Kept from original - this defines the overlap amount */
+    /* Add Safari prefixes for clip-path */
+    -webkit-clip-path: polygon(16px 0, 100% 0, 100% 100%, 0% 100%);
+    clip-path: polygon(16px 0, 100% 0, 100% 100%, 0% 100%);
+    z-index: 2;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    position: relative; /* Ensure position is set for Safari stacking context */
+    transform: translateZ(0); /* Promote to its own layer in Safari */
+    -webkit-transform: translateZ(0);
+}
+
+.signup-btn:hover {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-accent);
+    z-index: 3;
+    transform: scale(1.03);
+}
+
+/* Safari-specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    .auth-btn-group {
+        transform: translateZ(0); /* Force hardware acceleration on Safari */
+        -webkit-transform: translateZ(0);
+    }
+}
+
+/* User profile styles */
+.user-info {
+    position: relative;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    gap: 8px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--color-accent);
+    transition: background-color 0.3s ease;
+}
+
+.user-info:hover {
+    background-color: var(--color-secondary-dark);
+}
+
+.user-info.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* User dropdown specific styles */
+.user-dropdown-options {
+    position: absolute; /* Crucial for positioning relative to .user-info */
+    top: 100%; /* Position below the .user-info element */
+    left: 0; /* Align to the left edge of .user-info */
+    right: auto; /* Reset right positioning */
+    width: 100%; /* Make dropdown same width as .user-info */
+    /* min-width: 150px; */ /* Removed, width is now 100% of parent */
+    z-index: 1001;
+    background-color: var(--color-secondary-dark); /* Background for the dropdown */
+    border-radius: 0 0 5px 5px; /* Rounded bottom corners */
+    margin-top: 0; /* Removed gap between user-info and dropdown */
+    list-style: none; /* Remove default list bullets */
+    padding: 0.5rem 0; /* Vertical padding inside the dropdown */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Dropdown shadow */
+    /* Ensure it's hidden initially if not controlled by *ngIf, but *ngIf handles this */
+}
+
+.user-dropdown-options li {
+    /* justify-content: center; */ /* Removed as li is not a flex container by default */
+    text-align: center; /* Center text within li */
+    font-weight: 500;
+    font-size: 14px;
+    padding: 0.6rem 1.2rem; /* Padding for clickable area and spacing */
+    cursor: pointer;
+    color: var(--color-accent); /* Ensure text color matches theme */
+    transition: background-color 0.2s ease;
+}
+
+.user-dropdown-options li:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Media Query for responsiveness */
+@media (max-width: 768px) {
+    .main-header {
+        padding: 0 15px; /* Reduce padding on smaller screens */
+        /* justify-content: space-between; Will be adjusted for new layout */
+    }
+
+    .navigation-wrapper {
+        /* Mobile styles: dropdown panel */
+        position: absolute;
+        top: 50px; /* Match .main-header height */
+        left: 0;
+        width: 100%;
+        height: auto; /* Override desktop height */
+        transform: none; /* Override desktop transform */
+        background-color: var(--color-primary-dark);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        z-index: 1000; /* Below header but above page content */
+        
+        /* Animation properties */
+        display: block; /* Required for height animation */
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden; /* Initially hidden, overflow-y will be added when active */
+        transition: max-height 0.35s cubic-bezier(0.42, 0, 0.58, 1), 
+                    opacity 0.35s cubic-bezier(0.42, 0, 0.58, 1),
+                    padding-top 0.35s cubic-bezier(0.42, 0, 0.58, 1),
+                    padding-bottom 0.35s cubic-bezier(0.42, 0, 0.58, 1);
+        padding-top: 0;
+        padding-bottom: 0;
+        align-items: stretch; /* Override desktop align-items */
+    }
+
+    .navigation-wrapper.mobile-active {
+        max-height: calc(100vh - 50px); /* Full available height below header */
+        opacity: 1;
+        padding-top: 15px; /* Consistent padding */
+        padding-bottom: 15px; /* Consistent padding */
+        overflow-y: auto; /* Allow scrolling for content taller than the panel */
+    }
+
+    /* Style app-navigation contents for vertical layout in mobile menu */
+    .navigation-wrapper app-navigation nav,
+    .navigation-wrapper app-navigation nav ul {
+        flex-direction: column;
+        align-items: center; /* Center links */
+        width: 100%;
+    }
+
+    .navigation-wrapper app-navigation nav ul li {
+        width: 90%; /* Or 100% and style 'a' tag */
+        margin: 8px 0;
+        text-align: center;
+    }
+    
+    .navigation-wrapper app-navigation nav ul li a {
+        display: block; /* Make entire area clickable */
+        padding: 12px 15px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .navigation-wrapper app-navigation nav ul li a:hover {
+        background-color: var(--color-secondary-dark);
+    }
+
+    .mobile-menu-toggle {
+        display: block; /* Show hamburger */
+        order: 0; /* Hamburger menu first (left) */
+        /* margin-right: auto; Removed */
+    }
+
+    .logo {
+       order: 1; /* Logo second, next to hamburger */
+       /* Remove absolute positioning for centering */
+       position: static; /* Or relative, ensure it's in the flex flow */
+       transform: none; /* Remove transform */
+       padding: 0.5rem 0.2rem; /* Adjust padding if needed, e.g., less horizontal */
+       margin-right: auto; /* Pushes header-right to the far right */
+    }
+
+    .logo h1 {
+        font-size: 22px; /* Optionally slightly smaller logo text on mobile */
+        padding: 0.5rem 0.4rem; /* Adjust padding for h1 if needed */
+    }
+
+    .header-right {
+       order: 2; /* User info/auth buttons third (right) */
+       margin-left: auto; /* Pushes it to the right, works with logo's margin-right: auto */
+    }
+
+    /* Adjust user name font size on mobile */
+    .user-info span {
+        font-size: 0.8rem; /* Smaller font for user name */
+    }
+
+    /* REMOVE the mobile-specific override for user-dropdown-options 
+       to make it behave like desktop. The base styles above will now apply. */
+    /* 
+    .user-dropdown-options {
+        left: 5%; 
+        right: 5%; 
+        width: 90%; 
+        min-width: 0; 
+        transform: translateX(0); 
+        box-sizing: border-box; 
+    }
+    */
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-accent);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-info:hover .avatar {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(235, 94, 40, 0.4);
+}
+
