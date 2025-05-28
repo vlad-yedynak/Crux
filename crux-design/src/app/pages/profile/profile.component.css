@@ -94,7 +94,7 @@
 
 .info-blocks-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 30px;
   padding: 0;
   margin: 0;
@@ -116,9 +116,7 @@
   box-shadow: 0 12px 35px rgba(0,0,0,0.15);
 }
 
-.user-info {
-  /* Left block styling - no additional margin needed */
-}
+/* Left block styling for user info section */
 
 .account-info h2 {
   font-size: 28px;
@@ -182,6 +180,17 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.avatar-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  z-index: -1;
 }
 
 .avatar-wrapper:hover {
@@ -566,9 +575,14 @@
     padding: 30px 20px;
   }
   
-  .avatar-image {
+  .avatar-wrapper {
     width: 120px;
     height: 120px;
+  }
+  
+  .avatar-image {
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -594,14 +608,57 @@
     font-size: 14px;
   }
   
+  .avatar-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+  }
+  
   .avatar-image {
-    width: 80px;
-    height: 80px;
+    width: 100%;
+    height: 100%;
   }
   
   .save-button {
     width: 100%;
     padding: 12px 20px;
+  }
+}
+
+@media (max-width: 375px) {
+  .avatar-wrapper {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+  }
+  
+  .account-info h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .account-info {
+    padding: 20px 12px;
+  }
+  
+  .account-info .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 0;
+  }
+  
+  .account-info .label {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+  
+  .info-row.first-row {
+    margin-top: 10px;
+  }
+  
+  .nav-link {
+    padding: 12px 15px;
+    min-width: 120px;
   }
 }
 
