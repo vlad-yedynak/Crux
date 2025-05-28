@@ -1,24 +1,20 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
 public interface IAuthenticationService
 {
-    [HttpPost]
     AuthenticationResponse SignIn(UserRequest request);
-    
-    [HttpPost]
+    Task<AuthenticationResponse> SignInAsync(UserRequest request);
+
     AuthenticationResponse SignUp(UserRequest request);
+    Task<AuthenticationResponse> SignUpAsync(UserRequest request);
     
-    [HttpGet]
-    AuthenticationResponse SignOut(HttpContext context);
-
-    [HttpHead]
-    int? GetUserIdFromContext(HttpContext context);
-
-    [HttpHead]
-    bool CheckAuthentication(HttpContext context, UserRole? role = null);
+    AuthenticationResponse SignOut(int id);
+    Task<AuthenticationResponse> SignOutAsync(int id);
+    
+    int? CheckAuthentication(HttpContext context, UserRole? role = null);
+    Task<int?> CheckAuthenticationAsync(HttpContext context, UserRole? role = null);
 }

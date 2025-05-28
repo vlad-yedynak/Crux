@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using Crux.Models.Cards;
 
-namespace Crux.Models;
+namespace Crux.Models.Entities;
 
 public class Question
 {
@@ -11,8 +10,9 @@ public class Question
     
     public TestCard? TestCard { get; set; }
     
-    [MaxLength(255)]
     public required string QuestionText { get; set; }
     
     public ICollection<Answer> Answers { get; set; } = new List<Answer>();
+    
+    public ICollection<UserQuestionProgress> UserCompletedQuestions { get; set; } = new List<UserQuestionProgress>();
 }

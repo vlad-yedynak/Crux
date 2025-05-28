@@ -1,10 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.EntityTypes;
 
 namespace Crux.Models.Requests;
 
 public class CardRequest
 {
+    [JsonPropertyName("id")]
+    public int? Id { get; set; }
+    
     [Required]
     [MaxLength(255)]
     [JsonPropertyName("title")]
@@ -17,19 +21,13 @@ public class CardRequest
     
     [Required]
     [JsonPropertyName("lessonId")]
-    public int LessonId { get; set; }
+    public required int LessonId { get; set; }
     
     [Required]
     [JsonPropertyName("cardType")]
-    public CardType CardType { get; set; }
+    public required string CardType { get; set; }
     
-    [Required]
-    [MaxLength(1023)]
-    [JsonPropertyName("content")]
-    public string? Content { get; set; }
+    [JsonPropertyName("sandboxType")]
+    public string? SandBoxCardType { get; set; }
     
-    [Required]
-    [MaxLength(255)]
-    [JsonPropertyName("question")]
-    public Question? Question { get; set; }
 }

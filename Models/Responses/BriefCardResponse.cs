@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Crux.Models.EntityTypes;
 
 namespace Crux.Models.Responses;
 
-public class CardResponse : Response
+public class BriefCardResponse : Response
 {
     [JsonPropertyName("id")]
     public int? Id { get; set; }
@@ -20,11 +21,5 @@ public class CardResponse : Response
     public int? LessonId { get; set; }
     
     [JsonPropertyName("type")]
-    public CardType? CardType { get; set; }
-    
-    [JsonPropertyName("content")]
-    public string? Content { get; set; }
-    
-    [JsonPropertyName("questions")]
-    public ICollection<QuestionResponse>? Questions { get; set; }
+    public string? CardType { get; set; }
 }

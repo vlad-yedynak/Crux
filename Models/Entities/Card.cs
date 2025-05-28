@@ -1,4 +1,6 @@
-namespace Crux.Models;
+using Crux.Models.EntityTypes;
+
+namespace Crux.Models.Entities;
 
 public abstract class Card
 {

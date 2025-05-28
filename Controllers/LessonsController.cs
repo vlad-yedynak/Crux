@@ -1,24 +1,23 @@
-using System.Text.Json.Serialization;
-using Crux.Models;
-using Crux.Models.Requests;
-using Crux.Models.Responses;
-using Crux.Services;
 using Microsoft.AspNetCore.Mvc;
+using Crux.Models.EntityTypes;
+using Crux.Models.Responses;
+using Crux.Models.Requests;
+using Crux.Services;
 
 namespace Crux.Controllers;
 
-[Route("lessons")]
-public class LessonsController (
-    IAuthenticationService authenticationService,
-    ILessonService lessonService) : ControllerBase
+[Route("lesson")]
+public class LessonsController (IAuthenticationService authenticationService, ILessonService lessonService) : ControllerBase
 {
     [HttpPost("create-lesson")]
-    public Response CreateLesson([FromBody] string title)
+    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
             {
+                HttpContext.Response.StatusCode = 404;
                 return new ControllerResponse<UserResponse>
                 {
                     Success = false,
@@ -26,7 +25,7 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.AddLesson(HttpContext, title);
+            var response = await lessonService.AddLessonAsync(title);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -34,23 +33,26 @@ public class LessonsController (
                 Body = response
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<LessonResponse>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }
-
-    [HttpPost("create-card")]
-    public Response CreateCard([FromBody] CardRequest cardRequest)
+    
+    [HttpPut("update-lesson")]
+    public async Task<ActionResult<Response>> UpdateLessonAsync([FromBody] UpdateLessonRequest request)
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
             {
+                HttpContext.Response.StatusCode = 404;
                 return new ControllerResponse<UserResponse>
                 {
                     Success = false,
@@ -58,84 +60,80 @@ public class LessonsController (
                 };
             }
             
-            var response = lessonService.AddCard(HttpContext, cardRequest);
+            var response = await lessonService.UpdateLessonNameAsync(request);
 
-            return new ControllerResponse<CardResponse>
+            return new ControllerResponse<LessonResponse>
             {
                 Success = true,
                 Body = response
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<LessonResponse>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }
+    
+    [HttpDelete("delete-lesson/{id:int}")]
+    public async Task<ActionResult<Response>> UpdateLessonAsync(int id)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var response = await lessonService.DeleteLessonAsync(id);
 
+            return new ControllerResponse<bool>
+            {
+                Success = response,
+                Body = response
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
     [HttpGet("get-lessons")]
-    public Response GetLessons()
+    public async Task<ActionResult<Response>> GetLessonsAsync()
     {
         try
         {
-            if (!authenticationService.CheckAuthentication(HttpContext))
-            {
-                return new ControllerResponse<AuthenticationResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-            
-            var lessons = lessonService.GetLessons(HttpContext);
+            var lessons = await lessonService.GetLessonsAsync();
 
-            return new ControllerResponse<ICollection<KeyValuePair<int, LessonResponse>>>
+            return new ControllerResponse<ICollection<LessonResponse>>
             {
                 Success = true,
                 Body = lessons
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<LessonResponse>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
-            };
-        }
-    }
-
-    [HttpPost("create-question")]
-    public Response CreateQuestion([FromBody] QuestionRequest questionRequest)
-    {
-        try
-        {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
-            {
-                return new ControllerResponse<AuthenticationResponse>
-                {
-                    Success = false,
-                    Error = "Failed to authenticate user"
-                };
-            }
-
-            var response = lessonService.AddQuestion(HttpContext, questionRequest);
-
-            return new ControllerResponse<QuestionResponse>
-            {
-                Success = true,
-                Body = response
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ControllerResponse<QuestionResponse>
-            {
-                Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }

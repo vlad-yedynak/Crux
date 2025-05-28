@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using Crux.Models.Entities;
 
 namespace Crux.Models.Cards;
 

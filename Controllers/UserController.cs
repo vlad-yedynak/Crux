@@ -1,4 +1,4 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 using Crux.Services;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
@@ -12,104 +12,132 @@ public class UserController (
     IUserService userService) : ControllerBase
 {
     [HttpPost("sign-up")]
-    public Response SignUp([FromBody] UserRequest request)
+    public async Task<ActionResult<Response>> SignUpAsync([FromBody] UserRequest request)
     {
         try
         {
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
-                Body = authenticationService.SignUp(request)
+                Body = await authenticationService.SignUpAsync(request)
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
+            HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }
 
     [HttpPost("sign-in")]
-    public Response SignIn([FromBody] UserRequest request)
+    public async Task<ActionResult<Response>> SignInAsync([FromBody] UserRequest request)
     {
         try
         {
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = true,
-                Body = authenticationService.SignIn(request)
+                Body = await authenticationService.SignInAsync(request)
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
+            HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<AuthenticationResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
             };
         }
     }
 
     [HttpGet("sign-out")]
-    public new Response SignOut()
+    public async Task<ActionResult<Response>> SignOutAsync()
     {
         try
         {
-            return new ControllerResponse<AuthenticationResponse>
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
             {
-                Success = true,
-                Body = authenticationService.SignOut(HttpContext)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = $"An error occured: {ex.Message}"
-            };
-        }
-    }
-
-    [HttpGet("info")]
-    public Response Info()
-    {
-        try
-        {
-            return new ControllerResponse<UserResponse>
-            {
-                Success = true,
-                Body = userService.GetUserInfoFromContext(HttpContext)
-            };
-        }
-        catch (Exception ex)
-        {
-            return new ControllerResponse<AuthenticationResponse>
-            {
-                Success = false,
-                Error = $"An error occured: {ex.Message}"
-            };
-        }
-    }
-    
-    [HttpGet("get-users")]
-    public Response GetUsers()
-    {
-        try
-        {
-            if (!authenticationService.CheckAuthentication(HttpContext, UserRole.Admin))
-            {
-                return new ControllerResponse<AuthenticationResponse>
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
                 {
                     Success = false,
                     Error = "Failed to authenticate user"
                 };
             }
             
-            var usersInfo = userService.GetUsersInfo(HttpContext);
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = true,
+                Body = await authenticationService.SignOutAsync(userId.Value)
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+
+    [HttpGet("info")]
+    public async Task<ActionResult<Response>> InfoAsync()
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = await userService.GetUserInfoAsync(userId.Value)
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpGet("get-users")]
+    public async Task<ActionResult<Response>> GetUsersAsync()
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var usersInfo = await userService.GetUsersInfoAsync();
 
             return new ControllerResponse<ICollection<KeyValuePair<int, UserResponse>>>
             {
@@ -117,13 +145,121 @@ public class UserController (
                 Body = usersInfo
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new ControllerResponse<LessonResponse>
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
             {
                 Success = false,
-                Error = $"An error occured: {ex.Message}"
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPut("change-first-name")]
+    public async Task<ActionResult<Response>> ChangeFirstNameAsync([FromBody] string firstName)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = await userService.ChangeFirstNameAsync(userId.Value, firstName);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPut("change-last-name")]
+    public async Task<ActionResult<Response>> ChangeLastNameAsync([FromBody] string lastName)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = await userService.ChangeLastNameAsync(userId.Value, lastName);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPut("update-avatar")]
+    public async Task<ActionResult<Response>> UpdateAvatarAsync([FromBody] UpdateAvatarRequest request)
+    {
+        try
+        {
+            var userId = await authenticationService.CheckAuthenticationAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return new ControllerResponse<UserResponse>
+                {
+                    Success = false,
+                    Error = "Failed to authenticate user"
+                };
+            }
+            
+            var user = await userService.UpdateAvatarAsync(userId.Value, request);
+
+            return new ControllerResponse<UserResponse>
+            {
+                Success = true,
+                Body = user
+            };
+        }
+        catch (Exception)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<UserResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
             };
         }
     }
 }
+
+// TODO: move repeating code sections across all controllers to middleware :P

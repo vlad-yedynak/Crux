@@ -1,4 +1,4 @@
-using Crux.Models;
+using Crux.Models.EntityTypes;
 
 namespace Crux.Extensions;
 

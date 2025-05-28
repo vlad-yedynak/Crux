@@ -1,28 +1,67 @@
 using Crux.Data;
-using Crux.Models;
-using Crux.Models.Cards;
+using Crux.Models.Entities;
+using Crux.Models.EntityTypes;
 using Crux.Models.Requests;
 using Crux.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crux.Services;
 
-public class LessonService(
-    IAuthenticationService authenticationService,
-    ApplicationDbContext dbContext) : ILessonService
+public class LessonService(ICardManagementService cardManagementService, ApplicationDbContext dbContext) : ILessonService
 {
-    public LessonResponse AddLesson(HttpContext context, string title)
+    public ICollection<LessonResponse> GetLessons()
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new LessonResponse
+        var lessons = new List<LessonResponse>();
+        
+        dbContext.Lessons
+            .ToList()
+            .ForEach(lesson =>
             {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
+                lessons.Add(new LessonResponse
+                {
+                    Id = lesson.Id,
+                    Title = lesson.Title,
+                    BriefCards = cardManagementService.GetLessonCards(lesson.Id) 
+                });
+            });
+        
+        return lessons;
+    }
+    
+    public async Task<ICollection<LessonResponse>> GetLessonsAsync()
+    {
+        var lessons = await dbContext.Lessons
+            .Include(l => l.Cards)
+            .Select(l => new 
+            {
+                Lesson = l,
+                Cards = l.Cards.Select(c => new { c.Id, c.Title, c.CardType, c.Description, c.LessonId })
+            })
+            .ToListAsync();
+        
+        var lessonIds = lessons.Select(l => l.Lesson.Id).ToList();
+        var pointsData = await GetLessonsTotalPointsAsync(lessonIds);
 
+        return lessons.Select(l => new LessonResponse
+        {
+            Success = true,
+            Id = l.Lesson.Id,
+            Title = l.Lesson.Title,
+            TotalPoints = pointsData.GetValueOrDefault(l.Lesson.Id, 0),
+            BriefCards = l.Cards.Select(c => new BriefCardResponse
+            {
+                Success = true,
+                Id = c.Id,
+                LessonId = c.LessonId,
+                Title = c.Title,
+                CardType = c.CardType.ToString(),
+                Description = c.Description
+            }).ToList()
+        }).ToList();
+    }
+
+    public LessonResponse AddLesson(string title)
+    {
         var lesson = new Lesson { Title = title };
         dbContext.Lessons.Add(lesson);
         dbContext.SaveChanges();
@@ -31,283 +70,145 @@ public class LessonService(
         {
             Success = true,
             Id = lesson.Id,
+            Title = lesson.Title
         };
     }
-
-    public ICollection<KeyValuePair<int, LessonResponse>> GetLessons(HttpContext context)
+    
+    public async Task<LessonResponse> AddLessonAsync(string title)
     {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return [];
-        }
-        
-        var lessons = new List<KeyValuePair<int, LessonResponse>>();
-        
-        dbContext.Lessons.ToList()
-            .ForEach(lesson =>
-            {
-                lessons.Add(new KeyValuePair<int, LessonResponse>(lesson.Id, new LessonResponse
-                {
-                    Id = lesson.Id,
-                    Title = lesson.Title,
-                    Cards = GetLessonCards(lesson.Id)
-                }));
-            } );
-        
-        return lessons;
-    }
+        var lesson = new Lesson { Title = title };
+        await dbContext.Lessons.AddAsync(lesson);
+        await dbContext.SaveChangesAsync();
 
-    public CardResponse AddCard(HttpContext context, CardRequest cardRequest)
-    {
-        if (!authenticationService.CheckAuthentication(context, UserRole.Admin))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return new CardResponse
-            {
-                Success = false,
-                Error = "Unauthorized access"
-            };
-        }
-        
-        var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == cardRequest.LessonId);
-        if (lesson == null)
-        {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new CardResponse
-            {
-                Success = false,
-                Error = "Invalid lesson id"
-            };
-        }
-        
-        switch (cardRequest.CardType)
-        {
-            case CardType.Educational:
-                if (cardRequest.Content == null)
-                {
-                    return new CardResponse
-                    {
-                        Success = false,
-                        Error = "Educational card must include content"
-                    };
-                }
-
-                dbContext.EducationalCards.Add(new EducationalCard
-                {
-                    Title = cardRequest.Title,
-                    Description = cardRequest.Description,
-                    LessonId = cardRequest.LessonId,
-                    Content = cardRequest.Content
-                });
-                break;
-            case CardType.Test:
-                dbContext.TestCards.Add(new TestCard
-                {
-                    Title = cardRequest.Title,
-                    Description = cardRequest.Description,
-                    LessonId = cardRequest.LessonId
-                });
-                break;
-            default:
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                
-                return new CardResponse
-                {
-                    Success = false,
-                    Error = "Invalid card type"
-                };
-        }
-        
-        dbContext.SaveChanges();
-        
-        return new CardResponse
-        {
-            Success = true
-        };
-    }
-
-    private CardResponse GetCardInfo(int id)
-    {
-        var card = dbContext.Cards.FirstOrDefault(card => card.Id == id);
-
-        if (card == null)
-        {
-            return new CardResponse
-            {
-                Success = false,
-                Error = "Card not found"
-            };
-        }
-        
-        var content = card switch
-        {
-            EducationalCard educationalCard => educationalCard.Content,
-            _ => null
-        };
-
-        return new CardResponse
+        return new LessonResponse
         {
             Success = true,
-            Id = card.Id,
-            LessonId = card.LessonId,
-            Title = card.Title,
-            CardType = card.CardType,
-            Description = card.Description,
-            Content = content,
-            Questions = GetQuestions(card.Id)
+            Id = lesson.Id,
+            Title = lesson.Title
         };
     }
 
-    private List<KeyValuePair<int, CardResponse>> GetLessonCards(int lessonId)
+    public LessonResponse UpdateLessonName(UpdateLessonRequest request)
     {
-        var lesson = dbContext.Lessons.Include(lesson => lesson.Cards)
-            .FirstOrDefault(lesson => lesson.Id == lessonId);
-        var cardsInfo = new List<KeyValuePair<int, CardResponse>>();
-
-        if (lesson == null)
+        var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == request.Id);
+        if (lesson != null)
         {
-            return [];
-        }
-        
-        lesson.Cards.ToList().ForEach(card =>
-        {
-            cardsInfo.Add(new KeyValuePair<int, CardResponse>(card.Id, GetCardInfo(card.Id)));
-        });
-        
-        return cardsInfo;
-    }
-
-    private List<QuestionResponse> GetQuestions(int cardId)
-    {
-        var card = dbContext.TestCards.Include(card => card.Questions)
-            .FirstOrDefault(card => card.Id == cardId);
-        var questionsInfo = new List<QuestionResponse>();
-
-        if (card == null)
-        {
-            return [];
-        }
-
-        card.Questions.ToList().ForEach(question =>
-        {
-            questionsInfo.Add(GetQuestionInfo(question.Id));
-        });
-        
-        return questionsInfo;
-    }
-
-    private QuestionResponse GetQuestionInfo(int id)
-    {
-        var question = dbContext.Questions.FirstOrDefault(question => question.Id == id);
-
-        if (question == null)
-        {
-            return new QuestionResponse
+            lesson.Title = request.Title;
+            dbContext.SaveChanges();
+            
+            return new LessonResponse
             {
-                Success = false,
-                Error = "Question not found"
+                Success = true,
+                Id = lesson.Id,
+                Title = lesson.Title,
             };
         }
 
-        return new QuestionResponse
+        return new LessonResponse
         {
-            Success = true,
-            Id = question.Id,
-            QuestionText = question.QuestionText,
-            Answers = GetAnswers(question.Id)
+            Success = false,
+            Error = "Lesson not found"
         };
     }
-
-    private List<AnswerResponse> GetAnswers(int questionId)
+    
+    public async Task<LessonResponse> UpdateLessonNameAsync(UpdateLessonRequest request)
     {
-        var question = dbContext.Questions.Include(question => question.Answers)
-            .FirstOrDefault(question  => question.Id == questionId);
-        var answersInfo = new List<AnswerResponse>();
-
-        if (question == null)
+        var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == request.Id);
+        if (lesson != null)
         {
-            return [];
-        }
-
-        question.Answers.ToList().ForEach(answer =>
-        {
-            answersInfo.Add(GetAnswerInfo(answer.Id));
-        });
-        
-        return answersInfo;
-    }
-
-    private AnswerResponse GetAnswerInfo(int id)
-    {
-        var answer = dbContext.Answers.FirstOrDefault(question => question.Id == id);
-
-        if (answer == null)
-        {
-            return new AnswerResponse
+            lesson.Title = request.Title;
+            await dbContext.SaveChangesAsync();
+            
+            return new LessonResponse
             {
-                Success = false,
-                Error = "Answer not found"
+                Success = true,
+                Id = lesson.Id,
+                Title = lesson.Title,
             };
         }
 
-        return new AnswerResponse
+        return new LessonResponse
         {
-            Success = true,
-            Id = answer.Id,
-            AnswerText = answer.AnswerText,
+            Success = false,
+            Error = "Lesson not found"
         };
     }
 
-    public QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest)
+    public bool DeleteLesson(int id)
     {
-        var testCard = dbContext.TestCards.FirstOrDefault(tc => tc.Id == questionRequest.TestCardId);
-
-        if (testCard == null)
+        var lesson = dbContext.Lessons.FirstOrDefault(l => l.Id == id);
+        if (lesson != null)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            return new QuestionResponse
-            {
-                Success = false,
-                Error = "Invalid TestCardId"
-            };
+            dbContext.Lessons.Remove(lesson);
+            dbContext.SaveChanges();
+            return true;
         }
-
-        var question = new Question
-        {
-            TestCardId = questionRequest.TestCardId,
-            QuestionText = questionRequest.QuestionText
-        };
-
-        dbContext.Questions.Add(question);
-        dbContext.SaveChanges();
         
-        dbContext.Answers.AddRange(
-            questionRequest.Answers.Select(a => new Answer
-            {
-                QuestionId = question.Id,
-                AnswerText = a.AnswerText,
-                IsCorrect = a.IsCorrect
-            })
-        );
-
-        dbContext.SaveChanges();
-
-        return new QuestionResponse
+        return false;
+    }
+    
+    public async Task<bool> DeleteLessonAsync(int id)
+    {
+        var lesson = await dbContext.Lessons.FirstOrDefaultAsync(l => l.Id == id);
+        if (lesson != null)
         {
-            Success = true,
-            Id = question.Id,
-            QuestionText = question.QuestionText,
-            Answers = dbContext.Answers
-                .Where(a => a.QuestionId == question.Id)
-                .Select(a => new AnswerResponse
-                {
-                    Id = a.Id,
-                    AnswerText = a.AnswerText,
-                    IsCorrect = a.IsCorrect,
-                    Success = true
-                })
-                .ToList()
-        };
+            dbContext.Lessons.Remove(lesson);
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    private async Task<Dictionary<int, int>> GetLessonsTotalPointsAsync(List<int> lessonIds)
+    {
+        var result = new Dictionary<int, int>();
+        
+        var sandboxPoints = await dbContext.Cards
+            .Where(c => lessonIds.Contains(c.LessonId) && c.CardType == CardType.Sandbox)
+            .Join(dbContext.Tasks, 
+                c => c.Id, 
+                t => t.SandboxCardId, 
+                (c, t) => new { c.LessonId, t.Points })
+            .GroupBy(x => x.LessonId)
+            .Select(g => new { LessonId = g.Key, Points = g.Sum(x => x.Points) })
+            .ToListAsync();
+        
+        var testPoints = await dbContext.Cards
+            .Where(c => lessonIds.Contains(c.LessonId) && c.CardType == CardType.Test)
+            .Join(dbContext.Questions,
+                c => c.Id,
+                q => q.TestCardId,
+                (c, q) => new { c.LessonId, QuestionId = q.Id })
+            .Join(dbContext.Answers.Where(a => a.IsCorrect),
+                cq => cq.QuestionId,
+                a => a.QuestionId,
+                (cq, a) => new { cq.LessonId, a.Score })
+            .GroupBy(x => new { x.LessonId, x.Score })
+            .Select(g => new { g.Key.LessonId, g.Key.Score })
+            .GroupBy(x => x.LessonId)
+            .Select(g => new { LessonId = g.Key, Points = g.Sum(x => x.Score) })
+            .ToListAsync();
+        
+        foreach (var item in sandboxPoints)
+        {
+            result[item.LessonId] = item.Points;
+        }
+        
+        foreach (var item in testPoints)
+        {
+            if (result.ContainsKey(item.LessonId))
+                result[item.LessonId] += item.Points;
+            else
+                result[item.LessonId] = item.Points;
+        }
+        
+        return result;
+    }
+
+    private async Task<int> CalculateLessonTotalPointsAsync(int lessonId)
+    {
+        var points = await GetLessonsTotalPointsAsync(new List<int> { lessonId });
+        return points.GetValueOrDefault(lessonId, 0);
     }
 }

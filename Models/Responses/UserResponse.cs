@@ -13,8 +13,11 @@ public class UserResponse : Response
     [JsonPropertyName("email")]
     public string? Email { get; set; }
     
+    [JsonPropertyName("avatar")]
+    public string? AvatarUrl { get; set; }
+    
     [JsonPropertyName("scorePoints")]
-    public int? ScorePoints { get; set; }
+    public Dictionary<int, int>? ScorePoints { get; set; }
     
     [JsonPropertyName("userRole")]
     public string? UserRole { get; set; }

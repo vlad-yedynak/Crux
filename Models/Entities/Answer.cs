@@ -1,4 +1,4 @@
-namespace Crux.Models;
+namespace Crux.Models.Entities;
 
 public class Answer
 {
@@ -7,6 +7,8 @@ public class Answer
     public bool IsCorrect { get; set; }
     
     public required string AnswerText { get; set; }
+    
+    public required int Score { get; set; }
     
     public required int QuestionId { get; set; }
     

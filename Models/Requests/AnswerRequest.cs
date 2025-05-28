@@ -14,6 +14,10 @@ public class AnswerRequest
     public required string AnswerText { get; set; }
     
     [Required]
+    [JsonPropertyName("score")]
+    public required int Score { get; set; }
+    
+    [Required]
     [JsonPropertyName("isCorrect")]
-    public bool IsCorrect { get; set; }
+    public required bool IsCorrect { get; set; }
 }

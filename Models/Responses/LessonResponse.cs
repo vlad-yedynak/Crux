@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Crux.Models.Responses;
@@ -11,6 +10,9 @@ public class LessonResponse : Response
     [JsonPropertyName("title")]
     public string? Title { get; set; }
     
+    [JsonPropertyName("totalPoints")]
+    public int TotalPoints { get; set; }
+    
     [JsonPropertyName("cards")]
-    public ICollection<KeyValuePair<int, CardResponse>>? Cards { get; set; }
+    public ICollection<BriefCardResponse>? BriefCards { get; set; }
 }

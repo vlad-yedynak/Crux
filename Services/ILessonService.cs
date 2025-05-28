@@ -1,20 +1,19 @@
 using Crux.Models.Requests;
 using Crux.Models.Responses;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Crux.Services;
 
 public interface ILessonService
 {
-    [HttpPost]
-    LessonResponse AddLesson(HttpContext context, string title);
-
-    [HttpPost]
-    CardResponse AddCard(HttpContext context, CardRequest cardRequest);
+    ICollection<LessonResponse> GetLessons();
+    Task<ICollection<LessonResponse>> GetLessonsAsync();
     
-    [HttpPost]
-    QuestionResponse AddQuestion(HttpContext context, QuestionRequest questionRequest);
+    LessonResponse AddLesson(string title);
+    Task<LessonResponse> AddLessonAsync(string title);
 
-    [HttpGet]
-    ICollection<KeyValuePair<int, LessonResponse>> GetLessons(HttpContext context);
+    LessonResponse UpdateLessonName(UpdateLessonRequest request);
+    Task<LessonResponse> UpdateLessonNameAsync(UpdateLessonRequest request);
+    
+    bool DeleteLesson(int id);
+    Task<bool> DeleteLessonAsync(int id);
 }
