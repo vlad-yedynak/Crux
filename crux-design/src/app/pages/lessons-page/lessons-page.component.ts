@@ -236,6 +236,8 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
               this.router.navigate(['lessons/sandbox-card-bezier']);
             } else if (cardData.sandboxType === 'FractalSystem') {
               this.router.navigate(['lessons/sandbox-card-fractal']);
+            }  else if (cardData.sandboxType === 'Animation') {
+              this.router.navigate(['lessons/sandbox-card-animations']);
             } else {
               this.router.navigate(['lessons/sandbox-card']);
             }

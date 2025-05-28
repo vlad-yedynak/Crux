@@ -1,0 +1,525 @@
+<div *ngIf="!showAuthMessage">
+  <div class="mobile-warning">
+    <p>Ця сторінка не призначена для перегляду на мобільних пристроях через обмеження адаптивності.</p>
+    <p>Будь ласка, відкрийте її на персональному комп'ютері.</p>
+  </div>
+  <div *ngIf="card?.sandboxType === 'Animation'" class="sandbox-layout-container desktop-only-content">
+    <div class="canvas-section">
+      <div #canvasContainer id="canvasContainer">
+        <canvas #myCanvas id="coordinateCanvas"></canvas>
+      </div>
+    </div>
+    <div class="overlay-section">
+      <div class="overlay-navigation">
+        <button [ngClass]="{'active': activePanel === 'shapes'}" (click)="switchPanel('shapes')">Фігури</button>
+        <button [ngClass]="{'active': activePanel === 'tasks'}" (click)="switchPanel('tasks')">Завдання</button>
+        <button [ngClass]="{'active': activePanel === 'animations'}" (click)="switchPanel('animations')">Анімації</button>
+      </div>
+
+      <!-- Shapes panel -->
+      <div class="panel" *ngIf="activePanel === 'shapes'">
+        <div class="shape-selector">
+          <h4>Оберіть фігуру:</h4>
+          <select id="shape" name="shape" [(ngModel)]="selectedShapeType">
+            <option value="square">Квадрат</option>
+            <option value="triangle">Трикутник</option>
+            <option value="rectangle">Прямокутник</option> 
+            <option value="circle">Круг</option> 
+            <option value="polygon">Інший багатокутник</option>
+          </select>
+        </div>
+        <button class="draw-button" (click)="onDrawShape()">Намалювати</button>
+
+        <div class="drawn-shapes-list">
+          <h4>Намальовані фігури:</h4>
+          <ul *ngIf="drawnShapes.length > 0; else noShapes">
+            <li *ngFor="let shape of drawnShapes; let i = index">
+              <div class="shape-info" (click)="onEditShape(shape)">
+                <span>{{ i + 1 }}. {{ shape.name || shape.type }} {{ shape.isPlaceholder ? '(редагується)' : '' }}</span>
+              </div>
+              <div class="shape-actions">
+                <button class="edit-arrow-btn" (click)="onEditShape(shape)" [class.open]="shape.id === editingShapeId">
+                  <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button class="delete-cross-btn" (click)="onDeleteShape(shape.id)">
+                  <svg class="cross-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="shape-edit-panel" *ngIf="shape.id === editingShapeId" @slideTogglePanel>
+                <div class="name-section">
+                  <label>Назва фігури:</label>
+                  <input 
+                    type="text" 
+                    [(ngModel)]="shape.name" 
+                    (input)="updateShapeProperty('name', shape.name)"
+                  >
+                </div>
+                
+                <div class="color-section">
+                  <label>Колір заливки:</label>
+                  <input 
+                    type="color" 
+                    [(ngModel)]="shape.fillColor" 
+                    (change)="updateShapeProperty('fillColor', shape.fillColor)"
+                  >
+                </div>
+                
+                <div class="color-section">
+                  <label>Колір контуру:</label>
+                  <input 
+                    type="color" 
+                    [(ngModel)]="shape.borderColor" 
+                    (change)="updateShapeProperty('borderColor', shape.borderColor)"
+                  >
+                </div>
+                
+                <div class="points-section">
+                  <div class="points-header-container">
+                    <div class="points-header">
+                      <span *ngIf="shape.type !== 'circle' && shape.type !== 'polygon'">Точки (потрібно: {{ getRequiredPointsCount(shape.type) }}, маємо: {{ shape.points.length }}):</span>
+                      <span *ngIf="shape.type === 'polygon'">Точки (потрібно щонайменше: {{ getRequiredPointsCount(shape.type) }}, маємо: {{ shape.points.length }}):</span>
+                      <span *ngIf="shape.type === 'circle'">Центр:</span>
+                    </div>
+                    <button *ngIf="shape.type !== 'circle'" type="button" class="add-point-btn" (click)="addPointToShape(shape)">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+                      </svg>
+                      Додати точку
+                    </button>
+                  </div>
+              
+                  <!-- Point inputs for Polygons -->
+                  <div *ngIf="shape.type !== 'circle'" class="points-container">
+                    <div *ngFor="let point of shape.points; let i = index" class="point-inputs" [ngClass]="{'invalid-point': !isPointValid(shape.id, i)}">
+                      <div class="point-header">
+                        <span class="point-label">Точка {{ i + 1 }}:</span>
+                        <button type="button" class="remove-point-btn" (click)="removePointFromShape(shape, i)">
+                          <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 24 24" width="18">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label for="point-{{i}}-x">X:</label>
+                          <input 
+                            type="number" 
+                            id="point-{{i}}-x" 
+                            [(ngModel)]="shape.points[i].x" 
+                            (input)="updateShapeProperty('point-'+i+'-x', shape.points[i].x)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, i)}"
+                            step="1.0"
+                          >
+                        </div>
+                        <div class="coordinate">
+                          <label for="point-{{i}}-y">Y:</label>
+                          <input 
+                            type="number" 
+                            id="point-{{i}}-y" 
+                            [(ngModel)]="shape.points[i].y" 
+                            (input)="updateShapeProperty('point-'+i+'-y', shape.points[i].y)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, i)}"
+                            step="1.0"
+                          >
+                        </div>
+                      </div>
+                      <div *ngIf="!isPointValid(shape.id, i)" class="point-validation-error">
+                        Ця точка не утворює правильну фігуру
+                      </div>
+                    </div>
+                    <div *ngIf="shape.points.length === 0 && shape.type !== 'circle'" class="no-points-message">
+                      Натисніть "Додати точку", щоб додати координати для фігури
+                    </div>
+                  </div>
+
+                  <div *ngIf="shape.type === 'circle'" class="points-container">
+                    <div *ngIf="shape.points.length > 0" class="point-inputs" [ngClass]="{'invalid-point': !isPointValid(shape.id, 0)}">
+                      <div class="point-header">
+                        <span class="point-label">Центр (X, Y):</span>
+                      </div>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label for="circle-center-x-{{shape.id}}">X:</label>
+                          <input 
+                            type="number" 
+                            id="circle-center-x-{{shape.id}}" 
+                            [(ngModel)]="shape.points[0].x" 
+                            (input)="updateShapeProperty('point-0-x', shape.points[0].x)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, 0) && shape.points.length > 0}"
+                            step="1.0"
+                          >
+                        </div>
+                        <div class="coordinate">
+                          <label for="circle-center-y-{{shape.id}}">Y:</label>
+                          <input 
+                            type="number" 
+                            id="circle-center-y-{{shape.id}}" 
+                            [(ngModel)]="shape.points[0].y" 
+                            (input)="updateShapeProperty('point-0-y', shape.points[0].y)"
+                            [ngClass]="{'invalid-input': !isPointValid(shape.id, 0) && shape.points.length > 0}"
+                            step="1.0"
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Radius Input -->
+                    <div class="point-inputs" [ngClass]="{'invalid-point': shape.radius !== undefined && shape.radius <= 0}">
+                        <div class="point-header">
+                            <span class="point-label">Радіус:</span>
+                        </div>
+                        <div class="coordinates">
+                            <div class="coordinate">
+                                <label for="circle-radius-{{shape.id}}">R:</label>
+                                <input 
+                                  type="number" 
+                                  id="circle-radius-{{shape.id}}" 
+                                  [(ngModel)]="shape.radius" 
+                                  (input)="updateShapeProperty('radius', shape.radius)"
+                                  min="0.1" 
+                                  step="0.1"
+                                  [ngClass]="{'invalid-input': shape.radius !== undefined && shape.radius <= 0}"
+                                >
+                            </div>
+                        </div>
+                        <div *ngIf="shape.radius !== undefined && shape.radius <= 0" class="point-validation-error">
+                          Радіус має бути позитивним числом.
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="button" class="save-btn" 
+                    [disabled]="!isShapeValid(shape)" 
+                    (click)="onSaveShape()">Зберегти</button>
+                  <button type="button" class="cancel-btn" (click)="onCancelEditShape()">Скасувати</button>
+                </div>
+              
+                <div *ngIf="shape.points.length !== getRequiredPointsCount(shape.type) && shape.type !== 'circle' && shape.type !== 'polygon'" class="validation-error">
+                  Для фігури "{{ shape.type === 'square' ? 'квадрат' : shape.type === 'triangle' ? 'трикутник' : 'прямокутник' }}" потрібно точно
+                  {{ getRequiredPointsCount(shape.type) }} точки
+                </div>
+                <div *ngIf="shape.type === 'polygon' && shape.points.length < getRequiredPointsCount(shape.type)" class="validation-error">
+                  Для фігури "багатокутник" потрібно щонайменше {{ getRequiredPointsCount(shape.type) }} точки.
+                </div>
+                 <div *ngIf="shape.type === 'circle' && (shape.radius === undefined || shape.radius <= 0)" class="validation-error">
+                  Радіус для круга має бути вказаний і бути позитивним.
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noShapes>
+            <p class="no-shapes-message">Ще не намальовано жодної фігури.</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Tasks panel -->
+      <div class="panel" *ngIf="activePanel === 'tasks'">
+        <div class="task-section">
+          <div *ngIf="!selectedTask" class="task-list">
+            <h4>Список завдань:</h4>
+            <ul *ngIf="card && card.tasks && card.tasks.length > 0; else noTasks">
+              <li *ngFor="let task of card?.tasks" (click)="selectTask(task)" [ngClass]="{'completed-task': task.isCompleted}">
+                <div class="shape-info">
+                  <span>{{ task.name }}</span>
+                </div>
+                <div class="task-status" *ngIf="task.isCompleted">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" class="completed-icon">
+                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                  <span class="completed-text">Виконано</span>
+                </div>
+              </li>
+            </ul>
+            <ng-template #noTasks>
+              <p class="no-shapes-message">Немає доступних завдань.</p>
+            </ng-template>
+          </div>
+          <div *ngIf="selectedTask" class="task-details shape-edit-panel" [ngClass]="{'completed-task': selectedTask.isCompleted}">
+            <div class="name-section">
+              <label>Завдання:</label>
+              <h4>{{ selectedTask.name }}</h4>
+            </div>
+            
+            <div class="points-section">
+              <div class="points-header">Опис:</div>
+              <p class="task-description">{{ selectedTask.description }}</p>
+            </div>
+            
+            <div class="points-section">
+              <div class="points-header">Відповідь:</div>
+              
+              <div *ngIf="selectedTask.expectedDataType && selectedTask.expectedDataCount && selectedTask.expectedDataType.length >= selectedTask.expectedDataCount; else noExpectedData">
+                <ng-container *ngFor="let dataType of selectedTask.expectedDataType; let idx = index">
+                  <div *ngIf="idx < selectedTask.expectedDataCount" class="point-inputs">
+                    <div class="point-header">
+                      <span class="point-label">{{ getDataTypeLabel(dataType) }}:</span>
+                    </div>
+                    <div class="coordinates">
+                      <div class="coordinate" style="width: 100%;">
+                        <input 
+                          *ngIf="dataType.toLowerCase() !== 'bool'"
+                          [type]="getInputType(dataType)" 
+                          [(ngModel)]="taskAnswers[idx]"
+                          [placeholder]="getPlaceholder(dataType)"
+                          [step]="dataType.toLowerCase() === 'double' ? '0.01' : (dataType.toLowerCase() === 'int' ? '1' : null)"
+                          class="task-input-field" 
+                        />
+                        <select *ngIf="dataType.toLowerCase() === 'bool'" [(ngModel)]="taskAnswers[idx]" class="task-input-field">
+                          <option [ngValue]="undefined">Оберіть...</option>
+                          <option value="true">Правда (True)</option>
+                          <option value="false">Неправда (False)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+              <ng-template #noExpectedData>
+                <p class="no-shapes-message">Інформація про очікувані типи даних для цього завдання відсутня або некоректна.</p>
+              </ng-template>
+            </div>
+            
+            <div class="form-actions">
+              <button class="save-btn" (click)="submitTaskAnswer()" [disabled]="selectedTask.isCompleted">Надіслати відповідь</button>
+              <button class="cancel-btn" (click)="deselectTask()">Назад</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animations panel -->
+      <div class="panel" *ngIf="activePanel === 'animations'">
+        <div class="animation-section">
+          <h4>Управління анімаціями:</h4>
+          
+          <!-- Shape selection for animation -->
+          <div class="shape-selector" *ngIf="!selectedAnimationShapeId">
+            <h5>Оберіть фігуру для анімації:</h5>
+            <ul *ngIf="getNonPlaceholderShapes().length > 0; else noShapesForAnimation">
+              <li *ngFor="let shape of getNonPlaceholderShapes()" 
+                  (click)="selectShapeForAnimation(shape.id)" 
+                  class="shape-info clickable">
+                <span>{{ shape.name || shape.type }}</span>
+                <span *ngIf="shape.animation" class="animation-indicator">🎬</span>
+              </li>
+            </ul>
+            <ng-template #noShapesForAnimation>
+              <p class="no-shapes-message">Спочатку намалюйте фігури у вкладці "Фігури".</p>
+            </ng-template>
+          </div>
+
+          <!-- Animation editor -->
+          <div *ngIf="selectedAnimationShapeId" class="animation-editor">
+            <div class="animation-header">
+              <h5>Редагування анімації: {{ getSelectedShapeName() }}</h5>
+              <button class="cancel-btn" (click)="selectedAnimationShapeId = null">Назад</button>
+            </div>
+
+            <!-- Animation settings -->
+            <div class="animation-settings">
+              <div class="setting-row">
+                <label for="animDuration">Тривалість (сек):</label>
+                <input type="number" id="animDuration" [(ngModel)]="animationDuration" min="0.1" step="0.1">
+              </div>
+              <div class="setting-row">
+                <label for="animLoop">Циклічна анімація:</label>
+                <input type="checkbox" id="animLoop" [(ngModel)]="animationLoop">
+              </div>
+            </div>
+
+            <!-- Keyframes editor -->
+            <div class="keyframes-section">
+              <div class="keyframes-header">
+                <h6>Ключові кадри:</h6>
+                <button class="add-point-btn" (click)="addKeyframe()">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+                  </svg>
+                  Додати кадр
+                </button>
+              </div>
+
+              <div class="keyframes-list">
+                <div *ngFor="let keyframe of keyframes; let i = index" class="keyframe-item">
+                  <div class="keyframe-header" (click)="editKeyframe(i)">
+                    <span>Кадр {{ i + 1 }} ({{ keyframe.time }}с)</span>
+                    <div class="keyframe-actions">
+                      <button class="delete-cross-btn" (click)="removeKeyframe(i)" [disabled]="keyframes.length <= 1">
+                        <div>
+                          <svg class="cross-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                          </svg>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div *ngIf="editingKeyframeIndex === i" class="keyframe-editor" @slideTogglePanel>
+                    <div class="transform-section">
+                      <label>Час (сек):</label>
+                      <input type="number" [ngModel]="keyframe.time" 
+                             (input)="onKeyframeTimeChange(i, $event)" 
+                             min="0" [max]="animationDuration" step="0.1">
+                    </div>
+
+                    <div class="transform-section">
+                      <label>Переміщення:</label>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label>X:</label>
+                          <input type="number" [ngModel]="keyframe.translation?.x || 0" 
+                                 (input)="onKeyframeTranslationXChange(i, $event)" step="0.1">
+                        </div>
+                        <div class="coordinate">
+                          <label>Y:</label>
+                          <input type="number" [ngModel]="keyframe.translation?.y || 0" 
+                                 (input)="onKeyframeTranslationYChange(i, $event)" step="0.1">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="transform-section">
+                      <label>Поворот (градуси):</label>
+                      <input type="number" [ngModel]="(keyframe.rotation || 0)" 
+                             (input)="onKeyframeRotationChange(i, $event)" step="1">
+                    </div>
+
+                    <div class="transform-section">
+                      <label>Масштаб:</label>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label>X:</label>
+                          <input type="number" [ngModel]="keyframe.scale?.x || 1" 
+                                 (input)="onKeyframeScaleXChange(i, $event)" min="0.1" step="0.1">
+                        </div>
+                        <div class="coordinate">
+                          <label>Y:</label>
+                          <input type="number" [ngModel]="keyframe.scale?.y || 1" 
+                                 (input)="onKeyframeScaleYChange(i, $event)" min="0.1" step="0.1">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="transform-section">
+                      <label>Зсув:</label>
+                      <div class="coordinates">
+                        <div class="coordinate">
+                          <label>X:</label>
+                          <input type="number" [ngModel]="keyframe.shear?.x || 0" 
+                                 (input)="onKeyframeShearXChange(i, $event)" step="0.1">
+                        </div>
+                        <div class="coordinate">
+                          <label>Y:</label>
+                          <input type="number" [ngModel]="keyframe.shear?.y || 0" 
+                                 (input)="onKeyframeShearYChange(i, $event)" step="0.1">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Animation controls -->
+            <div class="form-actions">
+              <button class="save-btn" (click)="saveAnimation()">Зберегти анімацію</button>
+            </div>
+          </div>
+
+          <!-- Animated shapes list -->
+          <div class="animated-shapes-list" *ngIf="!selectedAnimationShapeId">
+            <h4>Фігури з анімацією:</h4>
+            <ul *ngIf="getAnimatedShapes().length > 0; else noAnimatedShapes">
+              <li *ngFor="let shape of getAnimatedShapes(); let i = index" class="animated-shape-item">
+                <div class="shape-info">
+                  <span>{{ i + 1 }}. {{ shape.name || shape.type }}</span>
+                  <span class="animation-status" [ngClass]="{'playing': shape.animation?.isPlaying}">
+                    {{ shape.animation?.isPlaying ? 'Відтворюється' : 'Зупинено' }}
+                  </span>
+                </div>
+                <div class="shape-actions">
+                  <button class="play-pause-btn" 
+                          [ngClass]="{'playing': shape.animation?.isPlaying}"
+                          (click)="shape.animation?.isPlaying ? pauseAnimation(shape.id) : playAnimation(shape.id)"
+                          title="{{ shape.animation?.isPlaying ? 'Призупинити' : 'Відтворити' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                      <path *ngIf="!shape.animation?.isPlaying" d="M8 5v14l11-7z" fill="currentColor"/>
+                      <path *ngIf="shape.animation?.isPlaying" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                  <button class="stop-btn" 
+                          (click)="stopAnimation(shape.id)"
+                          title="Зупинити">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                      <path d="M6 6h12v12H6z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                  <button class="edit-arrow-btn" 
+                          (click)="selectShapeForAnimation(shape.id)"
+                          title="Редагувати анімацію">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                  <button class="delete-cross-btn" 
+                          (click)="removeAnimation(shape.id)"
+                          title="Видалити анімацію">
+                    <svg class="cross-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                </div>
+              </li>
+            </ul>
+            <ng-template #noAnimatedShapes>
+              <p class="no-shapes-message">Жодна фігура ще не має анімації.</p>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Results Popup -->
+  <div *ngIf="showResultsPopup" class="results-popup-overlay desktop-only-content">
+    <div class="results-popup">
+      <h2>Результат завдання</h2>
+      <div class="results-content">
+        <p class="results-score" *ngIf="taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#4caf50" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+          <span class="highlight success">Правильна відповідь!</span>
+        </p>
+        
+        <!-- Add points animation here -->
+        <div *ngIf="taskResultCorrect" class="points-animation-container">
+          <div class="points-badge">+{{ selectedTask?.points || 0 }}</div>
+        </div>
+
+        <p class="results-score" *ngIf="!taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#EB5E28" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+          </svg>
+          <span class="highlight error">Неправильна відповідь!</span>
+        </p>
+        <div class="task-message" *ngIf="taskResultCorrect">
+          <p>Завдання виконано успішно! Ви можете повернутися до списку завдань.</p>
+        </div>
+        <div class="task-message" *ngIf="!taskResultCorrect">
+          <p>Спробуйте ще раз. Перевірте правильність відповіді.</p>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="retry-btn" *ngIf="!taskResultCorrect" (click)="closeResultsPopup(false)">Спробувати ще</button>
+        <button class="return-btn" (click)="closeResultsPopup(true)">Повернутися до завдань</button>
+      </div>
+    </div>
+  </div>
+</div>
