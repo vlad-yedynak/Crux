@@ -26,7 +26,8 @@
 
 .tab-item a:hover,
 .tab-item a.active {
-  /*background-color: var(--color-secondary-dark);*/
+  background-color: rgba(var(--color-secondary-dark-rgb), 0.1);
   color: var(--color-accent);
-  /*border-bottom: 2px solid var(--color-accent);*/
+  border-bottom: 2px solid var(--color-accent);
+  font-weight: 600;
 }

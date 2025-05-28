@@ -231,7 +231,6 @@ export class AuthServiceService {
   isLoggedIn(): boolean {
     return this.userSubject.value !== null;
   }
-
   logout() {
     if (this.isBrowser()) {
       this.cookiesService.deleteCookie(this.AUTH_TOKEN_KEY);
@@ -239,6 +238,10 @@ export class AuthServiceService {
       this.cookiesService.deleteCookie(this.USER_ID_KEY); // Also clear userId cookie
       localStorage.removeItem('userId');
       localStorage.removeItem('userEmail');
+      
+      // Also clear recommendation data when user logs out
+      localStorage.removeItem('user-recommendations');
+      
       console.log('AuthService: Auth data cleared from cookies and localStorage.');
     }
     this.userSubject.next(null);

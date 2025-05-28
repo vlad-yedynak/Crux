@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { CookiesService } from './cookies.service';
-import { environment } from '../environments/environment';
+import { ConfigService } from './config.service';
 
 export interface Answer {
   id: number;
@@ -83,17 +83,21 @@ export interface CardApiResponse {
 export class LessonsService {
 
   private lessonsSubject = new BehaviorSubject<Lesson[] | null>(null);
-  private baseUrl = `${environment.apiBaseUrl}/lesson`; 
-  private cardBaseUrl = `${environment.apiBaseUrl}/card`;
+  private baseUrl: string;
+  private cardBaseUrl: string;
   private readonly LESSONS_STORAGE_KEY = 'app-lessons-data';
   private readonly AUTH_TOKEN_KEY = 'auth-token';
-  private readonly CARD_DETAIL_STORAGE_KEY_PREFIX = 'app-card-detail-'; // New key for individual card caching
+  private readonly CARD_DETAIL_STORAGE_KEY_PREFIX = 'app-card-detail-';
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private cookiesService: CookiesService
-  ) { }
+    private cookiesService: CookiesService,
+    private configService: ConfigService
+  ) {
+    this.baseUrl = `${this.configService.getEndpoint('/lesson')}`; 
+    this.cardBaseUrl = `${this.configService.getEndpoint('/card')}`;
+  }
 
   private isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -116,16 +120,19 @@ export class LessonsService {
           this.lessonsSubject.next(lessons);
           return of(lessons);
         } else {
-          console.log('LessonService: Empty lessons array in localStorage, refreshing from server');
-          return this.forceRefreshLessons();
+          console.log('LessonService: Empty lessons array in localStorage');
+          // Return empty array instead of making API call
+          return of([]);
         }
       } catch (e) {
         console.error('LessonService: Error parsing lessons data:', e);
-        return this.forceRefreshLessons();
+        // Return null instead of making API call
+        return of(null);
       }
     } else {
-      console.log('LessonService: No lessons found in localStorage, refreshing from server');
-      return this.forceRefreshLessons();
+      console.log('LessonService: No lessons found in localStorage');
+      // Return null instead of making API call
+      return of(null);
     }
   }
 
@@ -294,7 +301,8 @@ export class LessonsService {
             sandboxType: apiCardData.sandboxType,
           };
           
-          if (this.isBrowser()) {
+          // Only cache non-Educational cards in localStorage
+          if (this.isBrowser() && card.type !== 'Educational') {
             const cardStorageKey = `${this.CARD_DETAIL_STORAGE_KEY_PREFIX}${cardId}`;
             try {
               localStorage.setItem(cardStorageKey, JSON.stringify(card));
@@ -302,7 +310,10 @@ export class LessonsService {
             } catch (e) {
               console.error(`LessonsService: Error saving card ${cardId} to localStorage:`, e);
             }
+          } else if (card.type === 'Educational') {
+            console.log(`LessonsService: Educational Card ${cardId} fetched from API (not cached in localStorage).`);
           }
+          
           return card;
         } else {
           const errorMessage = response.error || 'Unknown error';

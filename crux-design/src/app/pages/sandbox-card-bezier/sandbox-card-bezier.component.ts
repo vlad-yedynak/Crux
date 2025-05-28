@@ -690,4 +690,77 @@ export class SandboxCardBezierComponent implements OnInit, AfterViewInit, OnDest
     }
     this.redrawCanvas();
   }
+
+  @HostListener('window:load')
+  onPageLoad(): void {
+    if (this.isBrowser()) {
+      // Check if this is a page refresh
+      const isPageRefresh = this.isPageRefresh();
+      
+      if (isPageRefresh) {
+        const cardId = localStorage.getItem('selectedCardId');
+        if (cardId) {
+          console.log('Page was refreshed - forcing bezier sandbox card data update from server');
+          this.forceRefreshCardData(parseInt(cardId, 10));
+        }
+      }
+    }
+  }
+  
+  // Helper method to detect if current page load is a refresh
+  private isPageRefresh(): boolean {
+    // Use multiple methods to detect refresh for better browser compatibility
+    
+    // Method 1: Using Performance API navigation type (modern browsers)
+    if (window.performance) {
+      if (window.performance.getEntriesByType) {
+        const navigationEntries = window.performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0) {
+          return (navigationEntries[0] as any).type === 'reload';
+        }
+      }
+      
+      // Method 2: Older Performance API (fallback)
+      if (window.performance.navigation) {
+        return window.performance.navigation.type === 1; // 1 is TYPE_RELOAD
+      }
+    }
+    
+    // If we can't detect it reliably, default to false
+    return false;
+  }
+
+  // Method to force refresh card data from server
+  private forceRefreshCardData(cardId: number): void {
+    console.log(`SandboxCardBezierComponent: Forcing refresh for card ${cardId} from server`);
+    
+    this.lessonsService.forceRefreshCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details refreshed from server in SandboxCardBezierComponent:', cardData);
+          this.card = cardData;
+          
+          // Always set the active panel to 'curves' on initialization
+          this.activePanel = 'curves';
+          
+          if (cardData.lessonId) {
+            localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
+          }
+          
+          setTimeout(() => this.setupCanvasIfReady(), 100);
+        } else {
+          console.error(`SandboxCardBezierComponent: Failed to fetch fresh card details for ID ${cardId} from service.`);
+        }
+      },
+      error: (err) => {
+        console.error(`SandboxCardBezierComponent: Error refreshing card details for ID ${cardId}:`, err);
+        
+        // Try to load from cache as fallback
+        const cachedCardId = localStorage.getItem('selectedCardId');
+        if (cachedCardId) {
+          this.fetchCardDetails(parseInt(cachedCardId, 10));
+        }
+      }
+    });
+  }
 }

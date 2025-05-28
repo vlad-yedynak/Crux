@@ -810,5 +810,76 @@ export class SandboxCardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activePanel = panel;
   }
 
+  @HostListener('window:load')
+  onPageLoad(): void {
+    if (this.isBrowser()) {
+      // Check if this is a page refresh
+      const isPageRefresh = this.isPageRefresh();
+      
+      if (isPageRefresh) {
+        const cardId = localStorage.getItem('selectedCardId');
+        if (cardId) {
+          console.log('Page was refreshed - forcing sandbox card data update from server');
+          this.forceRefreshCardData(parseInt(cardId, 10));
+        }
+      }
+    }
+  }
   
+  // Helper method to detect if current page load is a refresh
+  private isPageRefresh(): boolean {
+    // Use multiple methods to detect refresh for better browser compatibility
+    
+    // Method 1: Using Performance API navigation type (modern browsers)
+    if (window.performance) {
+      if (window.performance.getEntriesByType) {
+        const navigationEntries = window.performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0) {
+          return (navigationEntries[0] as any).type === 'reload';
+        }
+      }
+      
+      // Method 2: Older Performance API (fallback)
+      if (window.performance.navigation) {
+        return window.performance.navigation.type === 1; // 1 is TYPE_RELOAD
+      }
+    }
+    
+    // If we can't detect it reliably, default to false
+    return false;
+  }
+
+  // Method to force refresh card data from server
+  private forceRefreshCardData(cardId: number): void {
+    console.log(`SandboxCardComponent: Forcing refresh for card ${cardId} from server`);
+    
+    this.lessonsService.forceRefreshCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details refreshed from server in SandboxCardComponent:', cardData);
+          this.card = cardData;
+          
+          // Установка правильної активної панелі
+          this.activePanel = 'shapes';
+          
+          if (cardData.lessonId) {
+            localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
+          }
+          
+          setTimeout(() => this.setupCanvasIfReady(), 100);
+        } else {
+          console.error(`SandboxCardComponent: Failed to fetch fresh card details for ID ${cardId} from service.`);
+        }
+      },
+      error: (err) => {
+        console.error(`SandboxCardComponent: Error refreshing card details for ID ${cardId}:`, err);
+        
+        // Try to load from cache as fallback
+        const storedCardId = localStorage.getItem('selectedCardId');
+        if (storedCardId) {
+          this.fetchCardDetails(parseInt(storedCardId, 10));
+        }
+      }
+    });
+  }
 }

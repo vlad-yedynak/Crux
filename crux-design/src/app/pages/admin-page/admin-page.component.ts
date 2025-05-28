@@ -181,6 +181,30 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     private lessonsService: LessonsService // Inject LessonsService
   ) {}
   
+  // Add window load event listener to detect page refreshes
+  @HostListener('window:load')
+  onPageLoad(): void {
+    if (this.isBrowser()) {
+      // Check if this is a page refresh
+      const isPageRefresh = this.isPageRefresh();
+      
+      if (isPageRefresh) {
+        console.log('Admin page was refreshed - making API call to get fresh lessons data');
+        this.lessonsService.forceRefreshLessons().subscribe({
+          next: (refreshedLessons) => {
+            console.log('Lessons refreshed from server:', refreshedLessons ? refreshedLessons.length : 0);
+          },
+          error: (err) => {
+            console.error('Error refreshing lessons data:', err);
+            this.isLoading = false;
+            this.hasError = true;
+            this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
+          }
+        });
+      }
+    }
+  }
+  
   ngOnInit(): void {
     const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     if (!token) {
@@ -204,14 +228,62 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       }
     });
     
-    // Initialize data from the service
+    // Перевіряємо і завантажуємо уроки (з localStorage або з сервера)
     this.isLoading = true;
+    this.ensureLessonsLoaded();
+  }
+  
+  // Метод для перевірки і завантаження уроків
+  private ensureLessonsLoaded(): void {
     this.lessonsService.initializeData().subscribe({
-      error: (error) => {
-        console.error('Error initializing lessons data:', error);
-        this.isLoading = false;
-        this.hasError = true;
-        this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
+      next: (lessons) => {
+        if (lessons && lessons.length > 0) {
+          console.log('Успішно завантажено уроки з localStorage, кількість:', lessons.length);
+        } else {
+          console.log('Уроки не знайдено в localStorage або дані порожні. Виконуємо запит до сервера...');
+          
+          // Робимо запит до сервера, якщо немає даних в localStorage
+          this.lessonsService.fetchAndSetLessons().subscribe({
+            next: (fetchedLessons) => {
+              if (fetchedLessons && fetchedLessons.length > 0) {
+                console.log('Успішно завантажено уроки з сервера, кількість:', fetchedLessons.length);
+              } else {
+                console.warn('Не вдалося отримати уроки з сервера або список порожній');
+                this.isLoading = false;
+              }
+            },
+            error: (fetchError) => {
+              console.error('Помилка при завантаженні уроків з сервера:', fetchError);
+              this.hasError = true;
+              this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
+              this.isLoading = false;
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Помилка при завантаженні з localStorage:', err);
+        
+        // При помилці читання з localStorage також спробуємо запит до сервера
+        console.log('Спроба отримати дані з сервера після помилки localStorage...');
+        this.lessonsService.fetchAndSetLessons().subscribe({
+          next: (fetchedLessons) => {
+            if (fetchedLessons && fetchedLessons.length > 0) {
+              console.log('Успішно завантажено уроки з сервера після помилки, кількість:', fetchedLessons.length);
+            } else {
+              console.warn('Не вдалося отримати уроки з сервера або список порожній');
+              this.hasError = true;
+              this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
+              this.isLoading = false;
+            }
+          },
+          error: (fetchError) => {
+            console.error('Помилка при завантаженні уроків з сервера:', fetchError);
+            this.hasError = true;
+            this.errorMessage = 'Не вдалося завантажити дані уроків. Спробуйте ще раз.';
+            this.isLoading = false;
+          }
+        });
       }
     });
   }
@@ -2096,5 +2168,33 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     ];
     
     return allowedTypes.includes(file.type);
+  }
+
+  // Helper method to check if browser is available
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined';
+  }
+  
+  // Helper method to detect if current page load is a refresh
+  private isPageRefresh(): boolean {
+    // Use multiple methods to detect refresh for better browser compatibility
+    
+    // Method 1: Using Performance API navigation type (modern browsers)
+    if (window.performance) {
+      if (window.performance.getEntriesByType) {
+        const navigationEntries = window.performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0) {
+          return (navigationEntries[0] as any).type === 'reload';
+        }
+      }
+      
+      // Method 2: Older Performance API (fallback)
+      if (window.performance.navigation) {
+        return window.performance.navigation.type === 1; // 1 is TYPE_RELOAD
+      }
+    }
+    
+    // If we can't detect it reliably, default to false
+    return false;
   }
 }

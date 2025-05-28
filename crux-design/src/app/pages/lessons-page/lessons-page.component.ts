@@ -43,6 +43,10 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
   redirectCountdown: number = 3;
 
   private redirectTimer: any = null;
+
+  // Add flag to track if the page is being loaded for the first time
+  private pageRefreshed = true;
+
   constructor(
     private http: HttpClient,
     private sanitizer: DomSanitizer,
@@ -55,7 +59,56 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
     private configService: ConfigService
   ) {}
 
+  @HostListener('window:load')
+  onPageLoad(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Перевіряємо, чи це оновлення сторінки
+      const isPageRefresh = this.isPageRefresh();
+      
+      if (isPageRefresh) {
+        console.log('Сторінка була оновлена - виконуємо запит до API для отримання свіжих даних');
+        this.lessonsService.forceRefreshLessons().subscribe({
+          next: (refreshedLessons) => {
+            console.log('Уроки оновлено з сервера:', refreshedLessons ? refreshedLessons.length : 0);
+            if (refreshedLessons && refreshedLessons.length > 0) {
+              this.processLessonsData(refreshedLessons);
+            }
+          },
+          error: (err) => {
+            console.error('Помилка при оновленні даних уроків:', err);
+            // Навіть при помилці, спробуємо завантажити з localStorage
+            this.ensureLessonsLoaded();
+          }
+        });
+      }
+    }
+  }
+  
+  // Helper method to detect if current page load is a refresh
+  private isPageRefresh(): boolean {
+    // Use multiple methods to detect refresh for better browser compatibility
+    
+    // Method 1: Using Performance API navigation type (modern browsers)
+    if (window.performance) {
+      if (window.performance.getEntriesByType) {
+        const navigationEntries = window.performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0) {
+          return (navigationEntries[0] as any).type === 'reload';
+        }
+      }
+      
+      // Method 2: Older Performance API (fallback)
+      if (window.performance.navigation) {
+        return window.performance.navigation.type === 1; // 1 is TYPE_RELOAD
+      }
+    }
+    
+    // If we can't detect it reliably, default to false
+    return false;
+  }
+
   ngOnInit(): void {
+    // Підписка на зміни даних про уроки
     this.lessonsSubscription = this.lessonsService.getLessons().subscribe(lessons => {
       if (lessons && lessons.length > 0) {
         console.log('Lessons state updated:', lessons.length, 'lessons available');
@@ -63,10 +116,12 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
       }
     });
     
-    // Ensure data is initialized on first load
-    this.lessonsService.initializeData().subscribe();
+    // Перевіряємо і завантажуємо уроки (з localStorage або з сервера)
+    if (isPlatformBrowser(this.platformId)) {
+      this.ensureLessonsLoaded();
+    }
   }
-
+  
   ngOnDestroy(): void {
     if (this.lessonsSubscription) {
       this.lessonsSubscription.unsubscribe();
@@ -121,7 +176,8 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
         return; 
       }
       
-      this.fetchCardDetails(card.id);
+      // Always force refresh from server for educational cards
+      this.fetchCardDetailsFromServer(card.id);
       this.isPopupVisible = true;
       document.body.style.overflow = 'hidden';
       
@@ -202,6 +258,88 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
     }
   }
   
+  // New method to always fetch card from server
+  fetchCardDetailsFromServer(cardId: number): void {
+    console.log(`LessonsPageComponent: Forcing server request for card ${cardId}`);
+    this.lessonsService.forceRefreshCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details received from server in LessonsPageComponent:', cardData);
+          this.selectedCard = cardData;
+          
+          // Clear previous images and attachments
+          this.educationalImages = [];
+          this.educationalAttachments = [];
+          
+          if (this.selectedCard.content) {
+            let contentValue: string = '';
+            let parsedContent: any = null;
+            
+            // Parse content and extract images/attachments
+            try {
+              if (typeof this.selectedCard.content === 'string') {
+                try {
+                  parsedContent = JSON.parse(this.selectedCard.content);
+                  contentValue = parsedContent.content || '';
+                } catch {
+                  // If it's not valid JSON, use as-is (might be direct HTML)
+                  contentValue = this.selectedCard.content;
+                }
+              } else if (typeof this.selectedCard.content === 'object' && this.selectedCard.content !== null) {
+                if ('content' in this.selectedCard.content) {
+                  parsedContent = this.selectedCard.content;
+                  contentValue = (this.selectedCard.content as { content?: string }).content || '';
+                } else {
+                  // Convert object to string safely
+                  contentValue = JSON.stringify(this.selectedCard.content);
+                }
+              }
+              
+              // Extract images and attachments if they exist
+              if (parsedContent) {
+                if (parsedContent.images && Array.isArray(parsedContent.images)) {
+                  this.educationalImages = parsedContent.images.map((img: any) => ({
+                    url: img.url || '',
+                    caption: img.caption || '',
+                    altText: img.altText || ''
+                  }));
+                }
+                
+                if (parsedContent.attachments && Array.isArray(parsedContent.attachments)) {
+                  this.educationalAttachments = parsedContent.attachments.map((att: any) => ({
+                    url: att.url || '',
+                    description: att.description || ''
+                  }));
+                }
+              }
+            } catch (error) {
+              console.error('Error parsing educational content:', error);
+              contentValue = this.selectedCard.content as string;
+            }
+            
+            this.safeCardContent = this.sanitizer.bypassSecurityTrustHtml(contentValue);
+          } else {
+            this.safeCardContent = null;
+            console.warn(`LessonsPageComponent: Card ${cardId} has no content.`);
+          }
+        } else {
+          console.error(`LessonsPageComponent: Failed to fetch details for card ${cardId} from service.`);
+          this.closePopup(new MouseEvent('click'));
+        }
+      },
+      error: (error) => {
+        console.error(`LessonsPageComponent: Error fetching details for card ${cardId}:`, error);
+        this.closePopup(new MouseEvent('click'));
+        
+        // If authentication error, show auth message
+        if (error.status === 401 || error.status === 403) {
+          this.showAuthMessage = true;
+          this.startRedirectCountdown();
+        }
+      }
+    });
+  }
+
   startRedirectCountdown(): void {
     this.clearRedirectTimer();
     
@@ -346,6 +484,13 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
         if (isPlatformBrowser(this.platformId)) {
           localStorage.removeItem('selectedCardId');
           localStorage.removeItem('selectedLessonId');
+          
+          // Also clear the card data from localStorage
+          if (this.selectedCard) {
+            const cardStorageKey = `app-card-detail-${this.selectedCard.id}`;
+            localStorage.removeItem(cardStorageKey);
+            console.log(`Removed educational card ${this.selectedCard.id} data from localStorage`);
+          }
         }
       }
       
@@ -369,6 +514,13 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
         if (isPlatformBrowser(this.platformId)) {
           localStorage.removeItem('selectedCardId');
           localStorage.removeItem('selectedLessonId');
+          
+          // Also clear the card data from localStorage
+          if (this.selectedCard) {
+            const cardStorageKey = `app-card-detail-${this.selectedCard.id}`;
+            localStorage.removeItem(cardStorageKey);
+            console.log(`Removed educational card ${this.selectedCard.id} data from localStorage`);
+          }
         }
       }
       
@@ -507,5 +659,54 @@ export class LessonsPageComponent implements OnInit, OnDestroy {
   getSelectedLesson(): Lesson | undefined {
     if (this.selectedLessonId === null) return undefined;
     return this.lessons.find(lesson => lesson.id === this.selectedLessonId);
+  }
+
+  // Метод для перевірки і завантаження уроків
+  private ensureLessonsLoaded(): void {
+    this.lessonsService.initializeData().subscribe({
+      next: (lessons) => {
+        if (lessons && lessons.length > 0) {
+          console.log('Успішно завантажено уроки з localStorage, кількість:', lessons.length);
+        } else {
+          console.log('Уроки не знайдено в localStorage або дані порожні. Виконуємо запит до сервера...');
+          
+          // Робимо запит до сервера, якщо немає даних в localStorage
+          this.lessonsService.fetchAndSetLessons().subscribe({
+            next: (fetchedLessons) => {
+              if (fetchedLessons && fetchedLessons.length > 0) {
+                console.log('Успішно завантажено уроки з сервера, кількість:', fetchedLessons.length);
+              } else {
+                console.warn('Не вдалося отримати уроки з сервера або список порожній');
+                this.isLoading = false;
+              }
+            },
+            error: (fetchError) => {
+              console.error('Помилка при завантаженні уроків з сервера:', fetchError);
+              this.isLoading = false;
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Помилка при завантаженні з localStorage:', err);
+        
+        // При помилці читання з localStorage також спробуємо запит до сервера
+        console.log('Спроба отримати дані з сервера після помилки localStorage...');
+        this.lessonsService.fetchAndSetLessons().subscribe({
+          next: (fetchedLessons) => {
+            if (fetchedLessons && fetchedLessons.length > 0) {
+              console.log('Успішно завантажено уроки з сервера після помилки, кількість:', fetchedLessons.length);
+            } else {
+              console.warn('Не вдалося отримати уроки з сервера або список порожній');
+              this.isLoading = false;
+            }
+          },
+          error: (fetchError) => {
+            console.error('Помилка при завантаженні уроків з сервера:', fetchError);
+            this.isLoading = false;
+          }
+        });
+      }
+    });
   }
 }

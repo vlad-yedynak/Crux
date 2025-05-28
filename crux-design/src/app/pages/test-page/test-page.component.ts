@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -65,6 +65,93 @@ export class TestPageComponent implements OnInit, OnDestroy {
     private timeTrackerService: TimeTrackerService,
     private configService: ConfigService // Injected ConfigService
   ) {}
+
+  @HostListener('window:load')
+  onPageLoad(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Check if this is a page refresh
+      const isPageRefresh = this.isPageRefresh();
+      
+      if (isPageRefresh) {
+        const cardId = localStorage.getItem('selectedCardId');
+        if (cardId) {
+          console.log('Page was refreshed - forcing card data update from server');
+          this.forceRefreshCardData(parseInt(cardId, 10));
+        }
+      }
+    }
+  }
+  
+  // Helper method to detect if current page load is a refresh
+  private isPageRefresh(): boolean {
+    // Use multiple methods to detect refresh for better browser compatibility
+    
+    // Method 1: Using Performance API navigation type (modern browsers)
+    if (window.performance) {
+      if (window.performance.getEntriesByType) {
+        const navigationEntries = window.performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0) {
+          return (navigationEntries[0] as any).type === 'reload';
+        }
+      }
+      
+      // Method 2: Older Performance API (fallback)
+      if (window.performance.navigation) {
+        return window.performance.navigation.type === 1; // 1 is TYPE_RELOAD
+      }
+    }
+    
+    // If we can't detect it reliably, default to false
+    return false;
+  }
+
+  // New method to force refresh card data from server
+  private forceRefreshCardData(cardId: number): void {
+    this.isLoading = true;
+    console.log(`TestPageComponent: Forcing refresh for card ${cardId} from server`);
+    
+    this.lessonsService.forceRefreshCardById(cardId).subscribe({
+      next: (cardData) => {
+        if (cardData) {
+          console.log('Card details refreshed from server in TestPageComponent:', cardData);
+          this.card = cardData;
+          
+          if (this.card.questions && Array.isArray(this.card.questions)) {
+            this.questions = this.card.questions.filter(q => q.id != null) as Question[];
+            
+            const newSelectedAnswerIds: { [questionId: number]: number | null } = {};
+            this.questions.forEach(q => {
+              newSelectedAnswerIds[q.id!] = null; 
+            });
+            this.selectedAnswerIds = newSelectedAnswerIds;
+            this.userAnswers = []; 
+            this.testSubmitted = false; // Reset submission state
+          } else {
+            this.questions = [];
+            this.selectedAnswerIds = {};
+            console.log('No questions array found in card.questions or it was null.');
+          }
+
+          if (cardData.lessonId) {
+            localStorage.setItem('selectedLessonId', cardData.lessonId.toString());
+          }
+        } else {
+          this.hasError = true;
+          this.errorMessage = `Не вдалося завантажити деталі картки для ID ${cardId}`;
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error(`TestPageComponent: Error refreshing details for card ${cardId}:`, error);
+        this.hasError = true;
+        this.errorMessage = 'Не вдалося підключитися до сервера для отримання деталей картки.';
+        this.isLoading = false;
+        
+        // Try to load from cache as fallback
+        this.loadTestData();
+      }
+    });
+  }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {

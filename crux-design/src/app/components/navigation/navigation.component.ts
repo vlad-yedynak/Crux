@@ -12,10 +12,10 @@ import { Subscription } from 'rxjs';
   ],  template: `
     <nav class="tab-navigation">
         <ul class="tabs">
-            <li class="tab-item"><a [routerLink]="['/lessons']">Уроки</a></li>
-            <li class="tab-item"><a [routerLink]="['/foryou']">Рекомендації</a></li>
-            <li class="tab-item"><a [routerLink]="['/about']">Про нас</a></li>
-            <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']">Редагувати контент</a></li>
+            <li class="tab-item"><a [routerLink]="['/lessons']" routerLinkActive="active">Уроки</a></li>
+            <li class="tab-item"><a [routerLink]="['/foryou']" routerLinkActive="active">Рекомендації</a></li>
+            <li class="tab-item"><a [routerLink]="['/about']" routerLinkActive="active">Про нас</a></li>
+            <li class="tab-item" *ngIf="isAdmin"><a [routerLink]="['/admin']" routerLinkActive="active">Редагувати контент</a></li>
         </ul>
     </nav>
   `,

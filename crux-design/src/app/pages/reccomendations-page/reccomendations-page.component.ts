@@ -43,6 +43,7 @@ interface RecommendationsResponse {
 })
 export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   private readonly AUTH_TOKEN_KEY = 'auth-token';
+  private readonly RECOMMENDATIONS_STORAGE_KEY = 'user-recommendations';
   
   recommendations: RecommendationItem[] = [];
   isLoading = true;
@@ -61,6 +62,10 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   confirmDialogMessage = '';
   confirmDialogTitle = '';
   pendingAction: () => void = () => {};
+
+  // Refresh button properties
+  isRefreshing = false;
+
   constructor(
     private router: Router,
     private http: HttpClient,
@@ -70,8 +75,9 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadRecommendations();
+    this.loadRecommendationsFromStorage();
   }
+
   ngOnDestroy(): void {
     // Cleanup notification timeout
     if (this.notificationTimeout) {
@@ -121,7 +127,8 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
     this.pendingAction = () => {};
   }
 
-  loadRecommendations(): void {
+  // Load recommendations from localStorage
+  loadRecommendationsFromStorage(): void {
     this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
@@ -129,6 +136,39 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
     const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
     if (!token) {
       this.handleError('Потрібна автентифікація. Будь ласка, увійдіть, щоб переглянути рекомендації.');
+      return;
+    }
+
+    // Try to get recommendations from localStorage
+    const storedRecommendations = localStorage.getItem(this.RECOMMENDATIONS_STORAGE_KEY);
+
+    if (storedRecommendations) {
+      try {
+        const parsedData = JSON.parse(storedRecommendations);
+        this.recommendations = parsedData;
+        this.isLoading = false;
+        console.log('Recommendations loaded from localStorage:', this.recommendations);
+      } catch (error) {
+        console.error('Error parsing recommendations from localStorage:', error);
+        // If there's an error parsing, fetch fresh data
+        this.refreshRecommendations();
+      }
+    } else {
+      // No data in localStorage, fetch fresh data
+      this.refreshRecommendations();
+    }
+  }
+
+  // Refresh recommendations from server
+  refreshRecommendations(): void {
+    this.isRefreshing = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
+    const token = this.cookiesService.getCookie(this.AUTH_TOKEN_KEY);
+    if (!token) {
+      this.handleError('Потрібна автентифікація. Будь ласка, увійдіть, щоб переглянути рекомендації.');
+      this.isRefreshing = false;
       return;
     }
 
@@ -141,23 +181,31 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.isLoading = false;
+          this.isRefreshing = false;
           
           if (response && response.success) {
             if (response.body && response.body.length > 0) {
               this.recommendations = response.body;
-              console.log('Recommendations loaded successfully:', this.recommendations);
+              // Save to localStorage
+              localStorage.setItem(this.RECOMMENDATIONS_STORAGE_KEY, JSON.stringify(response.body));
+              console.log('Recommendations loaded and saved to localStorage:', this.recommendations);
+              this.showToastNotification('Рекомендації успішно оновлено', 'success');
             } else {
               // No recommendations available - show default message
               this.recommendations = [];
+              localStorage.removeItem(this.RECOMMENDATIONS_STORAGE_KEY);
               console.log('No recommendations available');
-            }          } else {
+            }          
+          } else {
             this.handleError(response?.error || 'Не вдалося завантажити рекомендації');
           }
         },
         error: (error) => {
           this.isLoading = false;
+          this.isRefreshing = false;
           console.error('Error loading recommendations:', error);
-            if (error.status === 401 || error.status === 403) {
+          
+          if (error.status === 401 || error.status === 403) {
             this.handleError('Помилка автентифікації. Будь ласка, увійдіть знову.');
             // Optionally redirect to login
             // this.router.navigate(['/auth']);
@@ -170,10 +218,12 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
 
   private handleError(message: string): void {
     this.isLoading = false;
+    this.isRefreshing = false;
     this.hasError = true;
     this.errorMessage = message;
     this.recommendations = [];
   }
+  
   onRecommendationClick(recommendation: RecommendationItem): void {
     if (recommendation.url) {
       // Open the recommendation URL (could be external or internal)
@@ -196,7 +246,9 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
   onImageError(event: any): void {
     event.target.style.display = 'none';
     // Could also set a default image here
-  }  clearTrackingData(): void {
+  }  
+  
+  clearTrackingData(): void {
     if (this.isResetting || this.isLoading) return;
 
     this.showConfirmationDialog(
@@ -214,8 +266,10 @@ export class ReccomendationsPageComponent implements OnInit, OnDestroy {
     this.timeTrackerService.resetAllTimeData()
       .then(() => {
         this.isResetting = false;
+        // Clear the stored recommendations
+        localStorage.removeItem(this.RECOMMENDATIONS_STORAGE_KEY);
         // Reload recommendations after clearing data
-        this.loadRecommendations();
+        this.refreshRecommendations();
         this.showToastNotification('Дані успішно очищено! Рекомендації будуть оновлені на основі нових даних.', 'success', 5000);
       })
       .catch((error) => {

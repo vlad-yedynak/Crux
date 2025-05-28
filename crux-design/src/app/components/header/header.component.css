@@ -228,13 +228,13 @@ app-navigation {
     cursor: pointer;
     outline: none;
     /* Add Safari prefixes for clip-path */
-    -webkit-clip-path: polygon(0 0, 100% 0, 82% 100%, 0% 100%);
-    clip-path: polygon(0 0, 100% 0, 82% 100%, 0% 100%);
+    -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0% 100%);
     z-index: 1;
     background-clip: padding-box;
     -webkit-background-clip: padding-box;
     position: relative; /* Ensure position is set for Safari stacking context */
-    margin-right: -2px; /* Help overlap on Safari */
+    margin-right: -2px; /* Help overlap on Safari - Kept from original */
 }
 
 .login-btn:hover {
@@ -254,15 +254,15 @@ app-navigation {
     font-weight: 600;
     font-size: 1rem;
     width: auto; /* Changed from fixed 80px to auto */
-    min-width: 130px; /* Set minimum width to ensure it's large enough for the Ukrainian text "Зареєструватись" */
+    min-width: 150px; /* Set minimum width to ensure it's large enough for the Ukrainian text "Зареєструватись" */
     padding: 0.4rem 0.6rem 0.4rem 0.8rem;
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
     cursor: pointer;
     outline: none;
-    margin-left: -16px; 
+    margin-left: -16px; /* Kept from original - this defines the overlap amount */
     /* Add Safari prefixes for clip-path */
-    -webkit-clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
-    clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
+    -webkit-clip-path: polygon(16px 0, 100% 0, 100% 100%, 0% 100%);
+    clip-path: polygon(16px 0, 100% 0, 100% 100%, 0% 100%);
     z-index: 2;
     background-clip: padding-box;
     -webkit-background-clip: padding-box;
