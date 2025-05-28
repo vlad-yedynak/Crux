@@ -76,7 +76,7 @@ export class HeaderComponent implements OnInit{
   private readonly AUTH_TOKEN_KEY = 'auth-token'; // Define the key for the auth token
   
   
-  logoLetters: string[] = 'Goida'.split('');
+  logoLetters: string[] = 'Crux'.split('');
 
   constructor(
     private eRef: ElementRef, 

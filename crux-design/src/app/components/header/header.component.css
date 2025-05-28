@@ -37,7 +37,7 @@
 }
 
 /* Individual letter styling for animation */
-/* .logo h1 a .letter {
+.logo h1 a .letter {
     display: inline-block; 
     position: relative; 
     text-shadow: 0 0px 3px var(--color-accent);
@@ -73,7 +73,7 @@
     95% { 
         transform: translateY(-2px) scaleY(1.02) scaleX(0.98);
     }
-} */
+}
 
 /* Desktop navigation wrapper - centered */
 .navigation-wrapper {

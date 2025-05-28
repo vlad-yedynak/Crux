@@ -56,7 +56,7 @@
 }
 
 /* Individual letter styling for animation */
-/* .logo h1 a .letter {
+.logo h1 a .letter {
     display: inline-block;
     position: relative;
     text-shadow: 0 0px 5px var(--color-accent);
@@ -92,7 +92,7 @@
     95% {
         transform: translateY(-2px) scaleY(1.02) scaleX(0.98);
     }
-} */
+}
 
 .left-promo {
     position: absolute;
@@ -251,20 +251,22 @@
     .logo {
         padding: 1.5rem 2rem; /* Adjust padding for smaller screens */
         font-size: 20px; /* Optionally adjust font size */
+        z-index: 1; /* Lower z-index on mobile to place logo behind forms */
     }
 
     .left-promo {
         display: none; /* Hide the left promo section on mobile */
     }
 
-
-
     .signup-form-wrapper,
     .login-form-wrapper {
         width: 90%; /* Make forms take up most of the screen width */
         max-width: 350px; /* Keep max width as per desktop, or adjust if too large */
-        /* The existing absolute positioning and transforms should still work relative to the centered .auth-forms container */
     }
-
     
+    /* Ensure forms are above logo on mobile */
+    .signup-form-wrapper.active, 
+    .login-form-wrapper.active {
+        z-index: 20; /* Higher z-index to ensure forms are above logo */
+    }
 }
