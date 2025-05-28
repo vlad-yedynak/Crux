@@ -1,0 +1,24 @@
+﻿version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./uploads:/app/wwwroot/uploads
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - APP_DB_CONNECTION_STRING=server=${MYSQL_SERVER};port=${MYSQL_PORT};user=${MYSQL_USER};password=${MYSQL_PASSWORD};database=${MYSQL_DATABASE}
+    restart: unless-stopped
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
