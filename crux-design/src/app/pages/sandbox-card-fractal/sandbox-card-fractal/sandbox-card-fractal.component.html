@@ -1,1 +1,250 @@
-<p>sandbox-card-fractal works!</p>
+<div *ngIf="!showAuthMessage">
+  <div class="mobile-warning">
+    <p>Ця сторінка не призначена для перегляду на мобільних пристроях через обмеження адаптивності.</p>
+    <p>Будь ласка, відкрийте її на персональному комп'ютері.</p>
+  </div>
+
+  <div class="sandbox-layout-container desktop-only-content">
+    <!-- Canvas Section -->
+    <div class="canvas-section">
+      <div #canvasContainer id="canvasContainer">
+        <canvas #myCanvas id="coordinateCanvas"></canvas>
+      </div>
+
+      <!-- Canvas Controls -->
+      <div class="canvas-controls">
+        <input type="file" id="fractalFileInput" accept=".json" (change)="onFileSelected($event)" class="file-input" />
+        <label for="fractalFileInput" class="canvas-control-btn open-btn" title="Відкрити фрактал">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/>
+          </svg>
+        </label>
+        <button class="canvas-control-btn download-btn" (click)="downloadFractal()" title="Завантажити фрактал">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Overlay Section -->
+    <div class="overlay-section">
+      <div class="overlay-navigation">
+        <button [ngClass]="{'active': activePanel === 'fractals'}" (click)="switchPanel('fractals')">Фрактали</button>
+        <button [ngClass]="{'active': activePanel === 'tasks'}" (click)="switchPanel('tasks')">Завдання</button>
+      </div>
+
+      <!-- Fractals Panel -->
+      <div class="panel" *ngIf="activePanel === 'fractals'">
+        <div class="fractal-info-container">
+          <h4>Фрактали</h4>
+          <p class="fractal-info-text">
+            Фрактали - це нескінченно самоподібні математичні об'єкти, які можна масштабувати нескінченно, виявляючи подібні структури.
+          </p>
+        </div>
+
+        <div class="fractal-selector">
+          <h4>Виберіть фрактал</h4>
+          <select [(ngModel)]="selectedFractalType">
+            <option *ngFor="let type of fractalTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          <div class="drawing-instructions">
+            <p class="instruction-text">Виберіть тип фрактала для генерації і натисніть кнопку нижче.</p>
+          </div>
+        </div>
+
+        <div class="fractal-actions-container">
+          <button class="draw-button" (click)="onDrawFractal()">Згенерувати фрактал</button>
+        </div>
+
+        <div class="drawn-fractals-list">
+          <h4>Створені фрактали:</h4>
+          <ul *ngIf="drawnFractals.length > 0; else noFractals">
+            <li *ngFor="let fractal of drawnFractals; let i = index">
+              <div class="fractal-info" (click)="onEditFractal(fractal)">
+                <span>{{ i + 1 }}. {{ fractal.name }} {{ fractal.isPlaceholder ? '(редагується)' : '' }}</span>
+              </div>
+              <div class="fractal-actions">
+                <button class="edit-arrow-btn" (click)="onEditFractal(fractal)" [class.open]="fractal.id === editingFractalId">
+                  <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M7 10l5 5 5-5H7z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button class="delete-cross-btn" (click)="onDeleteFractal(fractal.id)">
+                  <svg class="cross-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="fractal-edit-panel" *ngIf="fractal.id === editingFractalId" @slideTogglePanel>
+                <div class="name-section">
+                  <label>Назва фрактала:</label>
+                  <input 
+                    type="text" 
+                    [(ngModel)]="fractal.name"
+                  >
+                </div>
+                
+                <div class="color-section">
+                  <label>Колір фрактала:</label>
+                  <input 
+                    type="color" 
+                    [(ngModel)]="fractal.color"
+                    (change)="drawFractal(fractal)"
+                  >
+                </div>
+                
+                <div class="parameters-section">
+                  <div class="parameters-header">
+                    Параметри фрактала:
+                  </div>
+              
+                  <div class="parameters-container">
+                    <div *ngFor="let param of fractal.parameters" class="parameter-inputs">
+                      <div class="parameter-header">
+                        <span class="parameter-label">{{ getParameterDisplayName(param.name) }}:</span>
+                      </div>
+                      <div class="parameter-values">
+                        <div class="parameter-value" style="width: 100%;">
+                          <input 
+                            type="range" 
+                            [min]="param.min" 
+                            [max]="param.max" 
+                            [step]="param.step"
+                            [(ngModel)]="param.value" 
+                            (input)="updateFractalProperty(fractal, param.name, param.value)"
+                            class="fractal-slider"
+                          >
+                          <div class="slider-value">{{ param.value }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="button" class="save-btn" (click)="onSaveFractal()">Зберегти</button>
+                  <button type="button" class="cancel-btn" (click)="onCancelEditFractal()">Скасувати</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noFractals>
+            <p class="no-fractals-message">Ще не створено жодного фрактала.</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Tasks Panel -->
+      <div class="panel" *ngIf="activePanel === 'tasks'">
+        <div class="task-section">
+          <div *ngIf="!selectedTask" class="task-list">
+            <h4>Список завдань:</h4>
+            <ul *ngIf="card && card.tasks && card.tasks.length > 0; else noTasks">
+              <li *ngFor="let task of card?.tasks" (click)="selectTask(task)" [ngClass]="{'completed-task': task.isCompleted}">
+                <div class="shape-info">
+                  <span>{{ task.name }}</span>
+                </div>
+                <div class="task-status" *ngIf="task.isCompleted">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" class="completed-icon">
+                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                  <span class="completed-text">Виконано</span>
+                </div>
+              </li>
+            </ul>
+            <ng-template #noTasks>
+              <p class="no-fractals-message">Немає доступних завдань.</p>
+            </ng-template>
+          </div>
+          <div *ngIf="selectedTask" class="task-details fractal-edit-panel" [ngClass]="{'completed-task': selectedTask.isCompleted}">
+            <div class="name-section">
+              <label>Завдання:</label>
+              <h4>{{ selectedTask.name }}</h4>
+            </div>
+            
+            <div class="points-section">
+              <div class="points-header">Опис:</div>
+              <p class="task-description">{{ selectedTask.description }}</p>
+            </div>
+            
+            <div class="points-section">
+              <div class="points-header">Відповідь:</div>
+              
+              <div *ngIf="selectedTask.expectedDataType && selectedTask.expectedDataCount && selectedTask.expectedDataType.length >= selectedTask.expectedDataCount; else noExpectedData">
+                <ng-container *ngFor="let dataType of selectedTask.expectedDataType; let idx = index">
+                  <div *ngIf="idx < selectedTask.expectedDataCount" class="parameter-inputs">
+                    <div class="parameter-header">
+                      <span class="parameter-label">{{ getDataTypeLabel(dataType) }}:</span>
+                    </div>
+                    <div class="parameter-values">
+                      <div class="parameter-value" style="width: 100%;">
+                        <input 
+                          *ngIf="dataType.toLowerCase() !== 'bool'"
+                          [type]="getInputType(dataType)" 
+                          [(ngModel)]="taskAnswers[idx]"
+                          [placeholder]="getPlaceholder(dataType)"
+                          [step]="dataType.toLowerCase() === 'double' ? '0.01' : (dataType.toLowerCase() === 'int' ? '1' : null)"
+                          class="task-input-field" 
+                        />
+                        <select *ngIf="dataType.toLowerCase() === 'bool'" [(ngModel)]="taskAnswers[idx]" class="task-input-field">
+                          <option [ngValue]="undefined">Оберіть...</option>
+                          <option value="true">Правда (True)</option>
+                          <option value="false">Неправда (False)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+              <ng-template #noExpectedData>
+                <p class="no-fractals-message">Інформація про очікувані типи даних для цього завдання відсутня або некоректна.</p>
+              </ng-template>
+            </div>
+            
+            <div class="form-actions">
+              <button class="save-btn" (click)="submitTaskAnswer()" [disabled]="selectedTask.isCompleted">Надіслати відповідь</button>
+              <button class="cancel-btn" (click)="deselectTask()">Назад</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Results Popup -->
+  <div *ngIf="showResultsPopup" class="results-popup-overlay desktop-only-content">
+    <div class="results-popup">
+      <h2>Результат завдання</h2>
+      <div class="results-content">
+        <p class="results-score" *ngIf="taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#4caf50" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+          <span class="highlight success">Правильна відповідь!</span>
+        </p>
+        
+        <div *ngIf="taskResultCorrect" class="points-animation-container">
+          <div class="points-badge">+{{ selectedTask?.points || 0 }}</div>
+        </div>
+
+        <p class="results-score" *ngIf="!taskResultCorrect">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="completed-icon big-icon">
+            <path fill="#EB5E28" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+          <span class="highlight error">Неправильна відповідь!</span>
+        </p>
+        <div class="task-message" *ngIf="taskResultCorrect">
+          <p>Завдання виконано успішно! Ви можете повернутися до списку завдань.</p>
+        </div>
+        <div class="task-message" *ngIf="!taskResultCorrect">
+          <p>Спробуйте ще раз. Перевірте правильність відповіді.</p>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="retry-btn" *ngIf="!taskResultCorrect" (click)="closeResultsPopup(false)">Спробувати ще</button>
+        <button class="return-btn" (click)="closeResultsPopup(true)">Повернутися до завдань</button>
+      </div>
+    </div>
+  </div>
+</div>
