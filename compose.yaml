@@ -16,6 +16,24 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    ports:
+      - "3307:3306" # Use 3306:3306 if not busy by local MySQL
 networks:
   app-network:
     driver: bridge

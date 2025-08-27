@@ -17,4 +17,6 @@ public interface IAuthenticationService
     
     int? CheckAuthentication(HttpContext context, UserRole? role = null);
     Task<int?> CheckAuthenticationAsync(HttpContext context, UserRole? role = null);
+
+    Task<int?> GetUserIdFromContextAsync(HttpContext context);
 }

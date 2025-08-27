@@ -6,10 +6,10 @@ namespace Crux.Services;
 public interface ILessonService
 {
     ICollection<LessonResponse> GetLessons();
-    Task<ICollection<LessonResponse>> GetLessonsAsync();
+    Task<ICollection<LessonResponse>> GetLessonsAsync(int? userId);
     
     LessonResponse AddLesson(string title);
-    Task<LessonResponse> AddLessonAsync(string title);
+    Task<LessonResponse> AddLessonAsync(LessonRequest request);
 
     LessonResponse UpdateLessonName(UpdateLessonRequest request);
     Task<LessonResponse> UpdateLessonNameAsync(UpdateLessonRequest request);

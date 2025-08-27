@@ -39,6 +39,8 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<CardImage> CardImages { get; set; }
     
     public DbSet<LessonTracker> LessonTrackers { get; set; }
+    
+    public DbSet<UserLessonAccess> UserLessonAccesses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -354,6 +356,21 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.TrackedTime).IsRequired();
+        });
+
+        modelBuilder.Entity<UserLessonAccess>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserLessonAccesses)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Lesson)
+                .WithMany(l => l.UserLessonAccesses)
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

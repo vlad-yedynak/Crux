@@ -28,9 +28,32 @@ public class LessonService(ICardManagementService cardManagementService, Applica
         return lessons;
     }
     
-    public async Task<ICollection<LessonResponse>> GetLessonsAsync()
+    public async Task<ICollection<LessonResponse>> GetLessonsAsync(int? userId)
     {
-        var lessons = await dbContext.Lessons
+        var query = dbContext.Lessons.AsQueryable();
+        
+        if (userId.HasValue)
+        {
+            var user = await dbContext.Users.FindAsync(userId.Value);
+            
+            if (user?.Role != UserRole.Admin)
+            {
+                query = query.Where(l =>
+                    l.Visibility == LessonVisibility.Public ||
+                    (user != null && l.UserLessonAccesses.Any(a =>
+                        a.UserId == userId.Value &&
+                        (a.ExpiresAt == null || a.ExpiresAt > DateTime.UtcNow)
+                    ))
+                );
+            }
+        }
+        else
+        {
+            query = query.Where(l => l.Visibility == LessonVisibility.Public);
+        }
+        
+        
+        var lessons = await query
             .Include(l => l.Cards)
             .Select(l => new 
             {
@@ -74,9 +97,19 @@ public class LessonService(ICardManagementService cardManagementService, Applica
         };
     }
     
-    public async Task<LessonResponse> AddLessonAsync(string title)
+    public async Task<LessonResponse> AddLessonAsync(LessonRequest request)
     {
-        var lesson = new Lesson { Title = title };
+        if (!Enum.TryParse<LessonVisibility>(request.Visibility, true, out var visibility))
+        {
+            visibility = LessonVisibility.Private;
+        }
+        
+        var lesson = new Lesson
+        {
+            Title = request.Title,
+            Visibility = visibility
+        };
+        
         await dbContext.Lessons.AddAsync(lesson);
         await dbContext.SaveChangesAsync();
 

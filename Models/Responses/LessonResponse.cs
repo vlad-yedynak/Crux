@@ -10,6 +10,9 @@ public class LessonResponse : Response
     [JsonPropertyName("title")]
     public string? Title { get; set; }
     
+    [JsonPropertyName("visibility")]
+    public string? Visibility { get; set; }
+    
     [JsonPropertyName("totalPoints")]
     public int TotalPoints { get; set; }
     

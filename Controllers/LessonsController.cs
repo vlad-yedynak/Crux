@@ -7,10 +7,12 @@ using Crux.Services;
 namespace Crux.Controllers;
 
 [Route("lesson")]
-public class LessonsController (IAuthenticationService authenticationService, ILessonService lessonService) : ControllerBase
+public class LessonsController (IAuthenticationService authenticationService, 
+                                ILessonService lessonService,
+                                ILessonAccessService lessonAccessService) : ControllerBase
 {
     [HttpPost("create-lesson")]
-    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] string title)
+    public async Task<ActionResult<Response>> CreateLessonAsync([FromBody] LessonRequest request)
     {
         try
         {
@@ -25,7 +27,7 @@ public class LessonsController (IAuthenticationService authenticationService, IL
                 };
             }
             
-            var response = await lessonService.AddLessonAsync(title);
+            var response = await lessonService.AddLessonAsync(request);
 
             return new ControllerResponse<LessonResponse>
             {
@@ -119,7 +121,8 @@ public class LessonsController (IAuthenticationService authenticationService, IL
     {
         try
         {
-            var lessons = await lessonService.GetLessonsAsync();
+            int? userId = await authenticationService.GetUserIdFromContextAsync(HttpContext);
+            var lessons = await lessonService.GetLessonsAsync(userId);
 
             return new ControllerResponse<ICollection<LessonResponse>>
             {
@@ -131,6 +134,148 @@ public class LessonsController (IAuthenticationService authenticationService, IL
         {
             HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<AuthenticationResponse>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+
+    [HttpPost("grant-access")]
+    public async Task<ActionResult<Response>> GrantAccessAsync([FromBody] GrantAccessRequest request)
+    {
+        try
+        {
+            var adminId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (adminId == null)
+            {
+                HttpContext.Response.StatusCode = 403;
+                return new ControllerResponse<bool>
+                {
+                    Success = false,
+                    Error = "Not authorized to grant lesson access"
+                };
+            }
+            
+            await lessonAccessService.GrantAccessToLessonAsync(
+                request.UserId, 
+                request.LessonId, 
+                request.ExpiresAt);
+            
+            return new ControllerResponse<bool>
+            {
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<bool>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpPost("revoke-access")]
+    public async Task<ActionResult<Response>> RevokeAccessAsync([FromBody] RevokeAccessRequest request)
+    {
+        try
+        {
+            var adminId = await authenticationService.CheckAuthenticationAsync(HttpContext, UserRole.Admin);
+            if (adminId == null)
+            {
+                HttpContext.Response.StatusCode = 403;
+                return new ControllerResponse<bool>
+                {
+                    Success = false,
+                    Error = "Not authorized to revoke lesson access"
+                };
+            }
+            
+            await lessonAccessService.RevokeAccessToLessonAsync(
+                request.UserId, 
+                request.LessonId);
+            
+            return new ControllerResponse<bool>
+            {
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<bool>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpGet("check/{lessonId:int}")]
+    public async Task<ActionResult<Response>> CheckAccessAsync(int lessonId)
+    {
+        try
+        {
+            var userId = await authenticationService.GetUserIdFromContextAsync(HttpContext);
+            if (userId == null)
+            {
+                HttpContext.Response.StatusCode = 403;
+                return new ControllerResponse<bool>
+                {
+                    Success = true,
+                    Body = false
+                };
+            }
+            
+            var hasAccess = await lessonAccessService.HasAccessToLessonAsync(userId.Value, lessonId);
+            
+            return new ControllerResponse<bool>
+            {
+                Success = true,
+                Body = hasAccess
+            };
+        }
+        catch (Exception ex)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<bool>
+            {
+                Success = false,
+                Error = "Internal Server Error"
+            };
+        }
+    }
+    
+    [HttpGet("accessible-lessons")]
+    public async Task<ActionResult<Response>> GetAccessibleLessonsAsync()
+    {
+        try
+        {
+            var userId = await authenticationService.GetUserIdFromContextAsync(HttpContext);
+            if (userId == null)
+            {
+                return new ControllerResponse<List<int>>
+                {
+                    Success = true,
+                    Body = new List<int>()
+                };
+            }
+            
+            var lessonIds = await lessonAccessService.GetAccessibleLessonsAsync(userId.Value);
+            
+            return new ControllerResponse<List<int>>
+            {
+                Success = true,
+                Body = lessonIds
+            };
+        }
+        catch (Exception ex)
+        {
+            HttpContext.Response.StatusCode = 500;
+            return new ControllerResponse<bool>
             {
                 Success = false,
                 Error = "Internal Server Error"

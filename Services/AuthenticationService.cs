@@ -291,7 +291,7 @@ public class AuthenticationService(
         return null;
     }
 
-    private async Task<int?> GetUserIdFromContextAsync(HttpContext context)
+    public async Task<int?> GetUserIdFromContextAsync(HttpContext context)
     {
         if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
         {
