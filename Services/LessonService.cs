@@ -38,12 +38,16 @@ public class LessonService(ICardManagementService cardManagementService, Applica
             
             if (user?.Role != UserRole.Admin)
             {
-                query = query.Where(l =>
-                    l.Visibility == LessonVisibility.Public ||
-                    (user != null && l.UserLessonAccesses.Any(a =>
-                        a.UserId == userId.Value &&
-                        (a.ExpiresAt == null || a.ExpiresAt > DateTime.UtcNow)
-                    ))
+                query = query.Where(l => 
+                    (l.Visibility == LessonVisibility.Public && 
+                     !l.UserLessonAccesses
+                         .Any(a => a.UserId == userId.Value && a.IsBanned)) ||
+                    (l.Visibility != LessonVisibility.Public && l.UserLessonAccesses
+                        .Any(a => a.UserId == userId.Value && 
+                                  !a.IsBanned &&
+                                  (a.ExpiresAt == null || a.ExpiresAt > DateTime.Now)
+                        )
+                    )
                 );
             }
         }

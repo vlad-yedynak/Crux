@@ -11,4 +11,10 @@ public class UserLessonAccess
     
     public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ExpiresAt { get; set; }
+    
+    public bool IsBanned { get; set; } =  false;
+    
+    public DateTime? BannedAt { get; set; }
+    
+    public string? BanReason { get; set; }
 }

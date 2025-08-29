@@ -1,16 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Crux.Models.Responses;
+namespace Crux.Models.Requests;
 
-public class GrantAccessRequest
+public class LessonAccessRequest
 {
+    [Required]
     [JsonPropertyName("userId")]
-    [Required]
-    public int UserId { get; set; }
+    public List<int> UserIds { get; set; } = new List<int>();
     
-    [JsonPropertyName("lessonId")]
     [Required]
+    [JsonPropertyName("lessonId")]
     public int LessonId { get; set; }
     
     [JsonPropertyName("expiresAt")]

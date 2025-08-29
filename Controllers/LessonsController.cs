@@ -142,7 +142,7 @@ public class LessonsController (IAuthenticationService authenticationService,
     }
 
     [HttpPost("grant-access")]
-    public async Task<ActionResult<Response>> GrantAccessAsync([FromBody] GrantAccessRequest request)
+    public async Task<ActionResult<Response>> GrantAccessAsync([FromBody] LessonAccessRequest request)
     {
         try
         {
@@ -157,17 +157,14 @@ public class LessonsController (IAuthenticationService authenticationService,
                 };
             }
             
-            await lessonAccessService.GrantAccessToLessonAsync(
-                request.UserId, 
-                request.LessonId, 
-                request.ExpiresAt);
+            await lessonAccessService.GrantAccessToLessonAsync(request);
             
             return new ControllerResponse<bool>
             {
                 Success = true
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<bool>
@@ -179,7 +176,7 @@ public class LessonsController (IAuthenticationService authenticationService,
     }
     
     [HttpPost("revoke-access")]
-    public async Task<ActionResult<Response>> RevokeAccessAsync([FromBody] RevokeAccessRequest request)
+    public async Task<ActionResult<Response>> RevokeAccessAsync([FromBody] LessonRevokeRequest request)
     {
         try
         {
@@ -194,16 +191,14 @@ public class LessonsController (IAuthenticationService authenticationService,
                 };
             }
             
-            await lessonAccessService.RevokeAccessToLessonAsync(
-                request.UserId, 
-                request.LessonId);
+            await lessonAccessService.RevokeAccessToLessonAsync(request);
             
             return new ControllerResponse<bool>
             {
                 Success = true
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<bool>
@@ -238,7 +233,7 @@ public class LessonsController (IAuthenticationService authenticationService,
                 Body = hasAccess
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<bool>
@@ -272,7 +267,7 @@ public class LessonsController (IAuthenticationService authenticationService,
                 Body = lessonIds
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             HttpContext.Response.StatusCode = 500;
             return new ControllerResponse<bool>
